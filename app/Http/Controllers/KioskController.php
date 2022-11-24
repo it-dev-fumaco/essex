@@ -860,7 +860,7 @@ class KioskController extends Controller
             'creation' => $todays_date,
             'modified' => $todays_date,
             'modified_by' => Auth::user()->employee_name,
-            'owner' => Auth::user()->email, 
+            'owner' => Auth::user()->employee_name, 
             'docstatus' => 0,
             'workflow_state' => 'For Approval',
             'transaction_date' => date('Y-m-d'),
