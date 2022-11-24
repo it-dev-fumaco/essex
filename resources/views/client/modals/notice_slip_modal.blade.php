@@ -101,7 +101,7 @@
                                        @endforeach
                                     </div>
                                     <div class="col-sm-12" id="out-of-office-table"></div>
-                                    <div class="col-sm-12 center"><button type="submit" class="btn btn-primary"><i class="fa fa-check"></i>Request for Approval</button></div>
+                                    <div class="col-sm-12 center"><button type="submit" class="btn btn-primary" id="notice-slip-submit-btn"><i class="fa fa-check"></i>Request for Approval</button></div>
                                     </form>
                                  </div>
                               </div>
