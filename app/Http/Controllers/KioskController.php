@@ -813,7 +813,10 @@ class KioskController extends Controller
             ->table('tabItinerary Tab')
             ->join('tabItinerary','tabItinerary.name','=','tabItinerary Tab.parent')
             ->select('tabItinerary.workflow_state','tabItinerary Tab.*')
-            ->where('tabItinerary Tab.owner', Auth::user()->email)
+            ->where(function ($query){
+                $query->where('tabItinerary Tab.owner', Auth::user()->email)
+                    ->orWhere('tabItinerary Tab.owner', Auth::user()->employee_name);
+            })
             ->whereYear('tabItinerary Tab.date', $request->year)
             ->whereMonth('tabItinerary Tab.date', $request->month)
             ->orderBy('creation', 'desc')
