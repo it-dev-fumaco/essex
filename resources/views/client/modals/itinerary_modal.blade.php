@@ -51,7 +51,7 @@
                      </div>
                         <div class="col-sm-6" style="line-height: 15px;">
                            <label>Itinerary Date:</label>
-                           <input type="text" id="updateitem_category" class="updateitem_category" name="updateitem_category" style="border: 0px none;font-weight: 50%;" value="{{ $row->date }}" placeholder="Item Classification" readonly>
+                           <input type="text" id="updateitem_category" class="updateitem_category" name="updateitem_category" style="border: 0px none;font-weight: 50%;" value="{{ $row->itinerary_date }}" placeholder="Itinerary Date" readonly>
                         </div>
                      
                      
