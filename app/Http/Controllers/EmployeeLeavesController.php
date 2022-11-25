@@ -147,28 +147,31 @@ class EmployeeLeavesController extends Controller
                 ->where('u.status', 'Active')->where('u.user_type', 'Employee')->where('u.employment_status', 'Regular')
                 ->select('el.employee_id', 'el.leave_type_id', DB::raw('MAX(el.total) as total_leave'), 'u.employee_name', 'lt.leave_type')
                 ->groupBy('el.employee_id', 'el.leave_type_id', 'u.employee_name', 'lt.leave_type')
-                ->orderBy('el.created_at', 'desc')->get();
+                ->orderBy('u.user_id', 'desc')->get();
 
             $values = [];
             foreach($query as $r) {
-                $values[] = [
-                    'employee_id' => $r->employee_id,
-                    'leave_type_id' => $r->leave_type_id,
-                    'total' => $r->total_leave,
-                    'remaining' => $r->total_leave,
-                    'year' => $request->next_year,
-                    'created_by' => Auth::user()->email,
-                    'last_modified_by' => Auth::user()->email,
-                    'created_at' => Carbon::now()->toDateTimeString(),
-                    'updated_at' => Carbon::now()->toDateTimeString(),
-                ];
+                $existing = DB::table('employee_leaves')->where('employee_id', $r->employee_id)->where('leave_type_id', $r->leave_type_id)->where('year', $request->next_year)->exists();
+                if (!$existing) {
+                    $values[] = [
+                        'employee_id' => $r->employee_id,
+                        'leave_type_id' => $r->leave_type_id,
+                        'total' => $r->total_leave,
+                        'remaining' => $r->total_leave,
+                        'year' => $request->next_year,
+                        'created_by' => Auth::user()->email,
+                        'last_modified_by' => Auth::user()->email,
+                        'created_at' => Carbon::now()->toDateTimeString(),
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ];
+                }
             }
 
             DB::table('employee_leaves')->insert($values);
             
             DB::commit();
 
-            return redirect()->back()->with('message', 'Employee Leave successfully added.');
+            return redirect()->back()->with('message', 'Employee Leave successfully updated.');
         } catch (Exception $e) {
             DB::rollback();
 
