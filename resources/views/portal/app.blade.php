@@ -153,9 +153,8 @@ $(document).ready(function(){
         $("#videohtml").attr('src', url);
     });
 
-    $(document).on('submit', '#loginModal form', submit(function(e){
+    $(document).on('submit', '#loginModal form', function(e) {
         e.preventDefault();
-        // Ajax Post 
         $.ajax({
             type: "POST",
             url: $(this).attr('action'),
