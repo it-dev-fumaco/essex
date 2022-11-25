@@ -46,7 +46,7 @@ Route::post('/userLogin', 'Auth\LoginController@userLogin');
     // Route::post('/applicant/examinee','ApplicantExaminationsController@show')->name('client.appli_examinee');
     // Route::get('/applicant/takeExam/{id}','ApplicantExaminationsController@takeExam')->name('applicant.take_exam');
     // Route::post('/applicant/saveExam','ApplicantExaminationsController@saveExam')->name('applicant.save_exam');
-    // Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
+    Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
 
 Auth::routes();
 Route::group(['prefix' => 'admin'], function(){

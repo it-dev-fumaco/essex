@@ -160,7 +160,6 @@ $(document).ready(function(){
             url: $(this).attr('action'),
             data: $(this).serialize(),
             success: function (data) {
-                console.log(data)
                 if (data) {
                     location.reload(false);
                 }else{
@@ -169,6 +168,27 @@ $(document).ready(function(){
                 }
             }
         });
+    });
+
+    $('#ldap-login').click(function (e) {
+        e.preventDefault();
+        var formData = $(this).closest('form').serializeArray();
+        formData.push({ name: this.name, value: this.value });
+        $.ajax({
+            type: "POST",
+            url: $('#loginModal form').attr('action'),
+            data: formData,
+            success: function (data) {
+                if (data) {
+                    location.reload(false);
+                }else{
+                    $("#message").html("<div class='alert alert-danger alert-dismissible'><button type='button' class='close' data-dismiss='alert'>&times;</button><center><strong>Invalid login!</strong> Access ID or password is incorrect.</center></div>");
+                    $("#message").effect( "shake", {times:4}, 1000 );
+                }
+            }
+        });
+
+        console.log(formData)
     });
 });
 </script>

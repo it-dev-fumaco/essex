@@ -28,12 +28,13 @@
                                         <input type="password" class="form-control" placeholder="Password" name="password" required>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="display: none;">
                                     <input type="checkbox" name="rememberme" value="forever"> Remember me
                                 </div>
-                                <button class="btn btn-common log-btn" type="submit">LOG IN</button>
+                                <button class="btn btn-common log-btn" type="submit" name="login_as" value="login">LOG IN</button>
+                                <button class="btn log-btn" type="submit" name="login_as" id="ldap-login" value="ldap-login" style="background-color: #808b96;">LOG IN with LDAP</button>
                             </form>
-                            <ul class="form-links">
+                            <ul class="form-links" style="display: none;">
                                 <li class="text-center"><a href="#">Don't have an account?</a></li>
                             </ul>
                         </div>
