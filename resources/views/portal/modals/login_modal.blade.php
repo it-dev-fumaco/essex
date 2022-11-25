@@ -14,24 +14,24 @@
                             <div class="form-group">
                                 <div id="message"></div>
                             </div>
-                            <form>
+                            <form action="/userLogin" method="POST" autocomplete="off">
                                 @csrf
                                 <div class="form-group">
                                     <div class="input-icon">
                                         <i class="icon-user"></i>
-                                        <input type="text" class="form-control" name="user_id" id="user_id" placeholder="Access ID">
+                                        <input type="text" class="form-control" name="user_id" placeholder="Access ID" required>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="input-icon">
                                         <i class="icon-lock-open"></i>
-                                        <input type="password" class="form-control" placeholder="Password" name="password" id="password">
+                                        <input type="password" class="form-control" placeholder="Password" name="password" required>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <input type="checkbox" name="rememberme" value="forever"> Remember me
                                 </div>
-                                <button class="btn btn-common log-btn" id="login" type="button">LOG IN</button>
+                                <button class="btn btn-common log-btn" type="submit">LOG IN</button>
                             </form>
                             <ul class="form-links">
                                 <li class="text-center"><a href="#">Don't have an account?</a></li>

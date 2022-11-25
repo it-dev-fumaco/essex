@@ -482,6 +482,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::post('/client/leave_balance/create','EmployeeLeavesController@leaveBalanceCreate');
     Route::post('/client/leave_balance/update/{id}','EmployeeLeavesController@leaveBalanceUpdate');
     Route::post('/client/leave_balance/delete/{id}','EmployeeLeavesController@leaveBalanceDelete');
+    Route::post('/client/employee_leave_balances/create','EmployeeLeavesController@employeeLeaveBalanceCreate');
     // END CLIENT LEAVE BALANCE CRUD
 
     // HR RECRUITMENT MODULE

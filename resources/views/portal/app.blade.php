@@ -22,9 +22,9 @@
 </head>
 
 <style type="text/css">
-*{
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-}
+    *{
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    }
     .login-content{
         background-color: transparent;
         -webkit-box-shadow: 0 5px 15px rgba(0,0,0,0);
@@ -35,7 +35,6 @@
         margin-top: 100px;
     }
 </style>
-
 
 @include('portal.modals.login_modal')
 
@@ -52,25 +51,16 @@
                 </div>
                 <div class="col-md-5 col-sm-6">
                     <div class="account-setting">
-
-                @if(Auth::user())
-
-                    <strong>Welcome {{ Auth::user()->employee_name }}</strong>
-                    <a href="{{ url('/userLogout') }}">
-                        <i class="icon-logout"></i><span>Logout</span>
-                    </a>
-                   {{--  <a href="{{ url('/home') }}">
-                        <i class="icon-logout"></i><span>ESSEX User Dashboard</span>
-                    </a>
- --}}
-                @else
-
-                    <a href="#"  data-toggle="modal" data-target="#loginModal">
-                        <i class="icon-login"></i> <span>Login</span>
-                    </a>
-
-                @endif
-
+                        @if(Auth::user())
+                        <strong>Welcome {{ Auth::user()->employee_name }}</strong>
+                        <a href="{{ url('/userLogout') }}">
+                            <i class="icon-logout"></i><span>Logout</span>
+                        </a>
+                        @else
+                        <a href="#"  data-toggle="modal" data-target="#loginModal">
+                            <i class="icon-login"></i> <span>Login</span>
+                        </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -101,11 +91,8 @@
             </div>
         </div>
     </div>
-
     @include('nav')
-
 </div>
-
 @yield('content')
 
 @include('portal.includes.footer')
@@ -166,31 +153,18 @@ $(document).ready(function(){
         $("#videohtml").attr('src', url);
     });
 
-
-    $("#login").click(function(){
-
-        var token    = $("input[name=_token]").val();
-        var user_id    = $("#user_id").val();
-        var password = $("#password").val();
-
-        var data = {
-            _token:token,
-            user_id:user_id,
-            password:password
-        };
-
+    $(document).on('submit', '#loginModal form', submit(function(e){
+        e.preventDefault();
         // Ajax Post 
         $.ajax({
-            type: "post",
-            url: "{{ url('/userLogin') }}",
-            data: data,
+            type: "POST",
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
             success: function (data) {
+                console.log(data)
                 if (data) {
-                     // console.log(data);
                     location.reload(false);
                 }else{
-                     // console.log("invalid login");
-                     
                     $("#message").html("<div class='alert alert-danger alert-dismissible'><button type='button' class='close' data-dismiss='alert'>&times;</button><center><strong>Invalid login!</strong> Access ID or password is incorrect.</center></div>");
                     $("#message").effect( "shake", {times:4}, 1000 );
                 }
@@ -199,7 +173,6 @@ $(document).ready(function(){
     });
 });
 </script>
-
 
 </body>
 </html>

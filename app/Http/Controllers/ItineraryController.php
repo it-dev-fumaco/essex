@@ -22,13 +22,12 @@ class ItineraryController extends Controller
             ->orderBy('creation', 'desc')
             ->paginate(8); 
 
-
         return view('client.tables.itinerary_table', compact('list'));
     }
    
     public function fetchItineraries_companion(Request $request){
-         $itr_companion = DB::connection('mysql_erp')->table('tabCompanion Table')
-                ->where('parent', $request->id)->get();
+        $itr_companion = DB::connection('mysql_erp')->table('tabCompanion Table')
+            ->where('parent', $request->id)->get();
 
         return view('client.tables.itinerary_companion', compact('itr_companion'));
     }
