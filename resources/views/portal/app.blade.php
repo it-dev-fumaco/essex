@@ -153,7 +153,7 @@ $(document).ready(function(){
         $("#videohtml").attr('src', url);
     });
 
-    $(document).on('submit', '#loginModal form', function(e) {
+    $(document).on('submit', '#biometric-login-form', function(e) {
         e.preventDefault();
         $.ajax({
             type: "POST",
@@ -170,14 +170,12 @@ $(document).ready(function(){
         });
     });
 
-    $('#ldap-login').click(function (e) {
+    $(document).on('submit', '#ldap-login-form', function(e) {
         e.preventDefault();
-        var formData = $(this).closest('form').serializeArray();
-        formData.push({ name: this.name, value: this.value });
         $.ajax({
             type: "POST",
-            url: $('#loginModal form').attr('action'),
-            data: formData,
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
             success: function (data) {
                 if (data) {
                     location.reload(false);
@@ -187,8 +185,6 @@ $(document).ready(function(){
                 }
             }
         });
-
-        console.log(formData)
     });
 });
 </script>
