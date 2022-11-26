@@ -172,6 +172,7 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/tabUpdateExam', 'ExamsController@tabUpdateExam');
     Route::post('/tabDeleteExam', 'ExamsController@tabDeleteExam');
     Route::get('/tabExaminees', 'HomeController@showExaminees')->name('client.tabExaminees');
+    Route::get('/cancel_ongoing_exam/{id}', 'HomeController@cancelOnGoingExam');
     Route::post('/tabAddExaminee', 'ExamineesController@tabAddExaminee');
     Route::post('/tabUpdateExaminee', 'ExamineesController@tabUpdateExaminee');
     Route::post('/tabDeleteExaminee', 'ExamineesController@tabDeleteExaminee');
@@ -1001,6 +1002,7 @@ Route::get('/oem/update_no_answer/{examineeid}', 'ApplicantExaminationsControlle
 // ONLINE EXAM - EMPLOYEE
 Route::post('/oem/employee/validateExamCode','ClientExamsController@validateExamCode');
 Route::get('/oem/employee/index/{id}','ClientExamsController@takeexam');
+Route::get('/check_ongoing_exam/{id}', 'ClientExamsController@checkOngoingStatus');
 Route::post('/oem/employee/update_answer', 'ClientExamsController@updateAnswer');
 Route::post('/oem/employee/update_examinee_status', 'ClientExamsController@updateExamineeStatus');
 Route::get('/oem/employee/preview_examinee_answer', 'ClientExamsController@preview_answers');

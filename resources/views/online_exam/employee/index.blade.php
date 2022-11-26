@@ -178,6 +178,24 @@
             </div>
          </div>
       </div>
+
+      <div class="modal fade" id="canceledExamModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+         <div class="modal-dialog" role="document">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Exam Canceled</h5>
+               </div>
+               <div class="modal-body">
+                  <center>
+                     Your exam has been canceled by administrator.
+                     <br>
+                     <br>
+                     <button class="btn btn-primary" onclick="location.reload()">OK</button>
+                  </center>
+               </div>
+            </div>
+         </div>
+    </div>
       </style>
       <script src="{{ asset('css/js/ajax.min.js') }}"></script> 
       <script src="{{ asset('/js/exam_employee.js')}}" type="text/javascript"></script>
@@ -364,16 +382,30 @@
          var $tabs = $('.tabbable li');
 
          $('.prevtab').on('click', function() {
-             $tabs.filter('.active').prev('li').find('a[data-toggle="tab"]').tab('show');
+            check_exam_status();
+            $tabs.filter('.active').prev('li').find('a[data-toggle="tab"]').tab('show');
          });
          
          $('.nexttab').on('click', function() {
-             $tabs.filter('.active').next('li').find('a[data-toggle="tab"]').tab('show');
+            check_exam_status();
+            $tabs.filter('.active').next('li').find('a[data-toggle="tab"]').tab('show');
          });
 
          $('#ended-modal-btn').click(function(){
             success_form();
          });
+
+         function check_exam_status(){
+            $.ajax({
+               type: 'GET',
+               url: '/check_ongoing_exam/{{ $examinee->examinee_id }}',
+               success: function(data){
+                  if(data.status == 0){
+                     $('#canceledExamModal').modal('show');
+                  }
+               }
+            });
+         }
       });
       </script>
       <script type="text/javascript">
