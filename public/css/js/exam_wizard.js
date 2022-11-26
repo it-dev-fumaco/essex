@@ -15,6 +15,13 @@ $(document).ready(function () {
                 $('#add-questions-step .exam-title').text(data.exam_title);
                 $('#add-questions-step .exam-id').val(data.exam_id);
                 $('#add-questions-step .exam-title').val(data.exam_title);
+
+                loadMultipleChoice();
+                loadTrueOrFalse();
+                loadEssay();
+                loadNumericalExam();
+                loadIdentification();
+                loadExaminees();
             }
         });
     });
@@ -40,7 +47,7 @@ $(document).ready(function () {
                 }
 
                 $.bootstrapGrowl("<center><i class=\"fa fa-check-square-o\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">" + data.message + "</span></center>", {
-                        type: 'success',
+                        type: data.success == 1 ? 'success' : 'danger',
                         align: 'center',
                         delay: 4000,
                         width: 450,
@@ -55,7 +62,6 @@ $(document).ready(function () {
     $(document).on('click', '#add-question-btn', function(event){
         event.preventDefault();
         var exam_type = $(this).data('exam-type');
-        console.log(exam_type);
 
         $('#add-question-form .exam-type').val(exam_type);
 
@@ -86,7 +92,7 @@ $(document).ready(function () {
         }else if(exam_type == 'Essay'){
             $('#add-question-modal .option').hide();
             $("#add-question-modal .answerDiv").hide();
-        }else if(exam_type == 'Identification - Dexterity and Accuracy Measures'){
+        }else if(exam_type == 'Identification'){
             $('#add-question-modal .option').hide();
             $("#add-question-modal .answerDiv").removeClass('col-md-8').addClass('col-md-12');
             $("#add-question-modal .answerDiv").show();
@@ -208,7 +214,7 @@ $(document).ready(function () {
         }else if(exam_type == 'Essay'){
             $('#edit-question-modal .option').hide();
             $("#edit-question-modal .answerDiv").hide();
-        }else if(exam_type == 'Identification - Dexterity and Accuracy Measures'){
+        }else if(exam_type == 'Identification'){
             $('#edit-question-modal .option').hide();
             $("#edit-question-modal .answerDiv").removeClass('col-md-8').addClass('col-md-12');
             $("#edit-question-modal .answerDiv").show();
@@ -464,7 +470,7 @@ $(document).ready(function () {
 
     function loadIdentification(page){
         var exam_id = $('#add-questions-step .exam-id').val();
-        var exam_type = 'Identification - Dexterity and Accuracy Measures';
+        var exam_type = 'Identification';
         var tableView = 'client.tables.questions_identification_table';
 
         data = {

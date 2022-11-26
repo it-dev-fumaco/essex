@@ -231,18 +231,26 @@ class QuestionsController extends Controller
     }
 
     public function addQuestion(Request $request){
-        $question = new Question;
-        $question->exam_id = $request->exam_id;
-        $question->exam_type_id = $request->exam_type_id;
-        $question->questions = $request->questions;
-        $question->option1 = $request->option1;
-        $question->option2 = $request->option2;
-        $question->option3 = $request->option3;
-        $question->option4 = $request->option4;
-        $question->correct_answer = $request->correct_answer;
-        $question->save();
+        DB::beginTransaction();
+        try {
+            $question = new Question;
+            $question->exam_id = $request->exam_id;
+            $question->exam_type_id = $request->exam_type_id;
+            $question->questions = $request->questions;
+            $question->option1 = $request->option1;
+            $question->option2 = $request->option2;
+            $question->option3 = $request->option3;
+            $question->option4 = $request->option4;
+            $question->correct_answer = $request->correct_answer;
+            $question->save();
 
-        return response()->json(['message' => 'Question no. <b>' . $question->question_id . '</b> has been added.']);
+            DB::commit();
+            return response()->json(['success' => 1, 'message' => 'Question no. <b>' . $question->question_id . '</b> has been added.']);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again later.']);
+            DB::rollback();
+            throw $th;
+        }
     }
 
     public function editQuestion(Request $request){

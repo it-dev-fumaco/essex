@@ -12,9 +12,10 @@
     <tr>
       <td style="text-align: center;">{{ $index + 1 }}</td>
       <td>{{ $q->questions }}</td>
+      <td>{{ $q->correct_answer }}</td>
       <td style="text-align: center;">
-        <a href="#" class="hover-icon" data-id="{{ $q->question_id }}"  data-exam-type="Identification - Dexterity and Accuracy Measures" id="edit-question-btn"><i class="fa fa-pencil" style="font-size: 15pt; color: #27AE60;"></i></a>
-        <a href="#" class="hover-icon" data-id="{{ $q->question_id }}"  data-exam-type="Identification - Dexterity and Accuracy Measures" data-question="{{ $q->questions }}" id="delete-question-btn"><i class="fa fa-trash" style="font-size: 15pt; color: #C0392B;"></i></a>
+        <a href="#" class="hover-icon" data-id="{{ $q->question_id }}"  data-exam-type="Identification" id="edit-question-btn"><i class="fa fa-pencil" style="font-size: 15pt; color: #27AE60;"></i></a>
+        <a href="#" class="hover-icon" data-id="{{ $q->question_id }}"  data-exam-type="Identification" data-question="{{ $q->questions }}" id="delete-question-btn"><i class="fa fa-trash" style="font-size: 15pt; color: #C0392B;"></i></a>
       </td>
     </tr>
     @empty
