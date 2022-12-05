@@ -381,7 +381,29 @@ class AbsentNoticesController extends Controller
             ->select('notice_slip.*', 'users.employee_name', 'leave_types.leave_type', 'departments.department', DB::raw("(SELECT employee_name FROM users WHERE user_id = notice_slip.approved_by) as approved_by"))
             ->first();
 
-        return response()->json($notice_slip);
+        $data = [
+            'date_from' => $notice_slip->date_from,
+            'date_to' => $notice_slip->date_to,
+            'leave_type_id' => $notice_slip->leave_type_id,
+            'user_id' => $notice_slip->user_id,
+            'notice_id' => $notice_slip->notice_id,
+            'employee_name' => $notice_slip->employee_name,
+            'department' => $notice_slip->department,
+            'leave_type' => $notice_slip->leave_type,
+            'time_from' => $notice_slip->time_from,
+            'time_to' => $notice_slip->time_to,
+            'means' => $notice_slip->means,
+            'time_reported' => $notice_slip->time_reported,
+            'info_by' => $notice_slip->info_by,
+            'approved_by' => $notice_slip->approved_by,
+            'approved_date' => Carbon::parse($notice_slip->approved_date)->format('M. d, Y h:i A'),
+            'reason' => $notice_slip->reason,
+            'remarks' => $notice_slip->remarks,
+            'status' => $notice_slip->status,
+            'date_filed' => Carbon::parse($notice_slip->date_filed)->format('M. d, Y h:i A'),
+        ];
+
+        return response()->json($data);
     }
 
     public function getAbsentToday(Request $request){

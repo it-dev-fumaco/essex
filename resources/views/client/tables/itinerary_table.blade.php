@@ -16,7 +16,7 @@
       <tr>
          <td style="width: 50px; text-align: center;">{{ $row->parent }}</td>
          <td style="width: 50px;">{{ $row->project }}</td>
-         <td style="width: 50px;">{{ $row->date }}</td>
+         <td style="width: 50px;">{{ $row->itinerary_date }}</td>
          <td style="width: 50px;">{{ $row->time }}</td>
          <td style="width: 50px; text-align: center;">{{ $row->destination }}</td>
 

@@ -46,7 +46,7 @@ Route::post('/userLogin', 'Auth\LoginController@userLogin');
     // Route::post('/applicant/examinee','ApplicantExaminationsController@show')->name('client.appli_examinee');
     // Route::get('/applicant/takeExam/{id}','ApplicantExaminationsController@takeExam')->name('applicant.take_exam');
     // Route::post('/applicant/saveExam','ApplicantExaminationsController@saveExam')->name('applicant.save_exam');
-    // Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
+    Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
 
 Auth::routes();
 Route::group(['prefix' => 'admin'], function(){
@@ -172,6 +172,7 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/tabUpdateExam', 'ExamsController@tabUpdateExam');
     Route::post('/tabDeleteExam', 'ExamsController@tabDeleteExam');
     Route::get('/tabExaminees', 'HomeController@showExaminees')->name('client.tabExaminees');
+    Route::get('/cancel_ongoing_exam/{id}', 'HomeController@cancelOnGoingExam');
     Route::post('/tabAddExaminee', 'ExamineesController@tabAddExaminee');
     Route::post('/tabUpdateExaminee', 'ExamineesController@tabUpdateExaminee');
     Route::post('/tabDeleteExaminee', 'ExamineesController@tabDeleteExaminee');
@@ -482,6 +483,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::post('/client/leave_balance/create','EmployeeLeavesController@leaveBalanceCreate');
     Route::post('/client/leave_balance/update/{id}','EmployeeLeavesController@leaveBalanceUpdate');
     Route::post('/client/leave_balance/delete/{id}','EmployeeLeavesController@leaveBalanceDelete');
+    Route::post('/client/employee_leave_balances/create','EmployeeLeavesController@employeeLeaveBalanceCreate');
     // END CLIENT LEAVE BALANCE CRUD
 
     // HR RECRUITMENT MODULE
@@ -1000,6 +1002,7 @@ Route::get('/oem/update_no_answer/{examineeid}', 'ApplicantExaminationsControlle
 // ONLINE EXAM - EMPLOYEE
 Route::post('/oem/employee/validateExamCode','ClientExamsController@validateExamCode');
 Route::get('/oem/employee/index/{id}','ClientExamsController@takeexam');
+Route::get('/check_ongoing_exam/{id}', 'ClientExamsController@checkOngoingStatus');
 Route::post('/oem/employee/update_answer', 'ClientExamsController@updateAnswer');
 Route::post('/oem/employee/update_examinee_status', 'ClientExamsController@updateExamineeStatus');
 Route::get('/oem/employee/preview_examinee_answer', 'ClientExamsController@preview_answers');

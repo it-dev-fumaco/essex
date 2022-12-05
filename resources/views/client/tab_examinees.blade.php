@@ -113,6 +113,28 @@
    </div>
 </div>
 
+<div class="modal fade" id="cancelExamModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+         <div class="modal-content">
+            <div class="modal-header">
+               <h5 class="modal-title" id="exampleModalLabel">Cancel Exam</h5>
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+               </button>
+            </div>
+            <div class="modal-body">
+               <center>
+                  Note: This will reset exam timer and logs
+               </center>
+               <span id="exam-id" hidden></span>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-primary" id="confirm-cancel-btn">Cancel</button>
+            </div>
+         </div>
+      </div>
+ </div>
+
 <style>
 #online-exam-tab .nav-tabs > li {
    float: none;
@@ -162,6 +184,31 @@
          "ordering": false,
          "dom": '<"top"f>rt<"bottom"ip><"clear">'
       });
+
+      $(document).on('click', '.cancel-exam-btn', function (){
+         $('#exam-id').text($(this).data('examinee-id'));
+         $('#cancelExamModal').modal('show');
+      });
+
+      $(document).on('click', '#confirm-cancel-btn', function (){
+         var exam_id = $('#exam-id').text();
+         $.ajax({
+            type: 'GET',
+            url:  '/cancel_ongoing_exam/' + exam_id,
+            success: function(data){
+               $('#cancelExamModal').modal('hide');
+               $.bootstrapGrowl("<center><i class=\"fa fa-check-square-o\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">" + data.message + "</span></center>", {
+                  type: data.success ? 'success' : 'danger',
+                  align: 'center',
+                  delay: 4000,
+                  width: 450,
+                  offset: {from: 'top', amount: 300},
+                  stackup_spacing: 20
+               });
+               loadExaminee();
+            }
+         });
+      })
 
       setInterval(loadExaminee, 5000);
 

@@ -127,7 +127,7 @@
                   <div class="tab-pane" id="tab-part5">
                      <div class="row">
                         <div class="col-md-12" style="text-align: right;">
-                           <a href="#" class="btn btn-primary" data-exam-type="Identification - Dexterity and Accuracy Measures" id="add-question-btn"><i class="fa fa-plus"></i> Identification</a>
+                           <a href="#" class="btn btn-primary" data-exam-type="Identification" id="add-question-btn"><i class="fa fa-plus"></i> Identification</a>
                         </div>
                         <div class="col-md-12">
                            <div id="identification-table"></div>

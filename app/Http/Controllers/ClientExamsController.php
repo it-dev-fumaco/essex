@@ -98,6 +98,12 @@ class ClientExamsController extends Controller
         }
     }
 
+    public function checkOngoingStatus($id){
+        $checker = DB::table('examinee')->where('examinee_id', $id)->where('status', 'On Going')->exists();
+
+        return response()->json(["success" => true, "status" => $checker ? 1 : 0]);
+    }
+
     public function takeExam($examineeid){
         
         $examinee = Examinee::where('examinee.examinee_id',$examineeid)

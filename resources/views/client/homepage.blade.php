@@ -977,6 +977,7 @@ $(document).ready(function(){
 
 	$('#add-notice-form').on("submit", function(event){
 		event.preventDefault();
+		$('#notice-slip-submit-btn').attr('disabled', true);
 		$.ajax({
 			url:"/notice_slip/create",
 			type:"POST",
@@ -1033,6 +1034,7 @@ $(document).ready(function(){
 
 	$('#absentNoticeModal').on('hidden.bs.modal', function(){
 		$('#out-of-office-table').html("");
+		$('#notice-slip-submit-btn').removeAttr('disabled');
 	});
 
 	function getDeductions(){

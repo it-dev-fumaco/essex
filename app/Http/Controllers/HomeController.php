@@ -323,6 +323,33 @@ class HomeController extends Controller
         return view('client.tab_exams', compact('designation', 'department', 'examgroups', 'departments', 'exam_types', 'exams'));
     }
 
+    public function cancelOnGoingExam($id){
+        DB::beginTransaction();
+        try {
+            $checker = DB::table('examinee')->where('status', 'On Going')->where('examinee_id', $id)->first();
+            if(!$checker){
+                return response()->json(['success' => false, 'message' => 'Exam has already been canceled.']);
+            }
+
+            DB::table('examinee')->where('examinee_id', $id)->update([
+                'start_time' => null,
+                'end_time' => null,
+                'duration' => null,
+                'time_spent' => null,
+                'date_taken' => null,
+                'status' => 'Not Started',
+                'remaining_time' => null,
+                'updated_at' => Carbon::now()->toDateTimeString()
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Exam Canceled.']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json(['success' => false, 'message' => 'An error occured. Please try again later.']);
+        }
+    }
+
     public function showExaminees(Request $request){
         $examgroups = DB::table('exam_group')->get();
         $exam_types = DB::table('exam_type')->get();
