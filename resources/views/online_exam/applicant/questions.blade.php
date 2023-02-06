@@ -22,34 +22,18 @@
             <span style="font-size: 15pt;">{!! $q->questions !!}</span>
          </div>
          <div class="col-md-8 col-md-offset-2" id="opt" style="padding: 10px 0;">
-            <div class="col-md-12">
-               <!-- Default inline 1-->
-               <div class="custom-control custom-radio">
-                 <input type="radio" class="custom-control-input" id="opt1" name="examinee_answer" value="{{ $q->option1 }}">
-                 <label class="custom-control-label" for="opt1">{{ $q->option1 }}</label>
+            @for($i = 1; $i <= 4; $i++)
+               @php
+                   $option = 'option'.$i;
+               @endphp
+               <div class="col-md-12">
+                  <!-- Default inline 1-->
+                  <div class="custom-control custom-radio">
+                  <input type="radio" class="custom-control-input" id="opt1" name="examinee_answer" value="{{ $q->$option }}" {{ $q->$option == $q->examinee_answer ? 'checked' : null }}>
+                  <label class="custom-control-label" for="opt1">{{ $q->$option }}</label>
+                  </div>
                </div>
-            </div>
-            <div class="col-md-12">
-               <!-- Default inline 2-->
-               <div class="custom-control custom-radio">
-                 <input type="radio" class="custom-control-input" id="opt2" name="examinee_answer" value="{{ $q->option2 }}">
-                 <label class="custom-control-label" for="opt2">{{ $q->option2 }}</label>
-               </div>
-            </div>
-            <div class="col-md-12">
-               <!-- Default inline 3-->
-               <div class="custom-control custom-radio">
-                 <input type="radio" class="custom-control-input" id="opt3" name="examinee_answer" value="{{ $q->option3 }}">
-                 <label class="custom-control-label" for="opt3">{{ $q->option3 }}</label>
-               </div>
-            </div>
-            <div class="col-md-12">
-               <!-- Default inline 4-->
-               <div class="custom-control custom-radio">
-                 <input type="radio" class="custom-control-input" id="opt4" name="examinee_answer" value="{{ $q->option4 }}">
-                 <label class="custom-control-label" for="opt4">{{ $q->option4 }}</label>
-               </div>
-            </div>
+            @endfor
          </div>
          @endif
 
@@ -59,7 +43,7 @@
             <span style="font-size: 15pt;">{!! $q->questions !!}</span>
          </div>
          <div class="col-md-8 col-md-offset-2" style="padding: 10px 0;">
-            <textarea class="form-control" rows="5" name="examinee_answer" placeholder="Start typing.."></textarea>
+            <textarea class="form-control" rows="5" name="examinee_answer" placeholder="Start typing..">{{ $q->examinee_answer }}</textarea>
          </div>
          @endif
 
@@ -73,14 +57,14 @@
                <div class="col-md-6">
                   <!-- Default inline 1-->
                   <div class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" id="tf1" name="examinee_answer" value="True">
+                    <input type="radio" class="custom-control-input" id="tf1" name="examinee_answer" value="True" {{ $q->examinee_answer == 'True' ? 'checked' : null }}>
                     <label class="custom-control-label" for="tf1">True</label>
                   </div>
                </div>
                <div class="col-md-6">
                   <!-- Default inline 2-->
                   <div class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" id="tf2" name="examinee_answer" value="False">
+                    <input type="radio" class="custom-control-input" id="tf2" name="examinee_answer" value="False" {{ $q->examinee_answer == 'False' ? 'checked' : null }}>
                     <label class="custom-control-label" for="tf2">False</label>
                   </div>
                </div>
@@ -101,11 +85,9 @@
             <center>
                <select class="form-control" name="examinee_answer" style="width: 25%;">
                   <option value=''>-- SELECT --</option>
-                  <option value='1'>1</option>
-                  <option value='2'>2</option>
-                  <option value='3'>3</option>
-                  <option value='4'>4</option>
-                  <option value='5'>5</option>
+                  @for($i = 1; $i <= 5; $i++)
+                     <option value="{{ $i }}" {{ $i == $q->examinee_answer ? 'selected' : null }}>{{ $i }}</option> 
+                  @endfor
                </select>
             </center>
          </div>
@@ -126,7 +108,7 @@
          </div>
          <div class="col-md-12 text-center" style="padding: 10px 0;">
                <center>
-                  <textarea class="form-control" rows="3" placeholder="Start typing.." name="examinee_answer" style="width: 50%;"></textarea>
+                  <textarea class="form-control" rows="3" placeholder="Start typing.." name="examinee_answer" style="width: 50%;">{{ $q->examinee_answer }}</textarea>
                </center>
             </div>
          @endif
@@ -146,7 +128,7 @@
          </div>
          <div class="col-md-12 text-center" style="padding: 10px 0;">
             <center>
-               <input type="text" name="examinee_answer" placeholder="Type your answer here.." class="form-control w-25" style="width: 25%;">
+               <input type="text" name="examinee_answer" placeholder="Type your answer here.." class="form-control w-25" style="width: 25%;" value="{{ $q->examinee_anwer }}">
             </center>
          </div>
          @endif
@@ -166,7 +148,7 @@
          </div>
          <div class="col-md-12 text-center" style="padding: 10px 0;">
             <center>
-               <input type="text" name="examinee_answer" placeholder="Type your answer here.." class="form-control w-25" style="width: 25%;">
+               <input type="text" name="examinee_answer" placeholder="Type your answer here.." class="form-control w-25" style="width: 25%;" value="{{ $q->examinee_anwer }}">
             </center>
          </div>
          @endif
@@ -191,7 +173,7 @@
                @if($data['type_id'] == 16 && $loop->last)
                   <button type="button" class="btn btn-success action-button preview submit-btn" data-id="{{$q->examinee_answer_id}}" onclick="preview_answer()">Preview Answers</button>
                @else
-               <button type="button" class="btn btn-success action-button nexttab submit-btn" data-id="{{$q->examinee_answer_id}}">Next</button>
+               <button type="button" class="btn btn-success action-button nexttab submit-btn {{ $i == count($active_exam_types) - 1 ? 'submit-exam-form' : null }}" data-id="{{$q->examinee_answer_id}}">Next</button>
                @endif
             @endif
          </div>

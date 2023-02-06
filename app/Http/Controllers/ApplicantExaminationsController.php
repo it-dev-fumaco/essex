@@ -72,10 +72,10 @@ class ApplicantExaminationsController extends Controller
 
     public function applicantExamIndex($examineeid){
         $examinee = Examinee::where('examinee.examinee_id',$examineeid)
-                        ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
-                        ->join('users', 'examinee.user_id', '=', 'users.id')
-                        ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type', 'exams.duration_in_minutes')
-                        ->first();
+            ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
+            ->join('users', 'examinee.user_id', '=', 'users.id')
+            ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type', 'exams.duration_in_minutes')
+            ->first();
 
         $exam_types = [4, 5, 6, 7, 12, 13, 14, 15, 16];
         $e_types = ['Multiple Choice', 'Essay', 'Numerical Exam', 'True or False', 'Identification', 'Abstract', 'Dexterity & Accuracy 1', 'Dexterity & Accuracy 2', 'Dexterity & Accuracy 3'];
@@ -86,7 +86,7 @@ class ApplicantExaminationsController extends Controller
                 ->where('examinee_answers.exam_id', $examinee->exam_id)
                 ->where('examinee_answers.examinee_id', $examineeid)
                 ->where('examinee_answers.exam_type_id', $type)
-                ->select('questions.*', 'examinee_answers.examinee_answer_id', 'examinee_answers.examinee_answer')
+                ->select('questions.*', 'examinee_answers.examinee_answer_id', 'examinee_answers.examinee_answer', 'examinee_answers.examinee_id')
                 ->orderBy('q_no', 'asc')->get();
 
             $exam_type_details = ExamType::where('exam_type_id', $type)->first();
@@ -94,6 +94,7 @@ class ApplicantExaminationsController extends Controller
             $exam_type_list[] = [
                 'exam_type_id' => $type,
                 'exam_type' => $e_types[$i],
+                'examinee' => $examineeid,
                 'instructions' => $exam_type_details->instruction,
                 'questions' => $questions,
             ];
@@ -104,6 +105,7 @@ class ApplicantExaminationsController extends Controller
             if (count($row['questions']) > 0) {
                 $active_exam_types [] = [
                     'title' => $row['exam_type'],
+                    'examinee' => $row['examinee'],
                     'type_id' => $row['exam_type_id'],
                     'instruction' => $row['instructions'],
                     'questions' => $row['questions'],
@@ -111,7 +113,20 @@ class ApplicantExaminationsController extends Controller
             }
         }
 
-        return view('online_exam.applicant.index', compact('active_exam_types', 'examinee'));
+        $active_tab = isset($active_exam_types[0]) ? $active_exam_types[0]['type_id'] : null;
+        if ($examinee->status == 'On Going') {
+            $active_tab = null;
+            foreach ($active_exam_types as $exam) {
+                foreach ($exam['questions'] as $question) {
+                    if(!$question->examinee_answer && !$active_tab){
+                        $active_tab = $exam['type_id'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return view('online_exam.applicant.index', compact('active_exam_types', 'examinee', 'active_tab'));
     }
 
     public function saveQuest($examinee_id, $exam_id){
@@ -163,6 +178,7 @@ class ApplicantExaminationsController extends Controller
     }
 
     public function updateAnswer(Request $request){
+        DB::beginTransaction();
         try {
             $examinee = Examinee::find($request->examinee_id);
             $examinee->time_spent = $request->spent_time;
@@ -177,8 +193,21 @@ class ApplicantExaminationsController extends Controller
             $answer->isCorrect = $is_correct;
             $answer->save();
             
+            $data = [
+                'examineeId' => $request->examinee_id,
+                'exam_id' => $request->exam_id
+            ];
+
+            $save = $this->save_result($data);
+
+            if(!$save){
+                return response()->json(['error', 'An error occured. Please try again.']);
+            }
+
+            DB::commit();
             return response()->json($answer->examinee_answer_id);
         } catch (Exception $e) {
+            DB::rollback();
             return response()->json(['error' => $e->getMessage()]);
         }
     }
@@ -254,46 +283,73 @@ class ApplicantExaminationsController extends Controller
         return view('online_exam.applicant.preview-answer', compact('answer','examinee'));
     }
 
-    public function save_examresult(Request $request, $examineeId){
-        $date_taken= date('Y-m-d');
-        $time_in_24_hour_format  = date("H:i:s", strtotime($request->start_time));
-        $end_time  = date("H:i:s", strtotime($request->end_time));
-        $examinee = Examinee::find($examineeId);
-        $examinee->status = 'Completed';
-        $examinee->start_time = $time_in_24_hour_format;
-        $examinee->date_taken = $date_taken;
-        $examinee->time_spent = $request->time_spent;
-        $examinee->remaining_time = $request->time_remaining;
-        $examinee->end_time = $end_time;
-        $examinee->save();
+    private function save_result($data){
+        try {
+            $total_items= DB::table('examinee_answers')->where('examinee_id', $data['examineeId'])
+                ->where('exam_id', $data['exam_id'])->count();
 
-        $total_items= DB::table('examinee_answers')->where('examinee_id', $examineeId)
-            ->where('exam_id', $request->examId)->count();
+            $total_score= DB::table('examinee_answers')->where('examinee_id', $data['examineeId'])
+                ->where('exam_id', $data['exam_id'])->where('isCorrect', 'True')->count();
 
-        $total_score= DB::table('examinee_answers')->where('examinee_id', $examineeId)
-            ->where('exam_id', $request->examId)->where('isCorrect', 'True')->count();
+            $record = ExaminationResult::where('examinee_id', $data['examineeId'])
+                ->where('exam_id',$data['exam_id'])->first();
 
-        $record = ExaminationResult::where('examinee_id', $examineeId)
-            ->where('exam_id',$request->examId)->first();
+            if(!empty($record)){
+                $examres = ExaminationResult::where('examinee_id',$data['examineeId'])
+                    ->where('exam_id',$data['exam_id'])->first();
+                $examres->exam_id = $data['exam_id'];
+                $examres->examinee_id = $data['examineeId'];
+                $examres->exam_items = $total_items;
+                $examres->examinee_score = $total_score;
+                $examres->save();
+            }else{
+                $examres = new ExaminationResult;
+                $examres->exam_id = $data['exam_id'];
+                $examres->examinee_id = $data['examineeId'];
+                $examres->exam_items = $total_items;
+                $examres->examinee_score = $total_score;
+                $examres->save();
+            }
 
-        if(!empty($record)){
-            $examres = ExaminationResult::where('examinee_id',$examineeId)
-                ->where('exam_id',$request->examId)->first();
-            $examres->exam_id = $request->examId;
-            $examres->examinee_id = $examineeId;
-            $examres->exam_items = $total_items;
-            $examres->examinee_score = $total_score;
-            $examres->save();
-        }else{
-            $examres = new ExaminationResult;
-            $examres->exam_id = $request->examId;
-            $examres->examinee_id = $examineeId;
-            $examres->exam_items = $total_items;
-            $examres->examinee_score = $total_score;
-            $examres->save();
+            return 1;
+        } catch (\Throwable $th) {
+            return 0;
         }
+    }
+
+    public function save_examresult(Request $request, $examineeId){
+        DB::beginTransaction();
+        try {
+            $date_taken= date('Y-m-d');
+            $time_in_24_hour_format  = date("H:i:s", strtotime($request->start_time));
+            $end_time  = date("H:i:s", strtotime($request->end_time));
+            $examinee = Examinee::find($examineeId);
+            $examinee->status = 'Completed';
+            $examinee->start_time = $time_in_24_hour_format;
+            $examinee->date_taken = $date_taken;
+            $examinee->time_spent = $request->time_spent;
+            $examinee->remaining_time = $request->time_remaining;
+            $examinee->end_time = $end_time;
+            $examinee->save();
+
+            $data = [
+                'examineeId' => $examineeId,
+                'exam_id' => $request->examId
+            ];
+
+            $save = $this->save_result($data);
+
+            if(!$save){
+                return redirect()->back()->with('error', 'An error occured. Please try again.');
+            }
             
-        return redirect()->route('applicant.exam_success',['examinee_id' => $examineeId]);
+            DB::commit();
+            return redirect()->route('applicant.exam_success',['examinee_id' => $examineeId]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return redirect()->back()->with('An error occured. Please try again.');
+        }
+        
     }
 
     public function update_no_answer(Request $request, $examineeId){

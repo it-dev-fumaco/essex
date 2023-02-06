@@ -16,6 +16,9 @@
                   Applicant Name: <b>{{ $examinee->employee_name }}</b><br>
                   Exam Title: <b>{{ $examinee->exam_title }}</b><br>
                   Duration: <b>{{ $examinee->duration_in_minutes }} min(s)</b>
+                  @if ($examinee->status == 'On Going')
+                  <br>Remaining Time: <b>{{ $examinee->remaining_time }} min(s)</b>
+                  @endif
                   <div class="row">
                      <div class="col-md-12">
                         Exam types are composed of the following:
@@ -30,15 +33,24 @@
                   </div>
                </div>
                <div class="col-md-12" style="margin-top: 10px; text-align: center;">
-                  <div style="font-size: 12pt; font-style: italic;">Click 'Start Exam' to begin.</div>
+                  <div style="font-size: 12pt; font-style: italic;">
+                     @if ($examinee->status == 'On Going')
+                        Click 'Continue Exam' to continue.                      
+                     @else
+                        Click 'Start Exam' to begin.
+                     @endif
+                  </div>
                </div>
             </div>
          </div>
          </form>
          <!-- Modal footer -->
          <div class="modal-footer" style="text-align: center;">
+            @php
+                $msg = $examinee->status == 'On Going' ? 'Continue Exam' : 'Start Exam';
+            @endphp
                <button class="btn btn-primary" id="start-exam-btn">
-                  <i class="fa fa-check"></i> Start Exam
+                  <i class="fa fa-check"></i> {{ $msg }}
                </button>
          </div>
       </div>
