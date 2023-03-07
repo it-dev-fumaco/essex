@@ -51,7 +51,17 @@
                         <input type="hidden" name="examinee_id" class="examineeId" id="examineeId" value="{{ $examinee->examinee_id }}">
                         <input type="hidden" name="exam_id" id="examId" value="{{ $examinee->exam_id }}">
                         <input type="hidden" id="end_time" name="end_time" value="{{date('H:i:s')}}">
+                        @php
+                           $duration = 0;
+                           if($examinee->status == 'On Going'){
+                              $min = isset(explode(':', $examinee->remaining_time)[0]) ? ((int)explode(':', $examinee->remaining_time)[0]) * 60 : 0;
+                              $sec = isset(explode(':', $examinee->remaining_time)[1]) ? ((int)explode(':', $examinee->remaining_time)[1]) : 0;
 
+                              $duration = $min + $sec;
+                           }
+                        @endphp
+                        <span id="exam-status" style="display: none">{{ $examinee->status }}</span>
+                        <input type="hidden" id="remaining-time" value="{{ $duration }}">
                      </div>
                      <div class="row">
                         <div class="col-md-4">
@@ -82,12 +92,11 @@
                      </div>
 
                      <div class="row" style="font-size: 11pt;" id="tabs">
-                        @php $current_tab = $active_exam_types[0]['type_id']; @endphp
                         <div style="margin-top: 2%; font-size: 10pt;" class="col-md-12 tabbable">
                            @if(count($active_exam_types) > 1)
                            <ul class="nav nav-tabs" style="text-align: center;">
                               @foreach($active_exam_types as $data)
-                              <li class="{{ $data['type_id'] == $current_tab ? 'active' : '' }}">
+                              <li class="{{ $data['type_id'] == $active_tab ? 'active' : '' }}">
                                  <a href="#tab{{ $data['type_id'] }}" data-toggle="tab" style="padding: 10px 8px;">{{ $data['title'] }}</a>
                               </li>
                               @endforeach
@@ -96,8 +105,8 @@
 
                            <div class="tab-content">
                               @if(count($active_exam_types) > 1)
-                              @foreach($active_exam_types as $data)
-                              <div class="tab-pane {{ $data['type_id'] == $current_tab ? 'active' : '' }}" id="tab{{ $data['type_id'] }}">
+                              @foreach($active_exam_types as $i => $data)
+                              <div class="tab-pane {{ $data['type_id'] == $active_tab ? 'active' : '' }}" id="tab{{ $data['type_id'] }}">
                                  <h5>Instructions:</h5>
                                  <p>{!! $data['instruction'] !!}</p>
                                  <hr>
@@ -288,12 +297,16 @@
             });
          });
          
-         var exam_duration = $('#exam-duration').val();
-         $('#time-remaining-disp').text(exam_duration + ':00');
+         var exam_duration = $('#exam-duration').val() * 60;
+         var exam_time = $('#exam-duration').val() + ':00';
+         if($('#exam-status').text() == 'On Going'){
+            exam_time = '{{ $examinee->remaining_time }}';
+            exam_duration = parseInt($('#remaining-time').val());
+         }
+         $('#time-remaining-disp').text(exam_time);
          $('#time-remaining-div').css('color', '#1E8449');
-         $('.time-remaining').val(exam_duration + ':00');
-         $('.update_time-remaining').val(exam_duration + ':00');
-         var exam_duration = exam_duration * 60;
+         $('.time-remaining').val(exam_time);
+         $('.update_time-remaining').val(exam_time);
          function timeRemaining(){
             if (exam_duration <= 180) {
                $('#time-remaining-div').css('color', '#C0392B');
@@ -372,6 +385,10 @@
          
          $('.nexttab').on('click', function() {
              $tabs.filter('.active').next('li').find('a[data-toggle="tab"]').tab('show');
+         });
+
+         $(document).on('click', '.submit-exam-form', function (){
+            $('#confirm-submit-modal').modal('show');
          });
 
          $('#ended-modal-btn').click(function(){

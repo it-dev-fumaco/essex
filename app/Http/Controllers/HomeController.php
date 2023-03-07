@@ -358,12 +358,12 @@ class HomeController extends Controller
 
         $exams = DB::table('exams')->orderBy('department_id')->get();
         $examinees = DB::table('examinee')
-                        ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
-                        ->join('users', 'examinee.user_id', '=', 'users.id')
-                        ->where('examinee.status', '!=', 'On Going')
-                        ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type')
-                        ->orderBy('examinee.examinee_id', 'desc')
-                        ->get();
+            ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
+            ->join('users', 'examinee.user_id', '=', 'users.id')
+            ->where('examinee.status', '!=', 'On Going')
+            ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type')
+            ->orderBy('examinee.examinee_id', 'desc')
+            ->get();
 
         $examDepts = DB::table('exams')->select('department_id')->distinct('department_id')->get();
         
@@ -386,10 +386,10 @@ class HomeController extends Controller
 
         if ($request->ajax()) {
             $examinees = DB::table('examinee')
-                        ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
-                        ->join('users', 'examinee.user_id', '=', 'users.id')
-                        ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type')
-                        ->where('examinee.status', 'On Going')->get();
+                ->join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
+                ->join('users', 'examinee.user_id', '=', 'users.id')
+                ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'users.user_type')
+                ->where('examinee.status', 'On Going')->get();
 
             return view('client.tab_examinees_tbl', compact('examinees'));
         }
