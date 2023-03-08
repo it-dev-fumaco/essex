@@ -105,23 +105,28 @@ class AbsentNoticesController extends Controller
             $notice_slip->save();
     
             $viewdetails =DB::table('notice_slip')
-                ->join('leave_types','leave_types.leave_type_id','=','notice_slip.leave_type_id')
-                ->select('notice_slip.*', 'leave_types.leave_type')
+                ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+                ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
+                ->select('notice_slip.*', 'leave_types.leave_type', 'departments.department')
                 ->orderBy('notice_id', 'desc')
                 ->where('user_id', Auth::user()->user_id)
                 ->first();
     
-            $notice_id= $viewdetails->notice_id;
+            $notice_id = $viewdetails->notice_id;
     
             $data = array(
-                'employee_name'      => Auth::user()->employee_name,
-                'year'               => now()->format('Y'),
-                'slip_id'            => $notice_id,
-                'reported_to'        => $request->info_by,
-                'means'              => $request->means,
-                'reason'             => $request->reason,
-                'token'              => $token,
-                'approver'           => Auth::user()->user_id
+                'employee_name'     => Auth::user()->employee_name,
+                'year'              => now()->format('Y'),
+                'slip_id'           => $notice_id,
+                'reported_to'       => $request->info_by,
+                'means'             => $request->means,
+                'reason'            => $request->reason,
+                'token'             => $token,
+                'approver'          => Auth::user()->user_id,
+                'leave_type'        => $viewdetails->leave_type,
+                'from'              => Carbon::parse($viewdetails->date_from.' '.$viewdetails->time_from)->format('M. d, Y h:i A'),
+                'to'                => Carbon::parse($viewdetails->date_to.' '.$viewdetails->time_to)->format('M. d, Y h:i A'),
+                'department'        => $viewdetails->department
             );
     
             $leave_appprover= DB::table('department_approvers')
