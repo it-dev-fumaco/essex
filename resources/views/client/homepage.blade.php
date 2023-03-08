@@ -212,6 +212,26 @@
 
 <script>
 $(document).ready(function(){
+	@if (session()->has('success'))
+		$.bootstrapGrowl("<center><i class=\"fa fa-check-square-o\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">{{ session()->get('message') }}</span></center>", {
+			type: 'success',
+			align: 'center',
+			delay: 4000,
+			width: 450,
+			stackup_spacing: 20
+		});
+	@endif
+
+	@if (session()->has('error'))
+		$.bootstrapGrowl("<center><i class=\"fa fa-info\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">{{ session()->get('message') }}</span></center>", {
+			type: 'danger',
+			align: 'center',
+			delay: 4000,
+			width: 450,
+			stackup_spacing: 20
+		});
+	@endif
+	
 	// initialize input widgets first
    $('.time').timepicker({
       'timeFormat': 'g:i A'
@@ -983,16 +1003,37 @@ $(document).ready(function(){
 			type:"POST",
 			data:$(this).serialize(),
 			success:function(data){
-				loadAbsentNotices();
-				$.bootstrapGrowl("<i class=\"fa fa-check-circle-o\" style=\"font-size: 60pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 16pt; font-weight: bold; padding-top: 5px;\">Request sent to Managers.</span><span style=\"font-size: 10pt;\">Please wait for the approved absent notice form.<br>" + data.message + "</span>", {
-				type: 'success',
-				align: 'center',
-				delay: 8000,
-				width: 450,
-				offset: {from: 'top', amount: 300},
-				stackup_spacing: 20
+				$('#notice-slip-submit-btn').attr('disabled', false);
+				if(data.success){
+					loadAbsentNotices();
+					$.bootstrapGrowl("<i class=\"fa fa-check-circle-o\" style=\"font-size: 60pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 16pt; font-weight: bold; padding-top: 5px;\">Request sent to Managers.</span><span style=\"font-size: 10pt;\">Please wait for the approved absent notice form.<br>" + data.message + "</span>", {
+						type: 'success',
+						align: 'center',
+						delay: 8000,
+						width: 450,
+						offset: {from: 'top', amount: 300},
+						stackup_spacing: 20
+					});
+					$('#absentNoticeModal').modal('hide');
+				}else{
+					$.bootstrapGrowl("<i class=\"fa fa-info\" style=\"font-size: 20pt; float: left; padding-right: 10px;\"></i><span style=\"font-size: 10pt;\">" + data.message + "</span>", {
+						type: 'danger',
+						align: 'center',
+						delay: 8000,
+						width: 450,
+						stackup_spacing: 20
+					});
+				}
+			},
+			error: function (response){
+				$('#notice-slip-submit-btn').attr('disabled', false);
+				$.bootstrapGrowl("<i class=\"fa fa-info\" style=\"font-size: 20pt; float: left; padding-right: 10px;\"></i><span style=\"font-size: 10pt;\">An error occured. Please try again.</span>", {
+					type: 'danger',
+					align: 'center',
+					delay: 8000,
+					width: 450,
+					stackup_spacing: 20
 				});
-				$('#absentNoticeModal').modal('hide');
 			}
 		});
 	});

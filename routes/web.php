@@ -141,6 +141,7 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
 
     Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
     Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
+    Route::get('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
     
     Route::get('/gatepass/forApproval/fetch', 'GatepassesController@gatepassesForApproval');
     Route::post('/gatepass/updateStatus', 'GatepassesController@updateStatus');
