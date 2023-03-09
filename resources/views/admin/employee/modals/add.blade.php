@@ -128,7 +128,7 @@
                      </div>
                      <div class="form-group">
                         <label>Local Email:</label>
-                        <input type="email" class="form-control" name="email" placeholder="Enter Email">
+                        <input type="email" class="form-control" name="email" placeholder="Enter Email" required>
                      </div>
                      <div class="form-group">
                         <label>Password:</label>

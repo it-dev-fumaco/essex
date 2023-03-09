@@ -275,64 +275,100 @@ class EmployeesController extends Controller
     }
 
     public function employeeCreate(Request $request){
-        $image_path = null;
-        if($request->hasFile('empImage')){
-            $file = $request->file('empImage');
+        DB::beginTransaction();
+        try {
+            $image_path = null;
+            if($request->hasFile('empImage')){
+                $file = $request->file('empImage');
 
-            //get filename with extension
-            $filenamewithextension = $file->getClientOriginalName();
-            //get filename without extension
-            $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-            //get file extension
-            $extension = $file->getClientOriginalExtension();
-            //filename to store
-            $filenametostore = $request->user_id.'.'.$extension;
-            // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            //Resize image here
-            $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-            $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save($thumbnailpath);
+                //get filename with extension
+                $filenamewithextension = $file->getClientOriginalName();
+                //get filename without extension
+                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+                //get file extension
+                $extension = $file->getClientOriginalExtension();
+                //filename to store
+                $filenametostore = $request->user_id.'.'.$extension;
+                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                //Resize image here
+                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
+                $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $img->save($thumbnailpath);
 
-            $image_path = '/storage/employees/'.$filenametostore;
+                $image_path = '/storage/employees/'.$filenametostore;
+            }
+
+            $employee = new User;
+            $employee->user_id = $request->user_id;
+            $employee->department_id = $request->department;
+            $employee->shift_group_id = $request->shift;
+            $employee->password = bcrypt($request->password);
+            $employee->employee_name = $request->employee_name;
+            $employee->nick_name = $request->nickname;
+            $employee->designation_id = $request->designation;
+            $employee->branch = $request->branch;
+            $employee->telephone = $request->telephone;
+            $employee->email = $request->email;
+            $employee->user_type = 'Employee';
+            $employee->gender = $request->gender;
+            $employee->employment_status = $request->employment_status;
+            $employee->address = $request->address;
+            $employee->contact_no = $request->contact_no;
+            $employee->sss_no = $request->sss_no;
+            $employee->tin_no = $request->tin_no;
+            $employee->user_group = $request->user_group;
+            $employee->birth_date = $request->birthdate;
+            $employee->civil_status = $request->civil_status;
+            $employee->date_joined = $request->date_joined;
+            $employee->contact_person = $request->contact_person;
+            $employee->contact_person_no = $request->contact_person_no;
+            $employee->pagibig_no = $request->pagibig_no;
+            $employee->philhealth_no = $request->philhealth_no;
+            $employee->employee_id = $request->employee_id;
+            $employee->image = $image_path;
+            $employee->designation_name = $request->designation_name;
+            $employee->status = 'Active';
+            $employee->id_security_key = $request->id_key;
+            $employee->save();
+
+            $department = Department::find($employee->department_id);
+            $designation = Designation::find($employee->designation_id);
+
+            switch ($employee->branch) {
+                case 3:
+                    $file_server = 'xylon';
+                    break;
+                case 2:
+                    $file_server = 'kimberly';
+                    break;
+                default:
+                    $file_server = 'sam';
+                    break;
+            }
+
+            $data = [
+                'name' => $employee->employee_name,
+                'department' => $department->department,
+                'job_title' => $designation->designation,
+                'file_server' => $file_server
+            ];
+
+            $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+            if(!$mail['success']){
+                return response()->json(['success' => 0, 'message' => $mail['message']]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            // throw $th;
+            return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
         }
-
-        $employee = new User;
-        $employee->user_id = $request->user_id;
-        $employee->department_id = $request->department;
-        $employee->shift_group_id = $request->shift;
-        $employee->password = bcrypt($request->password);
-        $employee->employee_name = $request->employee_name;
-        $employee->nick_name = $request->nickname;
-        $employee->designation_id = $request->designation;
-        $employee->branch = $request->branch;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
-        $employee->user_type = 'Employee';
-        $employee->gender = $request->gender;
-        $employee->employment_status = $request->employment_status;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
-        $employee->user_group = $request->user_group;
-        $employee->birth_date = $request->birthdate;
-        $employee->civil_status = $request->civil_status;
-        $employee->date_joined = $request->date_joined;
-        $employee->contact_person = $request->contact_person;
-        $employee->contact_person_no = $request->contact_person_no;
-        $employee->pagibig_no = $request->pagibig_no;
-        $employee->philhealth_no = $request->philhealth_no;
-        $employee->employee_id = $request->employee_id;
-        $employee->image = $image_path;
-        $employee->designation_name = $request->designation_name;
-        $employee->status = 'Active';
-        $employee->id_security_key = $request->id_key;
-        $employee->save();
-
-        return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
+        
     }
 
     public function employeeUpdate(Request $request, $id){
