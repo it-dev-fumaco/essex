@@ -9,60 +9,92 @@ use Image;
 use Validator;
 use App\User;
 use App\ItemAccountability;
+use App\Department;
+use App\Designation;
 use Auth;
 use DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendMail_General;
 
 class EmployeesController extends Controller
 {
     public function index(){
         $employees = DB::table("users")
-                        ->join("departments", "users.department_id", "=", "departments.department_id")
-                        ->join("designation", "designation.des_id", "=", "users.designation_id")
-                        // ->select("users.*", "departments.department", 'designation.designation')
-                        ->where('users.user_type', '=', 'Employee')->orderBy ('users.employee_name', 'ASC')
-                        ->get(); 
+            ->join("departments", "users.department_id", "=", "departments.department_id")
+            ->join("designation", "designation.des_id", "=", "users.designation_id")
+            // ->select("users.*", "departments.department", 'designation.designation')
+            ->where('users.user_type', '=', 'Employee')->orderBy ('users.employee_name', 'ASC')
+            ->get(); 
 
         $departments = DB::table('departments')->get(); 
         $designations = DB::table('designation')->get(); 
-        $shifts = DB::table('shifts')->get(); 
-        $branch = DB::table('branch')->get(); 
+        $shifts = DB::table('shifts')->get();
+        $branch = DB::table('branch')->get();
 
-        $data = [
-            'employees' => $employees,
-            'departments' => $departments,
-            'designations' => $designations,
-            'shifts' => $shifts,
-            'branch' => $branch
-        ];
-
-        return view('admin.employee.index', $data);
+        return view('admin.employee.index', compact('employees', 'departments', 'designations', 'shifts', 'branch'));
     }
 
     public function store(Request $request){
-        $employee = new User;
-        $employee->user_id = $request->user_id;
-        $employee->department_id = $request->department;
-        $employee->shift_group_id = $request->shift;
-        $employee->password = bcrypt($request->password);
-        $employee->employee_name = $request->employee_name;
-        $employee->nick_name = $request->nickname;
-        $employee->designation_id = $request->designation;
-        $employee->branch = $request->branch;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
-        $employee->user_type = 'Employee';
-        $employee->employment_status = $request->employment_status;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
-        $employee->user_group = $request->user_group;
-        $employee->birth_date = $request->birthdate;
-        $employee->civil_status = $request->civil_status;
-        $employee->status = 'Active';
-        $employee->save();
+        DB::beginTransaction();
+        try {
+            $employee = new User;
+            $employee->user_id = $request->user_id;
+            $employee->department_id = $request->department;
+            $employee->shift_group_id = $request->shift;
+            $employee->password = bcrypt($request->password);
+            $employee->employee_name = $request->employee_name;
+            $employee->nick_name = $request->nickname;
+            $employee->designation_id = $request->designation;
+            $employee->branch = $request->branch;
+            $employee->telephone = $request->telephone;
+            $employee->email = $request->email;
+            $employee->user_type = 'Employee';
+            $employee->employment_status = $request->employment_status;
+            $employee->address = $request->address;
+            $employee->contact_no = $request->contact_no;
+            $employee->sss_no = $request->sss_no;
+            $employee->tin_no = $request->tin_no;
+            $employee->user_group = $request->user_group;
+            $employee->birth_date = $request->birthdate;
+            $employee->civil_status = $request->civil_status;
+            $employee->status = 'Active';
+            $employee->save();
 
-        return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
+            $department = Department::find($employee->department_id);
+            $designation = Designation::find($employee->designation_id);
+
+            switch ($employee->branch) {
+                case 3:
+                    $file_server = 'xylon';
+                    break;
+                case 2:
+                    $file_server = 'kimberly';
+                    break;
+                default:
+                    $file_server = 'sam';
+                    break;
+            }
+    
+            $data = [
+                'name' => $employee->employee_name,
+                'department' => $department->department,
+                'job_title' => $designation->designation,
+                'file_server' => $file_server
+            ];
+    
+            $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+            if(!$mail['success']){
+                return response()->json(['success' => 0, 'message' => $mail['message']]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            // throw $th;
+            return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
+        }
+        
     }
 
     public function update(Request $request){

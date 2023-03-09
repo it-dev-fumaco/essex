@@ -85,7 +85,7 @@
                         <select class="form-control" name="shift">
                            <option value="" disabled>Select Shift</option>
                            @forelse($shifts as $shift)
-                           <option value="{{ $shift->shift_id }}" {{ $employee->shift_id == $shift->shift_id ? 'selected' : '' }}>{{ $shift->shift_schedule }}</option>
+                           <option value="{{ $shift->shift_id }}" {{ $employee->shift_group_id == $shift->shift_id ? 'selected' : '' }}>{{ $shift->shift_schedule }}</option>
                            @empty
                            <option>No Shift(s) Found.</option>
                            @endforelse
