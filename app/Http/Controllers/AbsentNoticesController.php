@@ -14,6 +14,7 @@ use DatePeriod;
 use Carbon\Carbon;
 use DateInterval;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class AbsentNoticesController extends Controller
 {
@@ -36,94 +37,115 @@ class AbsentNoticesController extends Controller
     }
 
     public function store(Request $request){
-        if (in_array($request->absence_type, [1, 2, 3, 4,7])) {
-            $date_from = Carbon::parse($request->date_from);
-            $date_to = Carbon::parse($request->date_to);
-            $diff_in_days = $date_to->diffInDays($date_from);
-            $duration = $diff_in_days + 1;
-        }else{
-            $time_from = Carbon::parse($request->time_from);
-            $time_to = Carbon::parse($request->time_to);
-            $diff_in_hours = $time_to->diffInMinutes($time_from);
-            $duration = ($diff_in_hours / 60) * 0.125;
+        DB::beginTransaction();
+        try {
+            if (in_array($request->absence_type, [1, 2, 3, 4,7])) {
+                $date_from = Carbon::parse($request->date_from);
+                $date_to = Carbon::parse($request->date_to);
+                $diff_in_days = $date_to->diffInDays($date_from);
+                $duration = $diff_in_days + 1;
+            }else{
+                $time_from = Carbon::parse($request->time_from);
+                $time_to = Carbon::parse($request->time_to);
+                $diff_in_hours = $time_to->diffInMinutes($time_from);
+                $duration = ($diff_in_hours / 60) * 0.125;
+            }
+    
+            // get number of days absent
+            $fdate = $request->date_from;
+            $tdate = $request->date_to;
+            $datetime1 = new DateTime($fdate);
+            $datetime2 = new DateTime($tdate);
+            $interval = $datetime1->diff($datetime2);
+            $days = $interval->format('%a');
+            $days = $days + 1;
+    
+            // get total & remaining number of leaves
+            $year= date("Y");
+            $leave_type = DB::table('employee_leaves')
+                            ->where('leave_type_id', '=', $request->absence_type)
+                            ->where('employee_id', '=', $request->user_id)
+                            ->where('employee_leaves.year','=', $year)
+                            ->select('employee_leaves.*')
+                            ->first();
+           
+            // subtract number of days absent from total
+            if (isset($leave_type->remaining)) {
+                    $remaining = $leave_type->remaining - $days;
+    
+                    // update remaining number of leaves
+                    $employee_leave = DB::table('employee_leaves')
+                            ->where('leave_id', '=', $leave_type->leave_id)
+                            ->where('employee_id', '=', $request->user_id)
+                            ->where('employee_leaves.year','=', $year)
+                            ->update([
+                                'remaining' => $remaining
+                            ]);
+            }
+
+            $token = Str::random(64);
+    
+            $notice_slip = new AbsentNotice;
+            $notice_slip->user_id = $request->user_id;
+            $notice_slip->dept_id = $request->department;
+            $notice_slip->leave_type_id = $request->absence_type;
+            $notice_slip->date_from = $request->date_from;
+            $notice_slip->date_to = $request->date_to;
+            $notice_slip->time_from = $request->time_from;
+            $notice_slip->time_to = $request->time_to;
+            $notice_slip->means = $request->means;
+            $notice_slip->reason = $request->reason;
+            $notice_slip->time_reported = $request->time_reported;
+            $notice_slip->info_by = $request->info_by;
+            $notice_slip->status = 'FOR APPROVAL';
+            $notice_slip->remarks = $request->remarks;
+            $notice_slip->created_by = Auth::user()->employee_name;
+            $notice_slip->duration = $duration;
+            $notice_slip->token = $token;
+            $notice_slip->save();
+    
+            $viewdetails =DB::table('notice_slip')
+                ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+                ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
+                ->select('notice_slip.*', 'leave_types.leave_type', 'departments.department')
+                ->orderBy('notice_id', 'desc')
+                ->where('user_id', Auth::user()->user_id)
+                ->first();
+    
+            $notice_id = $viewdetails->notice_id;
+    
+            $data = array(
+                'employee_name'     => Auth::user()->employee_name,
+                'year'              => now()->format('Y'),
+                'slip_id'           => $notice_id,
+                'reported_to'       => $request->info_by,
+                'means'             => $request->means,
+                'reason'            => $request->reason,
+                'token'             => $token,
+                'approver'          => Auth::user()->user_id,
+                'leave_type'        => $viewdetails->leave_type,
+                'from'              => Carbon::parse($viewdetails->date_from.' '.$viewdetails->time_from)->format('M. d, Y h:i A'),
+                'to'                => Carbon::parse($viewdetails->date_to.' '.$viewdetails->time_to)->format('M. d, Y h:i A'),
+                'department'        => $viewdetails->department
+            );
+    
+            $leave_appprover= DB::table('department_approvers')
+                ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+                ->where('department_approvers.department_id',  Auth::user()->department_id)
+                ->select('department_approvers.*', 'users.email')
+                ->get();
+    
+            foreach ($leave_appprover as $row) {
+                Mail::to($row->email)->send(new SendMail_notice($data));
+            }
+    
+            DB::commit();
+            return response()->json(['success' => 1, 'message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            // throw $th;
+            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again.']);
         }
-
-        // get number of days absent
-        $fdate = $request->date_from;
-        $tdate = $request->date_to;
-        $datetime1 = new DateTime($fdate);
-        $datetime2 = new DateTime($tdate);
-        $interval = $datetime1->diff($datetime2);
-        $days = $interval->format('%a');
-        $days = $days + 1;
-
-        // get total & remaining number of leaves
-        $year= date("Y");
-        $leave_type = DB::table('employee_leaves')
-                        ->where('leave_type_id', '=', $request->absence_type)
-                        ->where('employee_id', '=', $request->user_id)
-                        ->where('employee_leaves.year','=', $year)
-                        ->select('employee_leaves.*')
-                        ->first();
-       
-        // subtract number of days absent from total
-        if (isset($leave_type->remaining)) {
-                $remaining = $leave_type->remaining - $days;
-
-                // update remaining number of leaves
-                $employee_leave = DB::table('employee_leaves')
-                        ->where('leave_id', '=', $leave_type->leave_id)
-                        ->where('employee_id', '=', $request->user_id)
-                        ->where('employee_leaves.year','=', $year)
-                        ->update([
-                            'remaining' => $remaining
-                        ]);
-        }
-
-        $notice_slip = new AbsentNotice;
-        $notice_slip->user_id = $request->user_id;
-        $notice_slip->dept_id = $request->department;
-        $notice_slip->leave_type_id = $request->absence_type;
-        $notice_slip->date_from = $request->date_from;
-        $notice_slip->date_to = $request->date_to;
-        $notice_slip->time_from = $request->time_from;
-        $notice_slip->time_to = $request->time_to;
-        $notice_slip->means = $request->means;
-        $notice_slip->reason = $request->reason;
-        $notice_slip->time_reported = $request->time_reported;
-        $notice_slip->info_by = $request->info_by;
-        $notice_slip->status = 'FOR APPROVAL';
-        $notice_slip->remarks = $request->remarks;
-        $notice_slip->created_by = Auth::user()->employee_name;
-        $notice_slip->duration = $duration;
-        $notice_slip->save();
-
-       //  $viewdetails =DB::table('notice_slip')
-       //      ->join('leave_types','leave_types.leave_type_id','=','notice_slip.leave_type_id')
-       //      ->select('notice_slip.*', 'leave_types.leave_type')
-       //      ->orderBy('notice_id', 'desc')
-       //      ->where('user_id', Auth::user()->user_id)
-       //      ->first();
-
-       //  $notice_id= $viewdetails->notice_id;
-
-       //  $data = array(
-       //      'employee_name'      =>  Auth::user()->employee_name,
-       //      'year'               => now()->format('Y'),
-       //      'slip_id'            => $notice_id
-       //  );
-
-       // $leave_appprover= DB::table('department_approvers')
-       //              ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
-       //              ->where('department_approvers.department_id',  Auth::user()->department_id)
-       //              ->select('department_approvers.*','users.email')
-       //              ->get();
-
-       //  foreach ($leave_appprover as $row) {
-       //      Mail::to($row->email)->send(new SendMail_notice($data));
-       //  }
-
-        return response()->json(['message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>']);
     }
 
     public function updateNoticeDetails(Request $request){
@@ -239,64 +261,94 @@ class AbsentNoticesController extends Controller
     }
 
     public function updateStatus(Request $request){
-        // get number of days absent
-        $fdate = $request->date_from;
-        $tdate = $request->date_to;
-        $datetime1 = new DateTime($fdate);
-        $datetime2 = new DateTime($tdate);
-        $interval = $datetime1->diff($datetime2);
-        $days = $interval->format('%a');
-        $days = $days + 1;
+        DB::beginTransaction();
+        try {
+            $notice_id = $request->notice_id;
+            $notice_slip = AbsentNotice::find($notice_id);
+            if($request->update_from_mail && request()->isMethod('get')){
+                $approver = DB::table('department_approvers as da')
+                    ->join('users as u', 'da.employee_id', 'u.user_id')
+                    ->where('da.employee_id', $request->approver_id)
+                    ->select('u.user_id', 'u.email')->first();
 
-        // get total & remaining number of leaves
-        $year= date("Y");
+                if(!$request->token || $notice_slip->token != $request->token || !$approver){
+                    Abort(401); // Unauthorized.
+                }
 
-        // get total & remaining number of leaves
-        $leave_type = DB::table('employee_leaves')
-                        ->where('leave_type_id', '=', $request->leave_type)
-                        ->where('employee_id', '=', $request->user_id)
-                        ->where('employee_leaves.year','=', $year)
-                        ->select('employee_leaves.*')
-                        ->first();
-       
-        // subtract number of days absent from total
-        if (isset($leave_type->remaining)) {
-            if ($request->status == 'CANCELLED') {
-                $remaining = $leave_type->remaining + $days;
+                if($notice_slip->status != 'FOR APPROVAL'){
+                    session()->flash('success', 1);
+                    return redirect('/home')->with('message', 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has already been <b>' . $notice_slip->status. '</b>.');
+                }
 
-            // update remaining number of leaves
-            $employee_leave = DB::table('employee_leaves')
-                    ->where('leave_id', '=', $leave_type->leave_id)
-                    ->where('employee_id', '=', $request->user_id)
-                    ->where('employee_leaves.year','=', $year)
-                    ->update([
-                        'remaining' => $remaining
-                    ]);
-            }elseif($request->status == 'DISAPPROVED') {
-                $remaining = $leave_type->remaining + $days;
+                $fdate = $notice_slip->date_from;
+                $tdate = $notice_slip->date_to;
+                
+                $leave_id = $notice_slip->leave_type;
+                $user_id = $notice_slip->user_id;
 
-                // update remaining number of leaves
-                $employee_leave = DB::table('employee_leaves')
-                        ->where('leave_id', '=', $leave_type->leave_id)
-                        ->where('employee_id', '=', $request->user_id)
-                        ->where('employee_leaves.year','=', $year)
+                $status = isset($request->approved) && $request->approved ? 'APPROVED' : 'DISAPPROVED';
+                $approved_by = $approver->user_id;
+                $remarks = null;
+            }else{
+                $fdate = $request->date_from;
+                $tdate = $request->date_to;
+
+                $leave_id = $request->leave_type;
+                $user_id = $request->user_id;
+
+                $status = $request->status;
+                $approved_by = $request->approved_by;
+                $remarks = $request->remarks;
+            }
+
+            $datetime1 = new DateTime($fdate);
+            $datetime2 = new DateTime($tdate);
+            $interval = $datetime1->diff($datetime2);
+            $days = $interval->format('%a');
+            $days = $days + 1;
+
+            // get total & remaining number of leaves
+            $year = date("Y");
+
+            // get total & remaining number of leaves
+            $leave_type = DB::table('employee_leaves')->where('leave_type_id', $leave_id)->where('employee_id', $user_id)->where('employee_leaves.year', $year)->select('employee_leaves.*')->first();
+        
+            // subtract number of days absent from total
+            if (isset($leave_type->remaining)) {
+                if(in_array($status, ['CANCELLED', 'DISAPPROVED'])){
+                    $remaining = $leave_type->remaining + $days;
+
+                    // update remaining number of leaves
+                    $employee_leave = DB::table('employee_leaves')->where('leave_id', $leave_type->leave_id)->where('employee_id', $user_id)->where('employee_leaves.year', $year)
                         ->update([
                             'remaining' => $remaining
-                        ]); 
-            }  
-    
+                        ]);
+                }
+            }
+
+            // update status of notice slip
+            $notice_slip->status = $status;
+            $notice_slip->remarks = $remarks;
+            $notice_slip->approved_by = $approved_by;
+            $notice_slip->approved_date = date('Y-m-d H:i:s');
+            $notice_slip->last_modified_by = Auth::user()->employee_name;
+            $notice_slip->save();
+
+            DB::commit();
+
+            if($request->update_from_mail && request()->isMethod('get')){
+                session()->flash('success', 1);
+                return redirect('/home')->with('message', 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.');
+            }
+            return response()->json(['message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.']);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            if($request->update_from_mail && request()->isMethod('get')){
+                session()->flash('error', 1);
+                return redirect('/home')->with('message', 'An error occured. Please try again.');
+            }
+            return response()->json(['message' => 'An error occured. Please try again.']);
         }
-
-        // update status of notice slip
-        $notice_slip = AbsentNotice::find($request->notice_id);
-        $notice_slip->status = $request->status;
-        $notice_slip->remarks = $request->remarks;
-        $notice_slip->approved_by = $request->approved_by;
-        $notice_slip->approved_date = date('Y-m-d H:i:s');
-        $notice_slip->last_modified_by = Auth::user()->employee_name;
-        $notice_slip->save();
-
-        return response()->json(['message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.']);
     }
 
     public function showLeaveCalendar(){

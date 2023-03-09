@@ -6,11 +6,10 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Auth;
-class SendMail_notice extends Mailable
+
+class SendMail_General extends Mailable
 {
     use Queueable, SerializesModels;
-    public $data;
 
     /**
      * Create a new message instance.
@@ -29,6 +28,8 @@ class SendMail_notice extends Mailable
      */
     public function build()
     {
-        $username = Auth::user()->employee_name;
-        return $this->from('essex@fumaco.local')->subject('Absent Notice Slip - FOR YOUR APPROVAL')->view('kiosk.Mail.template.notice_template')->with('data', $this->data);    }
+        $mail_config = $this->data['mail_config'];
+        $template_data = $this->data['data'];
+        return $this->from('essex@fumaco.local')->subject($mail_config['subject'])->view($mail_config['template'])->with('data', $template_data);
+    }
 }
