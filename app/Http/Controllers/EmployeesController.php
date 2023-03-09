@@ -18,14 +18,14 @@ use App\Mail\SendMail_General;
 
 class EmployeesController extends Controller
 {
-    private function send_mail($subject, $template, $recipient, $data){
+    private function send_mail($subject, $template, $recipient, $data_arr){
         try {
             $data['mail_config'] = [
                 'subject' => $subject,
                 'template' => $template
             ];
     
-            $data['data'] = $data;
+            $data['data'] = $data_arr;
     
             Mail::to($recipient)->send(new SendMail_General($data));
             if(Mail::failures()){
