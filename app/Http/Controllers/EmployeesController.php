@@ -18,6 +18,27 @@ use App\Mail\SendMail_General;
 
 class EmployeesController extends Controller
 {
+    private function send_mail($subject, $template, $recipient, $data){
+        try {
+            $data['mail_config'] = [
+                'subject' => $subject,
+                'template' => $template
+            ];
+    
+            $data['data'] = $data;
+    
+            Mail::to($recipient)->send(new SendMail_General($data));
+            if(Mail::failures()){
+                return ['success' => 0, 'message' => 'An error occured. Please try again.'];
+            }
+
+            return ['success' => 1, 'message' => 'email sent!'];
+        } catch (\Exception $e) {
+            // return $e->getMessage();
+            return ['success' => 0, 'message' => $e->getMessage()];
+        }
+    }
+
     public function index(){
         $employees = DB::table("users")
             ->join("departments", "users.department_id", "=", "departments.department_id")
