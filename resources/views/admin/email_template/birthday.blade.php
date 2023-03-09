@@ -25,7 +25,7 @@
         Thank you for being part of Fumaco, Inc.
         <br><br><br>
         All the Best,<br>
-        Your Fumaco Team
+        IT Team
         <br>
        </td>
     </tr>
