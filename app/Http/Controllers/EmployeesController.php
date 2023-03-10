@@ -15,6 +15,7 @@ use Auth;
 use DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
+use Carbon\Carbon;
 
 class EmployeesController extends Controller
 {
@@ -103,11 +104,13 @@ class EmployeesController extends Controller
                 'file_server' => $file_server
             ];
     
-            $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
-            if(!$mail['success']){
-                return response()->json(['success' => 0, 'message' => $mail['message']]);
+            if($request->email){
+                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                if(!$mail['success']){
+                    return response()->json(['success' => 0, 'message' => $mail['message']]);
+                }
             }
-
+            
             DB::commit();
             return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
         } catch (\Throwable $th) {
@@ -377,10 +380,13 @@ class EmployeesController extends Controller
                 'file_server' => $file_server
             ];
 
-            $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
-            if(!$mail['success']){
-                return response()->json(['success' => 0, 'message' => $mail['message']]);
+            if($request->email){
+                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                if(!$mail['success']){
+                    return response()->json(['success' => 0, 'message' => $mail['message']]);
+                }
             }
+            
 
             DB::commit();
             return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);

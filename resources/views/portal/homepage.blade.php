@@ -8,6 +8,30 @@
     @include('portal.includes.events')
     @include('portal.includes.milestones')
     {{-- @include('portal.includes.instructions') --}}
+    @if (session()->has('notice_data'))
+        @php
+            $data = session()->get('notice_data');
+        @endphp
+        <div class="modal fade" id="noticeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="center" style="background-color: {{ $data['success'] == 1 ? '#20BD67;' : '#767F86;' }} padding: 20px 0 20px 0; color: #fff;">
+                        <i class="fa fa-check-circle-o" style="font-size: 50pt; font-weight: 500 !important"></i>
+                        <br>
+                        <h2>{{ $data['status'] ? $data['status'] : null }}</h2>
+                    </div>
+                    <div class="center" style="padding: 20px 0 20px 0;">
+                        <p style="font-size: 12pt;">{!! $data['message'] !!}</p>
+                        <br>
+                        <button class="btn btn-warning" style="border-radius: 25px;" data-dismiss="modal" aria-label="Close">OK</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div> 
+    @endif
+    
 @endsection
 
 @section('script')
@@ -15,6 +39,11 @@
 <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
 <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
     <script>
+        $(document).ready(function () {
+            @if (session()->has('notice_data'))
+                $('#noticeModal').modal('show');
+            @endif
+        });
     	 $(document).on('click', '#editPostBtn', function(event){
         event.preventDefault();
         $('#editPostModal .post_id').val($(this).data('id'));
@@ -27,7 +56,7 @@
 
         $('#editPostModal').modal('show');
     });
-$(document).on('click', '#deletePostBtn', function(event){
+    $(document).on('click', '#deletePostBtn', function(event){
         event.preventDefault();
         $('#deletePostModal .post_id').val($(this).data('id'));
         $('#deletePostModal .post_title').text($(this).data('title'));
@@ -38,5 +67,4 @@ $(document).on('click', '#deletePostBtn', function(event){
 
         CKEDITOR.config.height = 450;
     </script>
-
 @endsection
