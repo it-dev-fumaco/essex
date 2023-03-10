@@ -141,7 +141,6 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
 
     Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
     Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
-    Route::get('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
     
     Route::get('/gatepass/forApproval/fetch', 'GatepassesController@gatepassesForApproval');
     Route::post('/gatepass/updateStatus', 'GatepassesController@updateStatus');
@@ -1020,3 +1019,5 @@ Route::post('/module/hr/delete_training','HumanResourcesController@delete_HR_tra
 Route::get('/module/hr/training/employee_list','HumanResourcesController@Employee_list');
 Route::get('/module/hr/training/employee_list_edit','HumanResourcesController@Employee_list_edit');
 Route::get('/module/hr/training_details/{id}','HumanResourcesController@edit_training_details');
+
+Route::get('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
