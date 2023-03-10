@@ -274,9 +274,16 @@ class AbsentNoticesController extends Controller
                         $message = 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has already been <b>' . $notice_slip->status. '</b>.';
                     }
 
+                    $approved_by = null;
+                    if($notice_slip){
+                        $approved_by = DB::table('users')->where('user_id', $notice_slip->approved_by)->pluck('employee_name')->first();
+                    }
+
                     $flash_data = [
                         'success' => 0,
                         'status' => $notice_slip ? $notice_slip->status : 'Not Found',
+                        'approved_by' => $approved_by ? $approved_by : null,
+                        'approved_date'=> $notice_slip ? Carbon::parse($notice_slip->approved_date)->format('M. d, Y') : null,
                         'message' => $message
                     ];
     

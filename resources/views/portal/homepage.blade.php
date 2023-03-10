@@ -23,6 +23,12 @@
                     </div>
                     <div class="center" style="padding: 20px 0 20px 0;">
                         <p style="font-size: 12pt;">{!! $data['message'] !!}</p>
+                        @if(isset($data['approved_by']) && $data['approved_by'])
+                            <p>{{ ($data['status'] == 'APPROVED' ? 'Approved by: ' : 'Disapproved by: ').$data['approved_by'] }}</p>
+                        @endif
+                        @if(isset($data['approved_date']) && $data['approved_date'])
+                            <p>Date {{ ($data['status'] == 'APPROVED' ? 'Approved: ' : 'Disapproved: ').$data['approved_date'] }}</p>
+                        @endif
                         <br>
                         <button class="btn btn-warning" style="border-radius: 25px;" data-dismiss="modal" aria-label="Close">OK</button>
                     </div>
