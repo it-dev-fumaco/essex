@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_notice;
 use DateTime;
 use App\AbsentNotice;
+use App\Department;
+use App\LeaveType;
 use Auth;
 use DB;
 use DatePeriod;
@@ -266,6 +268,22 @@ class AbsentNoticesController extends Controller
             $notice_id = $request->notice_id;
             $notice_slip = AbsentNotice::find($notice_id);
             if($request->update_from_mail && request()->isMethod('get')){
+                if(!$notice_slip || $notice_slip->status != 'FOR APPROVAL'){
+                    $message = 'Absent Notice Slip no. <b>' . $notice_id . '</b> not found.';
+                    if($notice_slip){
+                        $message = 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has already been <b>' . $notice_slip->status. '</b>.';
+                    }
+
+                    $flash_data = [
+                        'success' => 0,
+                        'status' => $notice_slip ? $notice_slip->status : 'Not Found',
+                        'message' => $message
+                    ];
+    
+                    session()->flash('notice_data', $flash_data);
+                    return redirect('/');
+                }
+
                 $approver = DB::table('department_approvers as da')
                     ->join('users as u', 'da.employee_id', 'u.user_id')
                     ->where('da.employee_id', $request->approver_id)
@@ -274,12 +292,7 @@ class AbsentNoticesController extends Controller
                 if(!$request->token || $notice_slip->token != $request->token || !$approver){
                     Abort(401); // Unauthorized.
                 }
-
-                if($notice_slip->status != 'FOR APPROVAL'){
-                    session()->flash('success', 1);
-                    return redirect('/home')->with('message', 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has already been <b>' . $notice_slip->status. '</b>.');
-                }
-
+                
                 $fdate = $notice_slip->date_from;
                 $tdate = $notice_slip->date_to;
                 
@@ -331,21 +344,37 @@ class AbsentNoticesController extends Controller
             $notice_slip->remarks = $remarks;
             $notice_slip->approved_by = $approved_by;
             $notice_slip->approved_date = date('Y-m-d H:i:s');
-            $notice_slip->last_modified_by = Auth::user()->employee_name;
+            $notice_slip->last_modified_by = $approved_by;
             $notice_slip->save();
 
             DB::commit();
 
             if($request->update_from_mail && request()->isMethod('get')){
-                session()->flash('success', 1);
-                return redirect('/home')->with('message', 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.');
+                $flash_data = [
+                    'success' => 1,
+                    'status' => $notice_slip->status,
+                    'message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.'
+                ];
+
+                session()->flash('notice_data', $flash_data);
+
+                return redirect('/');
             }
+
             return response()->json(['message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b> has been <b>' . $notice_slip->status. '</b>.']);
         } catch (\Throwable $th) {
             DB::rollback();
+            // throw $th;
             if($request->update_from_mail && request()->isMethod('get')){
-                session()->flash('error', 1);
-                return redirect('/home')->with('message', 'An error occured. Please try again.');
+                $flash_data = [
+                    'success' => 0,
+                    'status' => 'Error',
+                    'message' => 'An error occured. Please try again.'
+                ];
+
+                session()->flash('notice_data', $flash_data);
+
+                return redirect('/');
             }
             return response()->json(['message' => 'An error occured. Please try again.']);
         }
