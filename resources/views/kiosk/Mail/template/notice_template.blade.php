@@ -47,4 +47,9 @@
     .btn-success{
         background-color: #4CAF50;
     }
+    @media (max-width: 575.98px){
+        p{
+            line-height: 20px;
+        }
+    }
 </style>
