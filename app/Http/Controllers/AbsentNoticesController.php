@@ -124,7 +124,6 @@ class AbsentNoticesController extends Controller
                 'means'             => $request->means,
                 'reason'            => $request->reason,
                 'token'             => $token,
-                'approver'          => Auth::user()->user_id,
                 'leave_type'        => $viewdetails->leave_type,
                 'from'              => Carbon::parse($viewdetails->date_from.' '.$viewdetails->time_from)->format('M. d, Y h:i A'),
                 'to'                => Carbon::parse($viewdetails->date_to.' '.$viewdetails->time_to)->format('M. d, Y h:i A'),
@@ -134,10 +133,11 @@ class AbsentNoticesController extends Controller
             $leave_appprover= DB::table('department_approvers')
                 ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
                 ->where('department_approvers.department_id',  Auth::user()->department_id)
-                ->select('department_approvers.*', 'users.email')
+                ->select('department_approvers.*', 'users.email', 'users.user_id')
                 ->get();
     
             foreach ($leave_appprover as $row) {
+                $data['approver'] = $row->user_id;
                 Mail::to($row->email)->send(new SendMail_notice($data));
             }
     
@@ -266,6 +266,7 @@ class AbsentNoticesController extends Controller
         DB::beginTransaction();
         try {
             $notice_id = $request->notice_id;
+
             $notice_slip = AbsentNotice::find($notice_id);
             if($request->update_from_mail && request()->isMethod('get')){
                 if(!$notice_slip || $notice_slip->status != 'FOR APPROVAL'){
