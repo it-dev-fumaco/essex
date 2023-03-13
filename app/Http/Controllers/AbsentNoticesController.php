@@ -138,7 +138,9 @@ class AbsentNoticesController extends Controller
     
             foreach ($leave_appprover as $row) {
                 $data['approver'] = $row->user_id;
-                Mail::to($row->email)->send(new SendMail_notice($data));
+                try {
+                    Mail::to($row->email)->send(new SendMail_notice($data));
+                } catch (\Throwable $th) {}
             }
     
             DB::commit();
