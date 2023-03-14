@@ -130,16 +130,15 @@ class AbsentNoticesController extends Controller
                 'department'        => $viewdetails->department
             );
     
-            $leave_appprover= DB::table('department_approvers')
+            $leave_approver= DB::table('department_approvers')
                 ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
                 ->where('department_approvers.department_id',  Auth::user()->department_id)
-                ->select('department_approvers.*', 'users.email', 'users.user_id')
-                ->get();
+                ->distinct()->pluck('users.email', 'users.user_id');
     
-            foreach ($leave_appprover as $row) {
-                $data['approver'] = $row->user_id;
+            foreach ($leave_approver as $user_id => $email) {
+                $data['approver'] = $user_id;
                 try {
-                    Mail::to($row->email)->send(new SendMail_notice($data));
+                    Mail::to($email)->send(new SendMail_notice($data));
                 } catch (\Throwable $th) {}
             }
     
