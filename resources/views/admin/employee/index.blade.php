@@ -23,11 +23,13 @@
                      <table class="table" id="example">
                         <thead>
                            <tr>
-                              <th>Access ID</th>
+                              <th style="white-space: nowrap;">Access ID</th>
                               <th>Name</th>
                               <th>Designation</th>
                               <th>Department</th>
                               <th>Status</th>
+                              <th>Last Login</th>
+                              <th>Last Active</th>
                               <th>Actions</th>
                            </tr>
                         </thead>
@@ -42,7 +44,9 @@
                               <td>{{ $employee->designation }}</td>
                               <td>{{ $employee->department }}</td>
                               <td>{{ $employee->status }}</td>
-                              <td>
+                              <td style="white-space: nowrap;">{{ $employee->last_login_date ? Carbon\Carbon::parse($employee->last_login_date)->format('M. d, Y h:i A') : '-' }}</td>
+                              <td style="white-space: nowrap;">{{ $employee->last_active ? Carbon\Carbon::parse($employee->last_active)->format('M. d, Y h:i A') : '-' }}</td>
+                              <td style="white-space: nowrap;">
                                  <a href="#" data-toggle="modal" data-target="#reset-employee-password-{{ $employee->id }}">
                                     <i class="fa fa-repeat"></i>
                                  </a> |
