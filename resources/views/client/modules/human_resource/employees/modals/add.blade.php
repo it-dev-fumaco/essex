@@ -195,7 +195,7 @@
                               </div>
                               <div class="form-group">
                                  <label>Local Email:</label>
-                                 <input type="email" name="email" placeholder="Enter Email">
+                                 <input type="text" name="email" placeholder="Enter Email" required>
                               </div>
                               <div class="form-group">
                                  <label>Password:</label>

@@ -301,6 +301,18 @@ class EmployeesController extends Controller
     public function employeeCreate(Request $request){
         DB::beginTransaction();
         try {
+            if(User::where('user_id', $request->user_id)->exists()){
+                return redirect()->back()->with('error', 'User ID already exists.')->withInput();
+            }
+            
+            if(str_contains($request->email, '@fumaco.local') && User::where('email', $request->email)->exists()){
+                return redirect()->back()->with('error', 'Email already exists.')->withInput();
+            }
+
+            if(User::where('employee_id', $request->employee_id)->exists()){
+                return redirect()->back()->with('error', 'Employee ID already exists.')->withInput();
+            }
+
             $image_path = null;
             if($request->hasFile('empImage')){
                 $file = $request->file('empImage');
@@ -313,7 +325,6 @@ class EmployeesController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 //filename to store
                 $filenametostore = $request->user_id.'.'.$extension;
-                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
                 Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
                 //Resize image here
                 $thumbnailpath = public_path('storage/employees/'.$filenametostore);
@@ -373,21 +384,19 @@ class EmployeesController extends Controller
                     break;
             }
 
-            $data = [
-                'name' => $employee->employee_name,
-                'department' => $department->department,
-                'job_title' => $designation->designation,
-                'file_server' => $file_server
-            ];
+            if($request->email && str_contains($request->email, '@fumaco.local')){
+                $data = [
+                    'name' => $employee->employee_name,
+                    'department' => $department->department,
+                    'job_title' => $designation->designation,
+                    'file_server' => $file_server
+                ];
 
-            if($request->email){
-                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
-                if(!$mail['success']){
-                    return response()->json(['success' => 0, 'message' => $mail['message']]);
-                }
+                try {
+                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                } catch (\Throwable $th) {}
             }
             
-
             DB::commit();
             return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
         } catch (\Throwable $th) {
