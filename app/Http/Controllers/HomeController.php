@@ -38,14 +38,14 @@ class HomeController extends Controller
         $all_departments = DB::table('departments')->get();
         $absent_type_list = DB::table('leave_types')->get();
         $absence_types = DB::table('leave_types')
-                        ->where('applied_to_all', '=', 1)
-                        ->get();
+            ->where('applied_to_all', '=', 1)
+            ->get();
 
         $regular_shift = DB::table('shifts')
-                        ->join('users', 'shifts.shift_group_id', '=','users.shift_group_id')
-                        ->where('user_id', Auth::user()->user_id)
-                        ->select('shifts.*')
-                        ->get();
+            ->join('users', 'shifts.shift_group_id', '=','users.shift_group_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->select('shifts.*')
+            ->get();
 
         $emp_item_accountability = DB::table('issued_item')->where('issued_to', Auth::user()->user_id)->get();
 
@@ -63,23 +63,23 @@ class HomeController extends Controller
 
         $year= date("Y");
         $leave_types = DB::table('employee_leaves')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
-                        ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'employee_leaves.*')
-                        ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
-                        ->where('employee_leaves.year','=', $year)
-                        ->get();
+            ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
+            ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
+            ->where('employee_leaves.year','=', $year)
+            ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'leave_types.applied_to_all', 'employee_leaves.*')
+            ->get();
 
         $pending_notices = DB::table('notice_slip')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-                        ->where('status', '=', 'For Approval')
-                        ->where('user_id', '=', Auth::user()->user_id);
+            ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+            ->where('status', '=', 'For Approval')
+            ->where('user_id', '=', Auth::user()->user_id);
 
         $pending_notices = $pending_notices->get();
         $pending_notices_count = $pending_notices->count();
 
         $pending_gatepasses = DB::table('gatepass')
-                        ->where('status', '=', 'For Approval')
-                        ->where('user_id', '=', Auth::user()->user_id);
+            ->where('status', '=', 'For Approval')
+            ->where('user_id', '=', Auth::user()->user_id);
 
         $pending_gatepasses = $pending_gatepasses->get();
         $pending_gatepasses_count = $pending_gatepasses->count();
@@ -87,28 +87,26 @@ class HomeController extends Controller
         $pending_requests = $pending_notices_count + $pending_gatepasses_count;
 
         $approvers = DB::table('department_approvers')
-                        ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
-                        ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                        ->where('department_approvers.department_id', '=', Auth::user()->department_id)
-                        ->select('users.employee_name', 'designation.designation', 'department_approvers.employee_id')
-                        ->get();
+            ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->where('department_approvers.department_id', '=', Auth::user()->department_id)
+            ->select('users.employee_name', 'designation.designation', 'department_approvers.employee_id')
+            ->get();
 
         $awaiting_notices = DB::table('notice_slip')
-                        ->join('department_approvers', 'department_approvers.department_id', '=', 'notice_slip.dept_id')
-                        ->where('notice_slip.status', 'For Approval')
-                        ->where('department_approvers.employee_id', Auth::user()->user_id)
-                        ->count();
+            ->join('department_approvers', 'department_approvers.department_id', '=', 'notice_slip.dept_id')
+            ->where('notice_slip.status', 'For Approval')
+            ->where('department_approvers.employee_id', Auth::user()->user_id)
+            ->count();
 
         $awaiting_gatepass = 0;
         $gatepass_approvers = ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head'];
         if (in_array($designation, $gatepass_approvers)) {
-           $awaiting_gatepass = DB::table('gatepass')
-                                    ->join('users', 'users.user_id', '=', 'gatepass.user_id')
-                                    ->where('gatepass.status', '=', 'For Approval')
-                                    ->select('gatepass.*', 'users.employee_name')
-                                    ->count();
-
-                         
+            $awaiting_gatepass = DB::table('gatepass')
+                ->join('users', 'users.user_id', '=', 'gatepass.user_id')
+                ->where('gatepass.status', '=', 'For Approval')
+                ->select('gatepass.*', 'users.employee_name')
+                ->count();        
         }
 
         $departmentHeads = DB::table('department_head_list')->distinct('employee_id')->pluck('employee_id');
@@ -116,58 +114,58 @@ class HomeController extends Controller
         $awaiting_approval = $awaiting_notices + $awaiting_gatepass;
 
         $out_today = DB::table('notice_slip')
-                        ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
-                        ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-                        ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
-                        ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
-                        ->where('notice_slip.status', 'Approved')
-                        ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to');
+            ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+            ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
+            ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
+            ->where('notice_slip.status', 'Approved')
+            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to');
 
         $out_of_office_today = $out_today->get();
         $on_leave_today = $out_today->count();
 
 
         $clientexams = Examinee::join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
-                        ->join('users', 'examinee.user_id', '=', 'users.id')
-                        ->join('exam_group', 'exams.exam_group_id', '=', 'exam_group.exam_group_id')
-                        ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'exam_group.exam_group_description')
-                        ->where('examinee.user_id',Auth::user()->id)
-                        ->orderBy('validity_date','desc')
-                        ->orderBy('date_of_exam','desc')
-                        ->get();
+            ->join('users', 'examinee.user_id', '=', 'users.id')
+            ->join('exam_group', 'exams.exam_group_id', '=', 'exam_group.exam_group_id')
+            ->select('examinee.*', 'exams.exam_title', 'users.employee_name', 'exam_group.exam_group_description')
+            ->where('examinee.user_id',Auth::user()->id)
+            ->orderBy('validity_date','desc')
+            ->orderBy('date_of_exam','desc')
+            ->get();
 
         $userDept = User::join('departments', 'users.department_id', '=', 'departments.department_id')
-                        ->where('users.department_id', Auth::user()->department_id)
-                        ->select('department')
-                        ->first();
+            ->where('users.department_id', Auth::user()->department_id)
+            ->select('department')
+            ->first();
 
         
         $employee_profiles = User::where('users.department_id',Auth::user()->department_id)
-                        ->join('departments','users.department_id','departments.department_id')
-                        ->join('designation','users.designation_id','designation.des_id')
-                        ->select('users.*','departments.department','designation.designation')
-                        ->orderBy('department')
-                        ->orderBy('designation')
-                        ->orderBy('employee_name')
-                        ->paginate(10);
+            ->join('departments','users.department_id','departments.department_id')
+            ->join('designation','users.designation_id','designation.des_id')
+            ->select('users.*','departments.department','designation.designation')
+            ->orderBy('department')
+            ->orderBy('designation')
+            ->orderBy('employee_name')
+            ->paginate(10);
 
         $date = new Carbon();
         $date->addDays(93);
         $getholiday= CalendarEvent::whereBetween('holiday_date',[new Carbon(),$date])->get();
 
         $department_heads= DB::table('department_head_list')
-                            ->join('departments','department_head_list.department_id','=','departments.department_id')
-                            ->where('employee_id',Auth::user()->user_id)
-                            ->get();
+            ->join('departments','department_head_list.department_id','=','departments.department_id')
+            ->where('employee_id',Auth::user()->user_id)
+            ->get();
         if(!$department_heads->isEmpty()){
           $depart='head';
         }
         else{
           $department_heads= DB::table('users')
-                            ->join('departments','users.department_id','=','departments.department_id')
-                            ->where('user_id',Auth::user()->user_id)
-                            ->get();
+            ->join('departments','users.department_id','=','departments.department_id')
+            ->where('user_id',Auth::user()->user_id)
+            ->get();
           $depart='employee';
         }
 
