@@ -41,7 +41,20 @@ class AbsentNoticesController extends Controller
     public function store(Request $request){
         DB::beginTransaction();
         try {
-            if (in_array($request->absence_type, [1, 2, 3, 4,7])) {
+            if(!$request->absence_type){
+                return response()->json(['success' => 0, 'message' => 'Please select an absence type.']);
+            }
+
+            $exploded_absence_id = explode('-', $request->absence_type);
+
+            $absence_type_id = isset($exploded_absence_id[0]) ? $exploded_absence_id[0] : null;
+            $absence_type = DB::table('leave_types')->where('leave_type_id', $request->absence_type)->first();
+
+            if(!$absence_type){
+                return response()->json(['success' => 0, 'message' => 'Absence type not found.']);
+            }
+
+            if ($absence_type->applied_to_all) {
                 $date_from = Carbon::parse($request->date_from);
                 $date_to = Carbon::parse($request->date_to);
                 $diff_in_days = $date_to->diffInDays($date_from);
@@ -52,7 +65,7 @@ class AbsentNoticesController extends Controller
                 $diff_in_hours = $time_to->diffInMinutes($time_from);
                 $duration = ($diff_in_hours / 60) * 0.125;
             }
-    
+
             // get number of days absent
             $fdate = $request->date_from;
             $tdate = $request->date_to;
@@ -61,36 +74,42 @@ class AbsentNoticesController extends Controller
             $interval = $datetime1->diff($datetime2);
             $days = $interval->format('%a');
             $days = $days + 1;
+
+            $remarks = $request->remarks;
+            if(isset($exploded_absence_id[1]) && $exploded_absence_id[1] == 'halfday'){
+                $days = $days / 2;
+                $remarks = $request->remarks ? $request->remarks.' - Half Day' : 'Half Day';
+            }
     
             // get total & remaining number of leaves
             $year= date("Y");
             $leave_type = DB::table('employee_leaves')
-                            ->where('leave_type_id', '=', $request->absence_type)
-                            ->where('employee_id', '=', $request->user_id)
-                            ->where('employee_leaves.year','=', $year)
-                            ->select('employee_leaves.*')
-                            ->first();
-           
+                ->where('leave_type_id', $absence_type_id)
+                ->where('employee_id', $request->user_id)
+                ->where('employee_leaves.year', $year)
+                ->select('employee_leaves.*')
+                ->first();
+
             // subtract number of days absent from total
             if (isset($leave_type->remaining)) {
-                    $remaining = $leave_type->remaining - $days;
-    
-                    // update remaining number of leaves
-                    $employee_leave = DB::table('employee_leaves')
-                            ->where('leave_id', '=', $leave_type->leave_id)
-                            ->where('employee_id', '=', $request->user_id)
-                            ->where('employee_leaves.year','=', $year)
-                            ->update([
-                                'remaining' => $remaining
-                            ]);
+                $remaining = $leave_type->remaining - $days;
+
+                // update remaining number of leaves
+                $employee_leave = DB::table('employee_leaves')
+                    ->where('leave_id', '=', $leave_type->leave_id)
+                    ->where('employee_id', '=', $request->user_id)
+                    ->where('employee_leaves.year','=', $year)
+                    ->update([
+                        'remaining' => $remaining
+                    ]);
             }
 
             $token = Str::random(64);
-    
+
             $notice_slip = new AbsentNotice;
             $notice_slip->user_id = $request->user_id;
             $notice_slip->dept_id = $request->department;
-            $notice_slip->leave_type_id = $request->absence_type;
+            $notice_slip->leave_type_id = $absence_type_id;
             $notice_slip->date_from = $request->date_from;
             $notice_slip->date_to = $request->date_to;
             $notice_slip->time_from = $request->time_from;
@@ -100,12 +119,12 @@ class AbsentNoticesController extends Controller
             $notice_slip->time_reported = $request->time_reported;
             $notice_slip->info_by = $request->info_by;
             $notice_slip->status = 'FOR APPROVAL';
-            $notice_slip->remarks = $request->remarks;
+            $notice_slip->remarks = $remarks;
             $notice_slip->created_by = Auth::user()->employee_name;
             $notice_slip->duration = $duration;
             $notice_slip->token = $token;
             $notice_slip->save();
-    
+
             $viewdetails =DB::table('notice_slip')
                 ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
                 ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
@@ -113,9 +132,14 @@ class AbsentNoticesController extends Controller
                 ->orderBy('notice_id', 'desc')
                 ->where('user_id', Auth::user()->user_id)
                 ->first();
-    
+
             $notice_id = $viewdetails->notice_id;
-    
+
+            $leave_type_txt = $viewdetails->leave_type;
+            if(isset($exploded_absence_id[1]) && $exploded_absence_id[1] == 'halfday'){
+                $leave_type_txt = 'Half Day '.$viewdetails->leave_type;
+            }
+
             $data = array(
                 'employee_name'     => Auth::user()->employee_name,
                 'year'              => now()->format('Y'),
@@ -124,7 +148,7 @@ class AbsentNoticesController extends Controller
                 'means'             => $request->means,
                 'reason'            => $request->reason,
                 'token'             => $token,
-                'leave_type'        => $viewdetails->leave_type,
+                'leave_type'        => $leave_type_txt,
                 'from'              => Carbon::parse($viewdetails->date_from.' '.$viewdetails->time_from)->format('M. d, Y h:i A'),
                 'to'                => Carbon::parse($viewdetails->date_to.' '.$viewdetails->time_to)->format('M. d, Y h:i A'),
                 'department'        => $viewdetails->department
@@ -144,9 +168,9 @@ class AbsentNoticesController extends Controller
     
             DB::commit();
             return response()->json(['success' => 1, 'message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>']);
-        } catch (\Throwable $th) {
+        } catch (Exception $th) {
             DB::rollback();
-            // throw $th;
+            // return $th->getMessage();
             return response()->json(['success' => 0, 'message' => 'An error occured. Please try again.']);
         }
     }
