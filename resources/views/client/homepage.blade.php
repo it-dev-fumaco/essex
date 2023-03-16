@@ -1601,8 +1601,8 @@ function entryvalidation(){
 	  var fmon = $('#endtime').val();
 	  var convertedFrom = (convertTime12to24(smon));
 	  var convertedTo = (convertTime12to24(fmon));
-	  // console.log(convertedFrom);
-	  // console.log(convertedTo);
+	//   console.log(convertedFrom);
+	//   console.log(convertedTo);
 	  var remain_sick = $('#remain_L2').val();
 	  var remain_vaca = $('#remain_L1').val();
 	  var diff = 0 ;
@@ -1622,9 +1622,11 @@ function entryvalidation(){
 	    	$("#reg_L10").show();
 	    	$("#reg_L7").hide();
 
-	    	$("#emp_L1").hide();
+	    	$("#emp_L1").hide();	    	
+			$("#emp_L1-5").show(); // VL/SL Half day
 	 		$(".remain_L1").hide();
-	 		$("#emp_L2").hide();
+	 		$("#emp_L2").hide();	 		
+			$("#emp_L2-5").show(); // VL/SL Half day
 	 		$(".remain_L2").hide();
 	   	}else if(secondsTohhmmss(diff) <=4){
 	    	$("#reg_L7").hide();
@@ -1632,9 +1634,11 @@ function entryvalidation(){
 	    	$("#reg_L9").hide();
 	    	$("#reg_L10").hide();
 
-	 		$("#emp_L1").hide();
+	 		$("#emp_L1").hide();	 		
+			$("#emp_L1-5").show(); // VL/SL Half day
 	 		$(".remain_L1").hide();
-	 		$("#emp_L2").hide();
+	 		$("#emp_L2").hide();	 		
+			$("#emp_L2-5").show(); // VL/SL Half day
 	 		$(".remain_L2").hide();
 	 	}else if(secondsTohhmmss(diff) <=8){
 	    	$("#reg_L7").hide();
@@ -1642,9 +1646,11 @@ function entryvalidation(){
 	    	$("#reg_L9").hide();
 	    	$("#reg_L10").hide();
 
-	 		$("#emp_L1").hide();
+	 		$("#emp_L1").hide();	 		
+			$("#emp_L1-5").show(); // VL/SL Half day
 	 		$(".remain_L1").hide();
-	 		$("#emp_L2").hide();
+	 		$("#emp_L2").hide();	 		
+			$("#emp_L2-5").show(); // VL/SL Half day
 	 		$(".remain_L2").hide();
 
 	    }else if(secondsTohhmmss(diff) >= 9){
@@ -1655,22 +1661,26 @@ function entryvalidation(){
 
 	    	if(remain_vaca > 0){
 				if(totaldays > remain_vaca){
-			 		$("#emp_L1").hide();
+			 		$("#emp_L1").hide();			 		
+					$("#emp_L1-5").hide();
 					$(".remain_L1").hide();
 					console.log('hide vaca');
 				}else{
-					$("#emp_L1").show();
+					$("#emp_L1").show();					
+					$("#emp_L1-5").show();
 					$(".remain_L1").show();
 					console.log('show vaca');
 				}
 			}
 			if(remain_sick > 0){
 				if(totaldays > remain_sick){
-					$("#emp_L2").hide();
+					$("#emp_L2").hide();					
+					$("#emp_L2-5").hide();
 					$(".remain_L2").hide();
 					console.log('hide sick');
 				}else{
-					$("#emp_L2").show();
+					$("#emp_L2").show();					
+					$("#emp_L2-5").show();
 					$(".remain_L2").show();
 					console.log('show sick');
 				}

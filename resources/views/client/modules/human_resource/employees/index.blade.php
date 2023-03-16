@@ -35,6 +35,12 @@
                         <center>{!! session("message") !!}</center>
                      </div>
                      @endif
+                     @if(session("error"))
+                     <div class='alert alert-danger alert-dismissible'>
+                        <button type='button' class='close' data-dismiss='alert'>&times;</button>
+                        <center>{!! session("error") !!}</center>
+                     </div>
+                     @endif
                      <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#add-employee-modal" style="float: left; margin-bottom: -55px; z-index: 1;">
                         <i class="fa fa-plus"></i> Employee
                      </a>
@@ -251,7 +257,6 @@ textarea{
    $('.modal').on('hidden.bs.modal', function(){
          $(this).find('form')[0].reset();
       });
-      
    });
 </script>
 

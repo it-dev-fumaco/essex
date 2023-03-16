@@ -83,18 +83,26 @@
                                     <div class="col-md-4" style="padding: 50px 0 20px 30px;">
                                        <span style="display: block; padding-bottom: 10px; font-style: italic;">Type of Absence*</span>
                                        @foreach($leave_types as $leave_type)
-                                       <div id="emp_L{{ $leave_type->leave_type_id }}">
-                                         <label class="radio_container">{{ $leave_type->leave_type }}
-                                         <input type="radio" name="absence_type" value="{{ $leave_type->leave_type_id }}" id="{{ $leave_type->leave_type_id }}">
-                                             <span class="checkmark"></span>
-                                          </label>
-                                       </div>
+                                          <div id="emp_L{{ $leave_type->leave_type_id }}">
+                                             <label class="radio_container">{{ $leave_type->leave_type }}
+                                             <input type="radio" name="absence_type" value="{{ $leave_type->leave_type_id }}" id="{{ $leave_type->leave_type_id }}" required>
+                                                <span class="checkmark"></span>
+                                             </label>
+                                          </div>
+                                          @if (!$leave_type->applied_to_all)
+                                             <div id="emp_L{{ $leave_type->leave_type_id }}-5">
+                                                <label class="radio_container">Half Day {{ $leave_type->leave_type }}
+                                                <input type="radio" name="absence_type" value="{{ $leave_type->leave_type_id }}-halfday" id="{{ $leave_type->leave_type_id }}.5" required>
+                                                   <span class="checkmark"></span>
+                                                </label>
+                                             </div>    
+                                          @endif
                                        @endforeach
                                        
                                        @foreach($absence_types as $absence_type)
                                        <div id="reg_L{{ $absence_type->leave_type_id }}">
                                           <label class="radio_container">{{ $absence_type->leave_type }}
-                                             <input type="radio" name="absence_type" value="{{ $absence_type->leave_type_id }}" id="{{ $absence_type->leave_type_id }}">
+                                             <input type="radio" name="absence_type" value="{{ $absence_type->leave_type_id }}" id="{{ $absence_type->leave_type_id }}" required>
                                             <span class="checkmark"></span>
                                           </label>
                                        </div>
