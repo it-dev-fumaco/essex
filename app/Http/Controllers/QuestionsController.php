@@ -247,9 +247,8 @@ class QuestionsController extends Controller
             DB::commit();
             return response()->json(['success' => 1, 'message' => 'Question no. <b>' . $question->question_id . '</b> has been added.']);
         } catch (\Throwable $th) {
-            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again later.']);
             DB::rollback();
-            throw $th;
+            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again later.']);
         }
     }
 

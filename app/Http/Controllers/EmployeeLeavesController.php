@@ -8,6 +8,7 @@ use App\EmployeeLeave;
 use DB;
 use Auth;
 use Carbon\Carbon;
+use Exception;
 
 class EmployeeLeavesController extends Controller
 {

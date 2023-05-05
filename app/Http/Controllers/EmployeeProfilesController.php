@@ -182,7 +182,7 @@ class EmployeeProfilesController extends Controller
         $notice->status = "Approved";
         $notice->save();
 
-        return redirect()->route('client.view_employee_profile',$request->user_id);
+        return redirect()->route('client.view_employee_profile',$user_id);
     }
 
     public function changePassword(Request  $request){

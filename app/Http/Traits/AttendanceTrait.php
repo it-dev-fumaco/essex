@@ -144,8 +144,8 @@ trait AttendanceTrait
         $to_date = Carbon::parse($to_date)->format('Y-m-d');
 
         $days_present = DB::table('biometric_logs')->where('user_id', (int)$user_id)
-                ->whereBetween('transaction_date', [$from_date, $to_date])->select('transaction_date')
-                ->distinct('transaction_date')->count('transaction_date');
+                ->whereBetween('transaction_date', [$from_date, $to_date])
+                ->distinct()->count('transaction_date');
 
         return $days_present;
     }
@@ -217,8 +217,8 @@ trait AttendanceTrait
                     if (stripos(strtolower($row->leave_type), 'half')) {
                         $days = $days + 0.5;
                     }else if (stripos(strtolower($row->leave_type), 'undertime')) {
-                        $time_from = date('G:i', strtotime($row->time_from));
-                        $time_to = date('G:i', strtotime($row->time_to));
+                        $time_from = Carbon::parse($row->time_from);
+                        $time_to = Carbon::parse($row->time_to);
 
                         $hrs = $time_to->diffInHours($time_from) / 8;
 
@@ -293,7 +293,7 @@ trait AttendanceTrait
                     $biometric_count = DB::table('biometric_logs')
                         ->where('user_id', (int)$user_id)
                         ->whereDate('transaction_date', $date_period->format($format))
-                        ->distinct('transaction_date')->count();
+                        ->distinct()->count('transaction_date');
 
                     if ($biometric_count <= 0) {
                         if ($date_period->format($format) < date($format) && $date_period->format('N') < 7) {
@@ -324,8 +324,13 @@ trait AttendanceTrait
 
     // new 
     public function overallStatus($logs, $transaction_date, $employee){
-        $time_in = $logs ? $logs->time_in : null;
-        $time_out = $logs ? $logs->time_out : null;
+        if(is_array($logs)){
+            $time_in = $logs ? $logs['time_in'] : null;
+            $time_out = $logs ? $logs['time_out'] : null;
+        }else{ // for object
+            $time_in = $logs ? $logs->time_in : null;
+            $time_out = $logs ? $logs->time_out : null;
+        }
 
         $hasNotice = $this->getNotices($transaction_date, $employee);
    

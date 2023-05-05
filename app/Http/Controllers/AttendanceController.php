@@ -179,8 +179,8 @@ class AttendanceController extends Controller
                     if (stripos(strtolower($row->leave_type), 'half')) {
                         $days = $days + 0.5;
                     }else if (stripos(strtolower($row->leave_type), 'undertime')) {
-                        $time_from = date('G:i', strtotime($row->time_from));
-                        $time_to = date('G:i', strtotime($row->time_to));
+                        $time_from = Carbon::parse($row->time_from);
+                        $time_to = Carbon::parse($row->time_to);
 
                         $hrs = $time_to->diffInHours($time_from) / 8;
 
@@ -314,11 +314,11 @@ class AttendanceController extends Controller
         $department = $this->sessionDetails('department');
 
         $active_employees = DB::table('users')->where('user_type', 'Employee')->where('status', 'Active')->count();
-        $present_today = DB::table('biometrics')->distinct('employee_id')->where('bio_date', date('Y-m-d'))->count('employee_id');
-        $out_today = DB::table('notice_slip')->distinct('user_id')
+        $present_today = DB::table('biometrics')->where('bio_date', date('Y-m-d'))->distinct()->count('employee_id');
+        $out_today = DB::table('notice_slip')
                         ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
                         ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
-                        ->where('notice_slip.status', 'Approved')->count();
+                        ->where('notice_slip.status', 'Approved')->distinct()->count('user_id');
 
         $totals = [
             'active_employees' => $active_employees,
@@ -485,11 +485,16 @@ class AttendanceController extends Controller
             $day= $datess->format( 'l');
             $timein=$this->bioTimein($user_id,$datte);
             $timeout=$this->bioTimeout($user_id, $datte);
+            $logs = [
+                'time_in' => $timein,
+                'time_out' => $timeout
+            ];
             $shift_timein =$this->ShiftSpecial_timein($day,$datte,$user_id);
             $shift_timeout =$this->ShiftSpecial_timeout($day, $datte, $user_id);
             $grace_period = $this->graceperiod($day, $datte, $user_id) + 1;
             $statuss=$this->setStatus($timein, $shift_timein, $grace_period, $timeout, $datte, $datess, $user_id);
-            $stat=$this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+            // $stat=$this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+            $stat=$this->overallStatus($logs, $datte, $user_id);
             $breaktime_by_hour=$this->breaktime_by_hour($day, $datte, $user_id);
             $gettotalworkhrs=$this->calculateTwh($timein, $shift_timein, $timeout, $breaktime_by_hour, $grace_period, $shift_timeout);
             $getovertime=$this->calculateOvertime($timein, $shift_timeout, $timeout);
@@ -513,8 +518,8 @@ class AttendanceController extends Controller
                 // 'shift_timeout' => $this->ShiftSpecial_timeout($day, $datte, $user_id),
                 // 'graceperiod' => $this->graceperiod($day, $datte, $user_id),
                 // 'bio_date' => $this->biometricsfunc($user_id, $datte),
-                'timein' => $this->bioTimein($user_id, $datte),
-                'timeout' => $this->bioTimeout($user_id, $datte),
+                'timein' => $timein,
+                'timeout' => $timeout,
                 // 'location_in' => $this->bioLocin($user_id, $datte),
                 // 'location_out' => $this->bioLocout($user_id, $datte),
             ];
@@ -681,7 +686,13 @@ class AttendanceController extends Controller
     // }
 
     public function setStatus($timein, $shift_timein, $grace_period, $timeout, $datte, $datess, $user_id){
-        $statuss = $this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+        $logs = [
+            'time_in' => $timein,
+            'time_out' => $timeout
+        ];
+
+        // $statuss = $this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+        $statuss = $this->overallStatus($logs, $datte, $user_id);
         $timein = Carbon::parse($timein);
         $shift_timein = Carbon::parse($shift_timein);
             
@@ -699,16 +710,19 @@ class AttendanceController extends Controller
     }
 
     public function getTotalLates($timein, $shift_timein, $grace_period, $timeout, $datte, $datess, $user_id){
-        $status = $this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+        $logs = [
+            'time_in' => $timein,
+            'time_out' => $timeout
+        ];
+        // $status = $this->overallStatus($timein, $timeout, $datte, $datess, $user_id);
+        $status = $this->overallStatus($logs, $datte, $user_id);
         $time_in = Carbon::parse($timein);
         $shift_in =Carbon::parse($shift_timein)->addMinutes((int)$grace_period - 1);
 
         if (empty($timein)) {
             $late_in_minutes = 0;
-        }
-        elseif($status == 'Half Day Absence'){
+        }elseif($status == 'Half Day Absence'){
           $late_in_minutes = 0;
-
         }elseif($time_in > $shift_in){
             $late_in_minutes = $time_in->diffInMinutes($shift_in);
         }else{

@@ -1214,7 +1214,7 @@ class EvaluationController extends Controller
                 })
                 ->when($department, function($query) use ($department){
                     return $query->where('department_id', $department);
-                })
+                })->select('kpi_id', 'kpi_description')
                 ->get();
 
         $result = [];
@@ -1233,7 +1233,7 @@ class EvaluationController extends Controller
         $metric_list = DB::table('metrics')
                 ->when($kpi, function($query) use ($kpi){
                     return $query->where('kpi_id', $kpi);
-                })
+                })->select('metric_id', 'metric_description')
                 ->get();
 
         $result = [];
@@ -1280,11 +1280,11 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.kpi.tables.employee_kpi_result', compact('kpi_result'));
     }
 
-    public function viewEmpAppraisalResult($id){
+    public function viewEmpAppraisalResult($user_id){
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $appraisal_result = DB::table('appraisal_result')->where('appraisal_result_id', $id)->first();
+        $appraisal_result = DB::table('appraisal_result')->where('appraisal_result_id', $user_id)->first();
 
         $employee_id = $appraisal_result->employee_id;
 
@@ -1344,7 +1344,7 @@ class EvaluationController extends Controller
 
         $qualitative_kpi_set = DB::table('qualitative_kpi_result')
                 ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
-                ->where('qualitative_kpi_result.appraisal_result_id', $id)
+                ->where('qualitative_kpi_result.appraisal_result_id', $user_id)
                 ->where('category', 'Qualitative')->get();
 
         $employee_details = DB::table('users')

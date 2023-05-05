@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use App\ExamType;
+use Auth;
 
 use Exception;
 class ExamTypesController extends Controller

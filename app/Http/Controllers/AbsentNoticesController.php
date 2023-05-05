@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use DateInterval;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Exception;
 
 class AbsentNoticesController extends Controller
 {
@@ -922,15 +923,14 @@ class AbsentNoticesController extends Controller
                         if (stripos(strtolower($row->leave_type), 'half')) {
                             $days = $days + 0.5;
                         }else if (stripos(strtolower($row->leave_type), 'undertime')) {
-                            $time_from = date('G:i', strtotime($row->time_from));
-                            $time_to = date('G:i', strtotime($row->time_to));
+                            $time_from = Carbon::parse($row->time_from);
+                            $time_to = Carbon::parse($row->time_to);
 
                             $hrs = $time_to->diffInHours($time_from) / 8;
 
                             $days = $days + $hrs;
                         }else{
                             $days++;
-                            
                         }
                         if ($absence_date->format( 'Y-m-d') > date('Y-m-d')) {
                             if ($status == 'APPROVED') {

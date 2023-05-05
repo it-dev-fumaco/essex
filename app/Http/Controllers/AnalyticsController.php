@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
+use Carbon\Carbon;
 
 class AnalyticsController extends Controller
 {
@@ -23,11 +24,11 @@ class AnalyticsController extends Controller
         $department = $this->sessionDetails('department');
 
         $active_employees = DB::table('users')->where('user_type', 'Employee')->where('status', 'Active')->count();
-        $present_today = DB::table('biometrics')->distinct('employee_id')->where('bio_date', date('Y-m-d'))->count('employee_id');
-        $out_today = DB::table('notice_slip')->distinct('user_id')
+        $present_today = DB::table('biometrics')->where('bio_date', date('Y-m-d'))->distinct()->count('employee_id');
+        $out_today = DB::table('notice_slip')
                         ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
                         ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
-                        ->where('notice_slip.status', 'Approved')->count();
+                        ->where('notice_slip.status', 'Approved')->distinct()->count('user_id');
 
         $totals = [
             'active_employees' => $active_employees,

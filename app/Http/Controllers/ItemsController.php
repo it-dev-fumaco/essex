@@ -97,18 +97,16 @@ class ItemsController extends Controller
     }
 
     public function updateIssuedItems(Request $request, $id){
-        DB::table('issued_to_employee')
-                ->update([
-                    'user_id' => $request->employee,
-                    'item_id' => $request->item,
-                    'status' => $request->status,
-                    'date_issued' => $request->date_issued,
-                    'issued_by' => $request->issued_by,
-                    'valid_until' => $request->valid_until,
-                    'revoke_reason' => $request->revoke_reason,
-                    'remarks' => $request->remarks
-                ])
-                ->where('issue_id', '=', $id);
+        DB::table('issued_to_employee')->where('issue_id', '=', $id)->update([
+            'user_id' => $request->employee,
+            'item_id' => $request->item,
+            'status' => $request->status,
+            'date_issued' => $request->date_issued,
+            'issued_by' => $request->issued_by,
+            'valid_until' => $request->valid_until,
+            'revoke_reason' => $request->revoke_reason,
+            'remarks' => $request->remarks
+        ]);
 
         return redirect('/admin/items_issued')->with('message', 'Item successfully updated');
     }

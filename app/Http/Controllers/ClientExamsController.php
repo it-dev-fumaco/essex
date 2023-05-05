@@ -15,6 +15,7 @@ use App\ExamType;
 use App\ExaminationResult;
 use App\ExamineeAnswer;
 use Auth;
+use Exception;
 class ClientExamsController extends Controller
 {
 

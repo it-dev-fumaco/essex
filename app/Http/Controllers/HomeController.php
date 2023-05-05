@@ -109,7 +109,7 @@ class HomeController extends Controller
                 ->count();        
         }
 
-        $departmentHeads = DB::table('department_head_list')->distinct('employee_id')->pluck('employee_id');
+        $departmentHeads = DB::table('department_head_list')->distinct()->pluck('employee_id');
         
         $awaiting_approval = $awaiting_notices + $awaiting_gatepass;
 
@@ -363,7 +363,7 @@ class HomeController extends Controller
             ->orderBy('examinee.examinee_id', 'desc')
             ->get();
 
-        $examDepts = DB::table('exams')->select('department_id')->distinct('department_id')->get();
+        $examDepts = DB::table('exams')->distinct()->select('department_id')->get();
         
         $deptIDs = [null];
         foreach($examDepts as $edept){
@@ -430,19 +430,12 @@ class HomeController extends Controller
         // $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
 
         $files = DB::table('evaluation_files')
-                    ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id');
-                    
-        if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
-            $files = $files;
-        // }elseif (count($handledDepts) > 0) {
-        //     $files = $files->whereIn('users.department_id', $handledDepts);
-        }else{
-            $files = $files->where('evaluation_files.employee_id', Auth::user()->user_id);
-        }
-        
-        $files = $files->select('users.employee_name', 'evaluation_files.*', DB::raw('(select employee_name from users where user_id = evaluation_files.evaluated_by) as evaluated_by'))
-                    ->orderBy('id', 'desc')
-                    ->paginate(8);
+            ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id')
+            ->when(!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President']), function ($q){
+                return $q->where('evaluation_files.employee_id', Auth::user()->user_id);
+            })->select('users.employee_name', 'evaluation_files.*', DB::raw('(select employee_name from users where user_id = evaluation_files.evaluated_by) as evaluated_by'))
+            ->orderBy('id', 'desc')
+            ->paginate(8);
 
         return view('client.tables.evaluation_table', compact('files', 'designation'))->render();
     }
@@ -498,8 +491,8 @@ class HomeController extends Controller
         $user_id=Auth::user()->user_id;
 
         $attendance_dates = DB::table('biometrics')->where('employee_id',(int)$user_id)
-                ->whereBetween('bio_date', [$from_date, $to_date])->select('bio_date')
-                ->distinct('bio_date')->count('bio_date');
+                ->whereBetween('bio_date', [$from_date, $to_date])
+                ->distinct()->count('bio_date');
 
         return $attendance_dates;
     }
@@ -510,8 +503,8 @@ class HomeController extends Controller
         $to_date = $datee->format('Y-m-d');
 
         $days_present = DB::table('biometrics')->where('employee_id', Auth::user()->user_id)
-                ->whereBetween('bio_date', [$from_date, $to_date])->select('bio_date')
-                ->distinct('bio_date')->count('bio_date');
+                ->whereBetween('bio_date', [$from_date, $to_date])
+                ->distinct()->count('bio_date');
 
         return $days_present;
     }
@@ -594,7 +587,7 @@ class HomeController extends Controller
         $absent= $workingdays - $presentdays;
         $compute=($presentdays / $workingdays)* 100;
     
-        $lastmonthname = \Carbon\Carbon::now();
+        $lastmonthname = Carbon::now();
         $month= $lastmonthname->subMonth()->format('F');
 
         $round_compute=(round($compute, 2));

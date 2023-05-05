@@ -14,6 +14,7 @@ use App\Exam;
 use App\ExamType;
 use App\ExaminationResult;
 use App\ExamineeAnswer;
+use Exception;
 
 class ApplicantExaminationsController extends Controller
 {

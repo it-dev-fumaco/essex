@@ -16,6 +16,7 @@ use DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EmployeesController extends Controller
 {
@@ -305,7 +306,7 @@ class EmployeesController extends Controller
                 return redirect()->back()->with('error', 'User ID already exists.')->withInput();
             }
             
-            if(str_contains($request->email, '@fumaco.local') && User::where('email', $request->email)->exists()){
+            if(strpos($request->email, '@fumaco.local') && User::where('email', $request->email)->exists()){
                 return redirect()->back()->with('error', 'Email already exists.')->withInput();
             }
 
@@ -384,7 +385,7 @@ class EmployeesController extends Controller
                     break;
             }
 
-            if($request->email && str_contains($request->email, '@fumaco.local')){
+            if($request->email && strpos($request->email, '@fumaco.local')){
                 $data = [
                     'name' => $employee->employee_name,
                     'department' => $department->department,
