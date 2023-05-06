@@ -150,12 +150,83 @@ class PortalController extends Controller
         return redirect()->back()->with('message', 'Photo has been set as featured image!');
     }
 
-    public function showManuals(){
-        $manuals = DB::table('posts')->where('category', 'manuals')->orderBy('created_at', 'desc')->get();
-        return view('portal.manuals', compact('manuals'));
+    public function showManuals(Request $request){
+        $articles_by_tag = [];
+        $tag = null;
+        if($request->tag){
+            $tag = DB::connection('mysql_kb')->table('tags')->where('id', $request->tag)->pluck('name')->first();
+            $articles_by_tag = DB::connection('mysql_kb')->table('article_tag')->where('tag_id', $request->tag)->pluck('article_id');
+        }
+
+        if($request->ajax()){
+            $search_str = $request->search;
+            $articles = DB::connection('mysql_kb')->table('articles as a')
+                ->join('categories as c', 'a.category_id', 'c.id')
+                ->when($request->tag, function ($q) use ($articles_by_tag){
+                    return $q->whereIn('a.id', $articles_by_tag);
+                })
+                ->when(!Auth::check(), function ($q){
+                    return $q->where('a.is_private', 0);
+                })
+                ->when($search_str, function ($q) use ($search_str){
+                    $q->where(function($q) use ($search_str) {
+                        $search_strs = explode(" ", $search_str);
+                        foreach ($search_strs as $str) {
+                            $q->where('a.title', 'LIKE', "%".$str."%");
+                        }
+                        
+                        $q->orWhere(function($q) use ($search_strs) {
+                            foreach ($search_strs as $str) {
+                                $q->where('a.short_text', 'LIKE', "%".$str."%");
+                            }
+                        });
+
+                        $q->orWhere('c.name', 'like', '%'.$search_str.'%');
+                    });
+                })->whereNull('a.deleted_at')
+                ->select('a.*', 'c.name as category')
+                ->orderBy('a.views_count', 'desc')->get();
+            
+            if(Auth::check()){
+                $articles = collect($articles)->filter(function ($query){
+                    $allowed_departments = explode(',', $query->allowed_departments);
+                    return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+                });
+            }
+                
+            $latest_articles = $articles->take(6)->sortByDesc('updated_at');
+            $articles = $articles->groupBy('category');
+
+            return view('portal.tbl_manuals', compact('articles', 'latest_articles'));
+        }
+
+        return view('portal.manuals', compact('tag'));
     }
 
-    
+    public function showArticle($slug){
+        $article = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->select('articles.*', 'categories.name as category')
+            ->where('articles.slug', $slug)->first();
+        
+        if(!$article){
+            return redirect()->back()->with('error', 'Article not found');
+        }
+
+        if($article->is_private){
+            $allowed_departments = explode(',', $article->allowed_departments);
+            if(!Auth::check() || !in_array(Auth::user()->department_id, $allowed_departments)){
+                abort(401);
+            }
+        }
+
+        $files = DB::connection('mysql_kb')->table('article_files')->where('article_id', $article->id)->get();
+        $tags = DB::connection('mysql_kb')->table('article_tag as at')
+            ->join('tags', 'tags.id', 'at.tag_id')
+            ->where('at.article_id', $article->id)->select('tags.*')->get();
+
+        return view('portal.article_page', compact('article', 'files', 'tags'));
+    }
 
     public function showUpdates(){
         $updates = DB::table('posts')->where('category', 'updates')->orderBy('created_at', 'desc')->get();
