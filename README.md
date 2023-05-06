@@ -2,6 +2,7 @@
 Employee Support and Services Exchange (Employee Portal)
 
 Instructions using GUI and Commands
+
     Download GitHub Desktop
     Clone Project https://github.com/it-dev-fumaco/essex.git
     Locate Project Folder on your local PC
