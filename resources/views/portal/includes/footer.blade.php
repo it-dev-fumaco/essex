@@ -1,11 +1,11 @@
 <footer>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-10 col-md-offset-2">
                 <div class="footer-widget">
                     <h4> Useful Links </h4>
                     <div class="footer-nav">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <ul>
                                 <li><a href="http://www.accuweather.com" target="_blank"><i class="icon-arrow-right"></i>Accuweather</a></li>
                                 <li><a href="http://www.axolight.it/europe/en_GB" target="_blank"><i class="icon-arrow-right"></i>Axo Light</a></li>
@@ -21,7 +21,7 @@
                                 <li><a href="http://www.grandliteled.com/" target="_blank"><i class="icon-arrow-right"></i>Grandlite</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <ul>
                                 <li><a href="https://www.koizumi-lt.co.jp/index.html" target="_blank"><i class="icon-arrow-right"></i>Koizumi</a></li>
                                 <li><a href="https://www.lbcexpress.com/" target="_blank"><i class="icon-arrow-right"></i>LBC Express</a></li>
@@ -37,7 +37,7 @@
                                 <li><a href="http://www.philgeps.net/" target="_blank"><i class="icon-arrow-right"></i>Philgeps</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <ul>
                                 <li><a href="https://www.philippineairlines.com/en/ph/home" target="_blank"><i class="icon-arrow-right"></i>Philippine Airlines</a></li>
                                 <li><a href="http://www.riolight.com" target="_blank"><i class="icon-arrow-right"></i>Rio</a></li>

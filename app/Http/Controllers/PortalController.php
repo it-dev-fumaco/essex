@@ -7,32 +7,51 @@ use Illuminate\Support\Facades\Storage;
 use Image;
 use Auth;
 use DB;
+use Carbon\Carbon;
 
 class PortalController extends Controller
 {
     public function index(){
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
         $milestones = DB::table('posts')
-                    ->where('category', 'historical_milestones')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            ->where('category', 'historical_milestones')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $latest_news = DB::table('post_logs')
-                    ->select('post_logs.post_id as p_id',
-                        DB::raw("(SELECT max(id) FROM post_logs where post_id = p_id group by post_id) as log_id"),
-                        DB::raw("(SELECT new_title FROM post_logs where id = log_id) as title"),
-                        DB::raw("(SELECT new_content FROM post_logs where id = log_id) as content"),
-                        DB::raw("(SELECT date_modified FROM post_logs where id = log_id) as date_modified"),
-                        DB::raw("(SELECT employee_name FROM post_logs JOIN users ON users.user_id = post_logs.user_id where post_logs.id = log_id) as employee_name")
-                    )
-                    ->groupBy('post_id')
-                    ->orderBy('date_modified', 'desc')
-                    ->limit(5)
-                    ->get();
+            ->select('post_logs.post_id as p_id',
+                DB::raw("(SELECT max(id) FROM post_logs where post_id = p_id group by post_id) as log_id"),
+                DB::raw("(SELECT new_title FROM post_logs where id = log_id) as title"),
+                DB::raw("(SELECT new_content FROM post_logs where id = log_id) as content"),
+                DB::raw("(SELECT date_modified FROM post_logs where id = log_id) as date_modified"),
+                DB::raw("(SELECT employee_name FROM post_logs JOIN users ON users.user_id = post_logs.user_id where post_logs.id = log_id) as employee_name")
+            )
+            ->groupBy('post_id')
+            ->orderBy('date_modified', 'desc')
+            ->limit(5)
+            ->get();
 
-        $updates = DB::table('posts')->where('category', 'updates')->orderBy('created_at', 'desc')->get();
+        $general_concerns = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->where('articles.is_private', 0)->whereNull('articles.deleted_at')
+            ->select('articles.*', 'categories.name as category')
+            ->orderBy('articles.views_count', 'desc')->limit(6)
+            ->get();
 
-        return view('portal.homepage', compact('albums', 'milestones', 'latest_news', 'updates'));
+        $it_policy = DB::connection('mysql_kb')->table('articles')->where('title', 'IT Guidelines and Policies')->pluck('slug')->first();
+
+        $approvals = [];
+        if(Auth::check()){
+            $approvals = DB::table('notice_slip')
+                ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+                ->where('notice_slip.user_id', Auth::user()->user_id)
+                ->whereDate('date_from', '>=', Carbon::now())
+                ->whereDate('date_to', '>=', Carbon::now())
+                ->select('leave_types.leave_type', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.status')
+                ->limit(3)->get();
+        }
+
+        return view('portal.homepage', compact('albums', 'milestones', 'latest_news', 'general_concerns', 'it_policy', 'approvals'));
     }
 
     public function phoneEmailDirectory(){

@@ -40,52 +40,56 @@
 
 <div class="header">
     <div class="top-bar">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-7 col-sm-6">
-                    <ul class="contact-details">
-                        <li>
-                            <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-5 col-sm-6">
-                    <div class="account-setting">
-                        @if(Auth::user())
-                        <strong>Welcome {{ Auth::user()->employee_name }}</strong>
-                        <a href="{{ url('/userLogout') }}">
-                            <i class="icon-logout"></i><span>Logout</span>
-                        </a>
-                        @else
-                        <a href="#"  data-toggle="modal" data-target="#loginModal">
-                            <i class="icon-login"></i> <span>Login</span>
-                        </a>
-                        @endif
+        <div class="container-fluid">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="row">
+                    <div class="col-md-7 col-sm-6">
+                        <ul class="contact-details">
+                            <li>
+                                <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-5 col-sm-6">
+                        <div class="account-setting">
+                            @if(Auth::user())
+                            <strong>Welcome {{ Auth::user()->employee_name }}</strong>
+                            <a href="{{ url('/userLogout') }}">
+                                <i class="icon-logout"></i><span>Logout</span>
+                            </a>
+                            @else
+                            <a href="#"  data-toggle="modal" data-target="#loginModal">
+                                <i class="icon-login"></i> <span>Login</span>
+                            </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="top-bar-bottom">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-7 col-sm-6">
-                    <div class="header-logo">
-                        <a href="/">
-                            <img src="{{ asset('storage/img/logo5.png') }}" alt="">
-                        </a>
+        <div class="container-fluid">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="row">
+                    <div class="col-md-7 col-sm-6">
+                        <div class="header-logo">
+                            <a href="/">
+                                <img src="{{ asset('storage/img/logo5.png') }}" alt="">
+                            </a>
+                        </div>
+                        <div class="name-title"><img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span style="font-size: 14pt; font-weight: 150;">Employee Portal</span></div>
                     </div>
-                    <div class="name-title"><img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span style="font-size: 14pt; font-weight: 150;">Employee Portal</span></div>
-                </div>
-                <div class="col-md-5 col-sm-12 pull-right" style="margin: 15px 0 0 0;">
-                    <div class="widget widget-search">
-                        <form action="{{ route('search') }}" method="POST">
-                            @csrf
-                            <input class="form-control" type="search" name="query"  placeholder="Start Searching...">
-                            <button class="search-btn" name="search" type="submit">
-                                <i class=" icon-magnifier"></i>
-                            </button>
-                        </form>
+                    <div class="col-md-5 col-sm-12 pull-right" style="margin: 15px 0 0 0;">
+                        <div class="widget widget-search">
+                            <form action="{{ route('search') }}" method="POST">
+                                @csrf
+                                <input class="form-control" type="search" name="query"  placeholder="Start Searching...">
+                                <button class="search-btn" name="search" type="submit">
+                                    <i class=" icon-magnifier"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
