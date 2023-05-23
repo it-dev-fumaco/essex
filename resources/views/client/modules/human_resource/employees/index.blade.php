@@ -229,6 +229,7 @@ textarea{
                $('#edit-employee-form .branch').val(response.branch);
                $('#edit-employee-form .date_joined').val(response.date_joined);
                $('#edit-employee-form .user_group').val(response.user_group);
+               $('#edit-employee-form .reporting-to').val(response.reporting_to);
                $('#edit-employee-form .telephone').val(response.telephone);
                $('#edit-employee-form .email').val(response.email);
                $('#edit-employee-form .status').val(response.status);

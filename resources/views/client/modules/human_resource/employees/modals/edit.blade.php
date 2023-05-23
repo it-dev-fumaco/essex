@@ -149,6 +149,11 @@
                                     <option value="Probationary">Probationary</option>
                                  </select>
                               </div>
+
+                              <div class="form-group">
+                                 <label>Date Joined:</label>
+                                 <input type="date" name="date_joined" class="date_joined" placeholder="Enter Date Joined">
+                              </div>
                            </div>
                            <div class="col-sm-4">
                               <div class="form-group">
@@ -175,9 +180,15 @@
                               </div>
                               
                               <div class="form-group">
-                                 <label>Date Joined:</label>
-                                 <input type="date" name="date_joined" class="date_joined" placeholder="Enter Date Joined">
+                                 <label>Reporting to:</label>
+                                 <select name="reporting_to" class="reporting-to" required>
+                                    <option value="">Select an Employee</option>
+                                    @foreach ($regular_employees as $emp)
+                                       <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
+                                    @endforeach
+                                 </select>
                               </div>
+                              
                               <div class="form-group">
                                  <label>User Group:</label>
                                  <select name="user_group" class="user_group">

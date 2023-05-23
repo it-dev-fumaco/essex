@@ -323,16 +323,18 @@ class EmployeesController extends Controller
         $department = $this->sessionDetails('department');
 
         $employees = DB::table("users")
-                        ->join("departments", "users.department_id", "=", "departments.department_id")
-                        ->join("designation", "designation.des_id", "=", "users.designation_id")
-                        ->select("users.*", "departments.department", 'designation.designation')
-                        ->where('users.user_type', '=', 'Employee')->orderBy ('users.employee_name', 'ASC')
-                        ->get();
+            ->join("departments", "users.department_id", "=", "departments.department_id")
+            ->join("designation", "designation.des_id", "=", "users.designation_id")
+            ->select("users.*", "departments.department", 'designation.designation')
+            ->where('users.user_type', '=', 'Employee')->orderBy ('users.employee_name', 'ASC')
+            ->get();
 
         $departments = DB::table('departments')->get(); 
         $designations = DB::table('designation')->get(); 
         $shifts = DB::table('shift_groups')->get(); 
-        $branch = DB::table('branch')->get(); 
+        $branch = DB::table('branch')->get();
+
+        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
 
         $data = [
             'employees' => $employees,
@@ -342,6 +344,7 @@ class EmployeesController extends Controller
             'branch' => $branch,
             'department' => $department,
             'designation' => $designation,
+            'regular_employees' => $regular_employees
         ];
 
         return view('client.modules.human_resource.employees.index', $data);
@@ -418,6 +421,7 @@ class EmployeesController extends Controller
             $employee->pagibig_no = $request->pagibig_no;
             $employee->philhealth_no = $request->philhealth_no;
             $employee->employee_id = $request->employee_id;
+            $employee->reporting_to = $request->reporting_to;
             $employee->image = $image_path;
             $employee->designation_name = $request->designation_name;
             $employee->status = 'Active';
@@ -513,6 +517,7 @@ class EmployeesController extends Controller
         $employee->pagibig_no = $request->pagibig_no;
         $employee->philhealth_no = $request->philhealth_no;
         $employee->employee_id = $request->employee_id;
+        $employee->reporting_to = $request->reporting_to;
         $employee->image = $image_path;
         $employee->id_security_key = $request->id_key;
         $employee->designation_name = $request->designation_name;
