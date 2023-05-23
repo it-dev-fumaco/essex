@@ -29,7 +29,7 @@
         ],
         [
             'title' => 'secondary',
-            'color' => '#0069D9',
+            'color' => '#626A71',
             'font-color' => 'white'
         ],
         [
@@ -61,6 +61,11 @@
             'title' => 'dark',
             'color' => '#343A40',
             'font-color' => 'white'
+        ],
+        [
+            'title' => 'white',
+            'color' => '#fff',
+            'font-color' => 'black'
         ]
     ];
 @endphp

@@ -9,11 +9,11 @@
       <div class="container">
          <h1 class="title-2 center" style="margin-top: -40px; border: 0;">Search Results</h1>
           <div class="card">
-            <div class="card-header" align="center"><b>{{ $searchResults->count() }} results found for "{{ request('query') }}"</b>
+            <div class="card-header" align="center"><b>{{ count($searchResults) }} results found for "{{ request('query') }}"</b>
             </div>
             <br>
               <div class="card-body">
-                @foreach($searchResults->groupByType() as $type => $modelSearchResults)
+                @foreach(collect($searchResults)->groupBy('type') as $type => $modelSearchResults)
                   @foreach($modelSearchResults as $searchResult)
                     <ul>
                        <li>

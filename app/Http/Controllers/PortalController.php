@@ -256,7 +256,27 @@ class PortalController extends Controller
         return view('portal.manuals', compact('tag'));
     }
 
-    
+    public function showArticle($slug){
+        $article = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->select('articles.*', 'categories.name as category')
+            ->where('articles.slug', $slug)->first();
+        
+        if(!$article){
+            return redirect()->back()->with('error', 'Article not found');
+        }
+        if($article->is_private){
+            $allowed_departments = explode(',', $article->allowed_departments);
+            if(!Auth::check() || !in_array(Auth::user()->department_id, $allowed_departments)){
+                abort(401);
+            }
+        }
+        $files = DB::connection('mysql_kb')->table('article_files')->where('article_id', $article->id)->get();
+        $tags = DB::connection('mysql_kb')->table('article_tag as at')
+            ->join('tags', 'tags.id', 'at.tag_id')
+            ->where('at.article_id', $article->id)->select('tags.*')->get();
+        return view('portal.article_page', compact('article', 'files', 'tags'));
+    }
 
     public function showUpdates(){
         $updates = DB::table('posts')->where('category', 'updates')->orderBy('created_at', 'desc')->get();

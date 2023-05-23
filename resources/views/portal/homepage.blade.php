@@ -14,10 +14,12 @@
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
                             </div>
                             <div class="col-md-6">
-                                <form action="/manuals" method="get">
+                                <form action="{{ route('search') }}" method="POST">
+                                    @csrf
+                                {{-- <form action="/manuals" method="get"> --}}
                                     <div class="row" style="padding: 0; margin:0 ">
                                         <div class="col-md-9" style="padding: 0; margin: 0">
-                                            <input type="text" class="form-control carousel-search" type="search"  name="search" placeholder="How can we help you today?">
+                                            <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?">
                                         </div>
                                         <div class="col-md-3" style="padding: 0; margin: 0">
                                             <button type="submit" class="btn bg-success" style="padding: 16px; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>

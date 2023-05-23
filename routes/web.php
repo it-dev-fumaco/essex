@@ -22,13 +22,14 @@ Route::get('/gallery/fetchAlbums', 'PortalController@fetchAlbums');
 
 // M A N U A L S
 Route::get('/manuals', 'PortalController@showManuals');
+Route::get('/article/{slug}', 'PortalController@showArticle');
 Route::get('/services/directory', 'PortalController@phoneEmailDirectory');
 Route::get('/services/internet', 'PortalController@showInternet');
 Route::get('/services/email', 'PortalController@email');
 Route::get('/services/system', 'PortalController@system');
 Route::get('/gallery/album/{id}', 'PortalController@showAlbum');
 Route::get('/historical_milestones', 'PortalController@showHistoricalMilestones');
-Route::get('/manuals', 'PortalController@showManuals');
+// Route::get('/manuals', 'PortalController@showManuals');
 Route::get('/policies', 'PortalController@showMemorandum');
 Route::get('/updates', 'PortalController@showUpdates');
 Route::get('/itguidelines', 'PortalController@showitGuidelines');
