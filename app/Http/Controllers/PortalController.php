@@ -8,34 +8,16 @@ use Image;
 use Auth;
 use DB;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class PortalController extends Controller
 {
+
     public function index(){
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
         $milestones = DB::table('posts')
             ->where('category', 'historical_milestones')
             ->orderBy('created_at', 'desc')
-            ->get();
-
-        $latest_news = DB::table('post_logs')
-            ->select('post_logs.post_id as p_id',
-                DB::raw("(SELECT max(id) FROM post_logs where post_id = p_id group by post_id) as log_id"),
-                DB::raw("(SELECT new_title FROM post_logs where id = log_id) as title"),
-                DB::raw("(SELECT new_content FROM post_logs where id = log_id) as content"),
-                DB::raw("(SELECT date_modified FROM post_logs where id = log_id) as date_modified"),
-                DB::raw("(SELECT employee_name FROM post_logs JOIN users ON users.user_id = post_logs.user_id where post_logs.id = log_id) as employee_name")
-            )
-            ->groupBy('post_id')
-            ->orderBy('date_modified', 'desc')
-            ->limit(5)
-            ->get();
-
-        $general_concerns = DB::connection('mysql_kb')->table('articles')
-            ->join('categories', 'articles.category_id', 'categories.id')
-            ->where('articles.is_private', 0)->whereNull('articles.deleted_at')
-            ->select('articles.*', 'categories.name as category')
-            ->orderBy('articles.views_count', 'desc')->limit(6)
             ->get();
 
         $it_policy = DB::connection('mysql_kb')->table('articles')->where('title', 'IT Guidelines and Policies')->pluck('slug')->first();
@@ -47,11 +29,63 @@ class PortalController extends Controller
                 ->where('notice_slip.user_id', Auth::user()->user_id)
                 ->whereDate('date_from', '>=', Carbon::now())
                 ->whereDate('date_to', '>=', Carbon::now())
-                ->select('leave_types.leave_type', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.status')
-                ->limit(3)->get();
+                ->where('notice_slip.status', 'FOR APPROVAL')
+                ->select('leave_types.leave_type', 'notice_slip.*')
+                ->get();
         }
 
-        return view('portal.homepage', compact('albums', 'milestones', 'latest_news', 'general_concerns', 'it_policy', 'approvals'));
+        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals'));
+    }
+
+    public function load_manuals(Request $request){
+        // return $request->all();
+        $articles_by_tag = $selected_tags = [];
+        if($request->tags){
+            $tags_query = DB::connection('mysql_kb')->table('article_tag as at')
+                ->join('tags as t', 't.id', 'at.tag_id')
+                ->whereIn('t.id', array_filter(explode(',', $request->tags)))
+                ->select('t.id', 't.name', 'at.article_id')->get();
+
+            $selected_tags = collect($tags_query)->pluck('name', 'id');
+            $articles_by_tag = collect($tags_query)->pluck('article_id');
+        }
+
+        $general_concerns = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->when(!Auth::check(), function ($q){
+                $q->where('articles.is_private', 0);
+            })
+            ->when($request->tags, function ($q) use ($articles_by_tag){
+                return $q->whereIn('articles.id', $articles_by_tag);
+            })
+            ->whereNull('articles.deleted_at')
+            ->select('articles.*', 'categories.name as category')
+            ->orderBy('articles.views_count', 'desc')//->limit(6)
+            ->get();
+
+        $department = null;
+        if(Auth::check()){
+            $general_concerns = collect($general_concerns)->filter(function ($query){
+                $allowed_departments = $query->allowed_departments ? explode(',', $query->allowed_departments) : [];
+                $query->allowed_departments = $allowed_departments;
+                return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+            });
+
+            $department = DB::table('departments')->where('department_id', Auth::user()->department_id)->pluck('department')->first();
+        }
+
+        $tags = DB::connection('mysql_kb')->table('tags as t')
+            ->join('article_tag as a', 'a.tag_id', 't.id')
+            ->whereIn('a.article_id', $general_concerns->pluck('id'))
+            ->select('a.article_id', 't.name', 't.slug', 't.id')
+            ->orderBy('t.name')->get()->groupBy('article_id');
+
+        $tags_array = [
+            'selected_tags' => $selected_tags,
+            'tags' => $tags
+        ];
+
+        return view('portal.tbl_homepage_manuals', compact('general_concerns', 'department', 'tags_array'));
     }
 
     public function phoneEmailDirectory(){
@@ -169,9 +203,57 @@ class PortalController extends Controller
         return redirect()->back()->with('message', 'Photo has been set as featured image!');
     }
 
-    public function showManuals(){
-        $manuals = DB::table('posts')->where('category', 'manuals')->orderBy('created_at', 'desc')->get();
-        return view('portal.manuals', compact('manuals'));
+    public function showManuals(Request $request){
+        $articles_by_tag = [];
+        $tag = null;
+        if($request->tag){
+            $tag = DB::connection('mysql_kb')->table('tags')->where('id', $request->tag)->pluck('name')->first();
+            $articles_by_tag = DB::connection('mysql_kb')->table('article_tag')->where('tag_id', $request->tag)->pluck('article_id');
+        }
+
+        if($request->ajax()){
+            $search_str = $request->search;
+            $articles = DB::connection('mysql_kb')->table('articles as a')
+                ->join('categories as c', 'a.category_id', 'c.id')
+                ->when($request->tag, function ($q) use ($articles_by_tag){
+                    return $q->whereIn('a.id', $articles_by_tag);
+                })
+                ->when(!Auth::check(), function ($q){
+                    return $q->where('a.is_private', 0);
+                })
+                ->when($search_str, function ($q) use ($search_str){
+                    $q->where(function($q) use ($search_str) {
+                        $search_strs = explode(" ", $search_str);
+                        foreach ($search_strs as $str) {
+                            $q->where('a.title', 'LIKE', "%".$str."%");
+                        }
+                        
+                        $q->orWhere(function($q) use ($search_strs) {
+                            foreach ($search_strs as $str) {
+                                $q->where('a.short_text', 'LIKE', "%".$str."%");
+                            }
+                        });
+
+                        $q->orWhere('c.name', 'like', '%'.$search_str.'%');
+                    });
+                })->whereNull('a.deleted_at')
+                ->select('a.*', 'c.name as category')
+                ->orderBy('a.views_count', 'desc')->get();
+            
+            if(Auth::check()){
+                $articles = collect($articles)->filter(function ($query){
+                    $allowed_departments = explode(',', $query->allowed_departments);
+                    return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+                });
+            }
+                
+            $latest_articles = $articles->take(6)->sortByDesc('updated_at');
+            $articles = $articles->groupBy('category');
+
+            return view('portal.tbl_manuals', compact('articles', 'latest_articles'));
+        }
+
+        return view('portal.manuals', compact('tag'));
     }
 
     

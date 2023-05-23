@@ -20,7 +20,50 @@
     <link rel="stylesheet" href="{{ asset('css/css/slicknav.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 </head>
-
+@php
+    $colors_array = [
+        [
+            'title' => 'primary',
+            'color' => '#0069D9',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'secondary',
+            'color' => '#0069D9',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'success',
+            'color' => '#28A745',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'danger',
+            'color' => '#DC3545',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'warning',
+            'color' => '#E0A800',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'info',
+            'color' => '#138496',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'light',
+            'color' => '#E2E6EA',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'dark',
+            'color' => '#343A40',
+            'font-color' => 'white'
+        ]
+    ];
+@endphp
 <style type="text/css">
     *{
         font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -34,14 +77,78 @@
         border: 0;
         margin-top: 100px;
     }
+
+    .card{
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+    .card-kb{
+        min-height: 175px;
+        border: 1px solid rgba(175, 175, 175, .4);
+        border-top: 2px solid #4CAF50;
+    }
+
+    .card-greeting{
+        background-color: #11703C;
+        color: #fff;
+    }
+
+    .tag{
+        font-size: 8pt;
+        cursor: pointer;
+        display:inline-block;
+        border: 1px solid #000;
+        padding: 1px 5px 1px 5px;
+    }
+
+    .badge{
+        padding: 4px;
+        font-size: 9pt;
+        font-weight: 700;
+        border-radius: 5px;
+    }
+
+    .header-text{
+        font-size: 14pt;
+        font-weight: 200;
+    }
+
+    .dashboard-btn{
+        margin-top: 16px;
+    }
+
+    @media (max-width: 1199.98px) {
+        .header-text{
+            font-size: 12pt;
+        }
+
+        .nav li{
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid red;
+        }
+    }
 </style>
 
+@foreach ($colors_array as $color)
+<style>
+    .bg-{{ $color['title'] }}{
+        background-color: {{ $color["color"] }};
+        color: {{ $color["font-color"] }};
+    }
+
+    .border-{{ $color['title'] }}{
+        border: 1px solid {{ $color["color"] }};
+    }
+</style>
+@endforeach
 @include('portal.modals.login_modal')
 
 <div class="header">
     <div class="top-bar">
         <div class="container-fluid">
-            <div class="col-md-10 col-md-offset-1">
+            <div class="col-md-12">
                 <div class="row">
                     <div class="col-md-7 col-sm-6">
                         <ul class="contact-details">
@@ -62,33 +169,6 @@
                                 <i class="icon-login"></i> <span>Login</span>
                             </a>
                             @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="top-bar-bottom">
-        <div class="container-fluid">
-            <div class="col-md-10 col-md-offset-1">
-                <div class="row">
-                    <div class="col-md-7 col-sm-6">
-                        <div class="header-logo">
-                            <a href="/">
-                                <img src="{{ asset('storage/img/logo5.png') }}" alt="">
-                            </a>
-                        </div>
-                        <div class="name-title"><img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span style="font-size: 14pt; font-weight: 150;">Employee Portal</span></div>
-                    </div>
-                    <div class="col-md-5 col-sm-12 pull-right" style="margin: 15px 0 0 0;">
-                        <div class="widget widget-search">
-                            <form action="{{ route('search') }}" method="POST">
-                                @csrf
-                                <input class="form-control" type="search" name="query"  placeholder="Start Searching...">
-                                <button class="search-btn" name="search" type="submit">
-                                    <i class=" icon-magnifier"></i>
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>

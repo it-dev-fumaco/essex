@@ -14,7 +14,7 @@
                       @php
                           $img = $album->featured_image ? $album->featured_image : 'img/notfound.png';
                       @endphp
-                      <img src="{{ asset('storage/'.$img) }}" style="width: 100%">
+                      <img src="{{ asset('storage/'.$img) }}" width="340" height="210">
                     </a>
                   </figure>
                   <div class="item-body">

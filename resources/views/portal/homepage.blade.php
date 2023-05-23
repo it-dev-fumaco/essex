@@ -4,59 +4,32 @@
 @include('portal.modals.edit_post_modal')
 @include('portal.modals.delete_post_modal')
     <div class="container-fluid">
-        <div class="col-md-10 col-md-offset-1">
+        <div class="col-md-12 col-sm-10">
             <div class="row">
                 <div class="col-md-9">
-                    <section id="slider">
-                        <div class="tp-banner-container">
-                           <div class="tp-banner">
-                              <ul>
-                                 <li data-transition="fade" data-slotamount="7" data-masterspeed="2000" data-thumb="{{ asset('storage/img/slider/businessman.jpg') }}" data-delay="10000">
-                                    <img src="{{ asset('storage/img/dummy.png') }}" alt="laptopmockup_sliderdy" data-lazyload="{{ asset('storage/img/slider/businessman.jpg') }}" data-bgposition="right top" data-duration="12000" data-ease="Power0.easeInOut" data-bgfit="115" data-bgfitend="100" data-bgpositionend="center bottom">
-                                    <div class="tp-caption largeHeadingWhite sfl str tp-resizeme start" data-x="left" data-y="center" data-voffset="-40" data-voffset="-80" data-speed="1200" data-start="950" data-easing="easeInOutExpo" data-splitin="none" data-splitout="none" data-elementdelay="0.1" data-endelementdelay="0.1" data-endspeed="800" data-endeasing="easeInOutExpo" style="z-index: 12; margin-left: 25px; width: 500px; word-wrap: break-word !important;">
-                                        <div class="container-fluid">
-                                            <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 94px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 24px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Welcome to </h3>
-                                            <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 24px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex 7!</h3>
-                                            <form action="/manuals" method="get">
-                                                <input type="text" class="form-control carousel-search" type="search" name="search" placeholder="How can we help you today?">
-                                            </form>
-                                            {{-- <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 50px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 16px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Suggested Search:</h3>
-                                            <div>
-                                                @for($i = 0; $i < 15; $i++)
-                                                    <span class="badge" style="font-size: 16px;">Test</span>
-                                                @endfor
-                                            </div> --}}
+                    <div id="imagecontainer" class="container-fluid" style="min-height: 175px;">
+                        <div class="container-fluid">
+                            <div class="col-md-12">
+                                <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 94px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Welcome to </h3>
+                                <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
+                            </div>
+                            <div class="col-md-6">
+                                <form action="/manuals" method="get">
+                                    <div class="row" style="padding: 0; margin:0 ">
+                                        <div class="col-md-9" style="padding: 0; margin: 0">
+                                            <input type="text" class="form-control carousel-search" type="search"  name="search" placeholder="How can we help you today?">
+                                        </div>
+                                        <div class="col-md-3" style="padding: 0; margin: 0">
+                                            <button type="submit" class="btn bg-success" style="padding: 16px; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>
                                         </div>
                                     </div>
-                                 </li>
-                              </ul>
-                           </div>
+                                </form>
+                            </div>
                         </div>
-                    </section>
-                    <section id="general-it-concerns" style="margin-top: 10px;">
-                        <div class="row">
-                            <h3 class="center">General IT Concerns</h3>
-                            @foreach ($general_concerns as $concern)
-                                <div class="col-md-6" style="padding: 10px 20px 10px 20px;">
-                                    <div class="container-fluid card" style="box-shadow: 1px 1px 4px #999999">
-                                        <div class="row equal-height">
-                                            <div class="col-md-1" style="display: flex; justify-content: center; align-items: center;">
-                                                <i class="fa fa-question-circle" style="font-size: 18px;"></i>
-                                            </div>
-                                            <div class="col-md-11">
-                                                <a href="/article/{{ $concern->slug }}">
-                                                    <b>{{ $concern->title }}</b><br>
-                                                    <small class="text-muted">{{ $concern->short_text }}</small>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </section>
+                    </div>
+                    <section id="tbl-manuals" style="margin-top: 10px;"></section>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" style="padding: 0 20px 0 50px;">
                     <div class="card card-greeting">
                         <div class="row">
                             <div class="col-md-3 col-md-offset-1">
@@ -77,12 +50,53 @@
                     </div>
                     @if (Auth::check())
                         <div class="card card-border" style="margin-top: 10px; color: #001032; border: 1px solid #001032; text-align: left">
-                            <span style="font-size: 12pt; font-weight: 700 !important">My Approvals</span>
+                            <span style="font-size: 12pt; font-weight: 700 !important">Pending for Approval</span>
                             <hr style="border: 1px solid rgba(175, 175, 175, .4); margin: 10px !important">
-                            @forelse ($approvals as $approval)
-                                <p style="margin-bottom: 5px;"><span class="custom-badge {{ $approval->status == 'APPROVED' ? 'badge-success' : 'badge-warning' }}">{{ $approval->status }}</span> {{ $approval->leave_type }} on {{ Carbon\Carbon::parse($approval->date_from)->format('M d, Y') }}</p>
+                            @forelse ($approvals as $i => $approval)
+                                @php
+                                    $date = 'on '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y');
+                                    if(Carbon\Carbon::parse($approval->date_from)->format('M d, Y') != Carbon\Carbon::parse($approval->date_to)->format('M d, Y')){
+                                        $date = 'from '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' to '.Carbon\Carbon::parse($approval->date_to)->format('M d, Y');
+                                    }
+                                @endphp
+                                <a href="#" data-toggle="modal" data-target="#approval-modal-{{ $i }}" style="margin-bottom: 5px; text-decoration: none; text-transform: none; color: #000;">&nbsp;●&nbsp;{{ $approval->leave_type }} {{ $date }}</a>
+
+                                <!-- The modal -->
+                                <div class="modal fade" id="approval-modal-{{ $i }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                                <h4 class="modal-title" id="modalLabel">
+                                                    {{ $approval->leave_type }} {{ $date }}
+                                                </h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        Type of Absence: <b>{{ $approval->leave_type }}</b><br/>
+                                                        Status: <b>{{ $approval->status }}</b>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        From: <b>{{ Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_from)->format('h:i A') }}</b><br/>
+                                                        To: <b>{{ Carbon\Carbon::parse($approval->date_to)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_to)->format('h:i A') }}</b>
+                                                    </div>
+                                                    <div class="col-md-12" style="margin-top: 10px;">
+                                                        Reported to: <b>{{ $approval->info_by }}</b><br/>
+                                                        Reason: <b>{{ $approval->reason }}</b>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn bg-secondary" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @empty
-                                <p class="center" style="margin-bottom: 5px;">You have no pending approvals</p>
+                                <p class="center" style="margin-bottom: 5px;">You have no pending for approval</p>
                             @endforelse
                         </div>
                     @endif
@@ -116,42 +130,6 @@
                     </div>
                 </div>
             </div>
-            {{-- <div class="row" style="margin-top: 10px;">
-                <div class="col-md-9">
-                    <div class="row">
-                        <h3 class="center">General IT Concerns</h3>
-                        @foreach ($general_concerns as $concern)
-                            <div class="col-md-4" style="padding: 10px 20px 10px 20px;">
-                                <div class="container-fluid card card-kb">
-                                    <div>
-                                        <a href="/article/{{ $concern->slug }}">
-                                            <b>{{ $concern->title }}</b>
-                                        </a>
-                                    </div>
-                                    <hr style="border: 1px solid rgba(175, 175, 175, .4); margin: 10px !important">
-                                    <div class="text-concat">
-                                        {{ $concern->short_text }}
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="alert alert-info" style="margin-top: 10px;">
-                        <h4>REMINDER</h4>
-                        <br>
-                        <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                        <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                        <p>3. Log off each terminal after use</p>
-                    </div>
-                    <div class="alert alert-warning" style="margin-top: 15px;">
-                        <h4>Need for Support?</h4>
-                        <br>
-                        <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
-                    </div>
-                </div>
-            </div> --}}
         </div>
         
     </div>
@@ -189,19 +167,6 @@
     @endif
 
     <style>
-        .card{
-           padding: 15px;
-           border-radius: 5px;
-        }
-
-        .card-kb{
-            min-height: 175px;
-            border: 1px solid rgba(175, 175, 175, .4);
-            border-top: 2px solid #4CAF50;
-        }
-        .border-danger{
-           border: 1px solid red;
-        }
         .text-concat {
            position: relative;
            display: inline-block;
@@ -216,10 +181,6 @@
             content: "\f648";
         }
 
-        .card-greeting{
-            background-color: #11703C;
-            color: #fff;
-        }
         .equal-height {
             display: -webkit-box;
             display: -webkit-flex;
@@ -232,7 +193,7 @@
             flex-direction: column;
         }
         .carousel-search{
-            border-radius: 25px;
+            border-radius: 25px 0 0 25px;
             font-family: 'Trebuchet MS';
             font-size: 17px;
         }
@@ -251,6 +212,15 @@
         .badge-success{
             color: #fff;
             background-color: #28A745;
+        }
+
+        #imagecontainer {
+            background: url("{{ asset('storage/img/slider/businessman.jpg') }}") no-repeat;
+            height: 175px;
+            /* border: 1px solid; */
+            background-size: 100% auto;
+            background-repeat: no-repeat;
+            background-position: center center;
         }
      </style>
 @endsection
@@ -287,5 +257,47 @@
         // $('.textarea').ckeditor(); // if class is prefered.
 
         CKEDITOR.config.height = 450;
+
+    $(document).on('click', '.add-tag', function (e){
+        e.preventDefault();
+        var current_tags = $('.tag-input').val();
+        var tag_id = current_tags == '' ? $(this).data('id') : ',' + $(this).data('id'); 
+        if($.inArray($(this).data('id'), current_tags.split(',')) === -1){
+            $('.tag-input').val(current_tags + tag_id);
+            load_manuals();
+        }
+    });
+
+    $(document).on('click', '.remove-tag', function (e){
+        e.preventDefault();
+        var current_tags = $('.tag-input').val();
+        var tag_id = $(this).data('id');
+        var value = '';
+        $.each(current_tags.split(','), function(i, val){
+            if(val != tag_id && val != ''){
+                value += val + ',';
+            }
+        });
+        $('.tag-input').val(value);
+        load_manuals();
+    });
+
+    load_manuals();
+    function load_manuals(){
+        $.ajax({
+            url:"/tbl_manuals",
+            type:"GET",
+            data: {
+                tags: $('.tag-input').val()
+            },
+            success:function(response){
+                $('#tbl-manuals').html(response);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR, textStatus, errorThrown);
+            }
+        });
+    }
+    
     </script>
 @endsection
