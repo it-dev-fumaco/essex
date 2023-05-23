@@ -7,29 +7,29 @@
         <div class="col-md-12 col-sm-10">
             <div class="row">
                 <div class="col-md-9">
-                    <div id="imagecontainer" class="container-fluid" style="min-height: 175px;">
+                    <div id="imagecontainer" class="container-fluid">
                         <div class="container-fluid">
                             <div class="col-md-12">
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 94px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Welcome to </h3>
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
                             </div>
-                            <div class="col-md-6">
-                                <form action="{{ route('search') }}" method="POST">
+                            <div class="col-md-8">
+                                <form action="{{ route('search') }}" id="searh-form" method="POST">
                                     @csrf
-                                {{-- <form action="/manuals" method="get"> --}}
                                     <div class="row" style="padding: 0; margin:0 ">
                                         <div class="col-md-9" style="padding: 0; margin: 0">
-                                            <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?">
+                                            <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off">
                                         </div>
                                         <div class="col-md-3" style="padding: 0; margin: 0">
                                             <button type="submit" class="btn bg-success" style="padding: 16px; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>
                                         </div>
                                     </div>
                                 </form>
+                                <div id="autocomplete-container" class="card bg-white border-secondary d-none"></div>
                             </div>
                         </div>
                     </div>
-                    <section id="tbl-manuals" style="margin-top: 10px;"></section>
+                    <section id="tbl-manuals" style="margin-top: 10px; z-index: 999 !important"></section>
                 </div>
                 <div class="col-md-3" style="padding: 0 20px 0 50px;">
                     <div class="card card-greeting">
@@ -282,6 +282,43 @@
         });
         $('.tag-input').val(value);
         load_manuals();
+    });
+
+    $(document).on('keyup', '.carousel-search', function (e){
+        e.preventDefault();
+        if($(this).val() != ''){
+            $.ajax({
+                url: '/search',
+                type: 'POST',
+                data: {
+                    query: $(this).val(),
+                    _token: '{{ csrf_token() }}'
+                },
+                success:function(response){
+                    $('#autocomplete-container').removeClass('d-none').html(response);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR, textStatus, errorThrown);
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.submit-search', function (e){
+        e.preventDefault();
+        $('#searh-form').submit();
+    });
+
+    $(document).mouseup(function(e){
+        var container = $("#autocomplete-container");
+
+        if (!container.is(e.target) && container.has(e.target).length === 0){
+            container.addClass('d-none');
+        }
+    });
+
+    $(document).on('scroll', function (e){
+        $("#autocomplete-container").addClass('d-none');
     });
 
     load_manuals();

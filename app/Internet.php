@@ -27,7 +27,7 @@ class Internet extends Model implements Searchable
 
         return new SearchResult(
             $this,
-            $this->title.'-   ',
+            $this->title.' - ',
             $this->content,
             $this->category,
             $null,

@@ -29,7 +29,7 @@
         ],
         [
             'title' => 'secondary',
-            'color' => '#626A71',
+            'color' => '#6C757D',
             'font-color' => 'white'
         ],
         [
@@ -121,6 +121,26 @@
 
     .dashboard-btn{
         margin-top: 16px;
+    }
+
+    .d-none{
+        display: none;
+    }
+
+    .d-block{
+        display: block;
+    }
+
+    .d-inline{
+        display: inline;
+    }
+
+    #autocomplete-container{
+        z-index: 1000 !important;
+        position: absolute;
+        top: 20;
+        left: 50 !important;
+        width: 95%;
     }
 
     @media (max-width: 1199.98px) {

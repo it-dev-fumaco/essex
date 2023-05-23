@@ -20,7 +20,7 @@ class Operational extends Model implements Searchable
         $cat= 'Operational policies';
         return new SearchResult(
             $this,
-            $this->subject.'-   ',
+            $this->subject.' - ',
             $this->description,
             $cat,
             $null,

@@ -40,6 +40,13 @@ class SearchController extends Controller
             return $q;
         })->filter()->values()->all();
 
+        if($request->ajax()){
+            $count = count($searchResults);
+            $searchResults = collect($searchResults)->take(4);
+            $search_term = $request->input('query');
+            return view('portal.modals.search_autocomplete', compact('searchResults', 'count', 'search_term'));
+        }
+
         return view('portal.modals.search', compact('searchResults'));
     }
     

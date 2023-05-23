@@ -20,10 +20,10 @@ class Directory extends Model implements Searchable
         $cat = 'Phone and Email Directory';
         return new SearchResult(
             $this,
-            $this->employee_name.'-   ',
+            $this->employee_name.' -   ',
             $this->email,
             $cat,
-            $this->telephone.'- ',
+            $this->telephone.' - ',
             $url
          );
     }
