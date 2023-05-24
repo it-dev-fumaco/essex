@@ -118,6 +118,16 @@
                         We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.
                     </div>
 
+                    <div class="thumbnail" data-title="IT Guidelines and Policies" data-url="{{ asset('storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4') }}">
+                        <div class="policy-thumbnail">
+                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(255, 255, 255, .4)"></i>
+                        </div>
+                        <div class="container" style="font-weight: 600; margin-top: 10px;">
+                            <span>IT Guidelines and Policies</span><br/>
+                            <span class="text-muted">General IT Concern</span>
+                        </div>
+                    </div>
+
                     <div class="alert alert-info" style="margin-top: 10px;">
                         <h4>REMINDER</h4>
                         <br>
@@ -125,6 +135,7 @@
                         <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
                         <p>3. Log off each terminal after use</p>
                     </div>
+                    
                     <div class="alert alert-warning" style="margin-top: 15px;">
                         <h4>Need for Support?</h4>
                         <br>
@@ -134,6 +145,28 @@
             </div>
         </div>
         
+    </div>
+
+    <div class="modal fade" id="thumbnail-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document" style="width: 50% !important">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="modalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <video width="100%" controls>
+                        <source src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video> 
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn bg-secondary" data-dismiss="modal"><i class="fa fa-close"></i>&nbsp;Close</button>
+                </div>
+            </div>
+        </div>
     </div>
     @include('portal.includes.events')
     @include('portal.includes.milestones')
@@ -223,6 +256,29 @@
             background-size: 100% auto;
             background-repeat: no-repeat;
             background-position: center center;
+        }
+
+        .thumbnail{
+            transition: .4s;
+            margin-top: 10px;
+            border-radius: 0;
+            box-shadow: 1px 1px 4px 2px rgba(0,0,0,.3);
+        }
+
+        .thumbnail:hover{
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .policy-thumbnail{
+            background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
+            height: 200px;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
      </style>
 @endsection
@@ -319,6 +375,23 @@
 
     $(document).on('scroll', function (e){
         $("#autocomplete-container").addClass('d-none');
+    });
+
+    $(document).on('click', '.thumbnail', function (e){
+        e.preventDefault();
+        var url = $(this).data('url');
+        var title = $(this).data('title');
+
+        $('#thumbnail-modal .modal-title').text(title);
+        $('#thumbnail-modal source').attr('src', url);
+        $('#thumbnail-modal video').get(0).load();
+        $('#thumbnail-modal video').get(0).play();
+        $('#thumbnail-modal').modal('show');
+    });
+
+    $('#thumbnail-modal').on('hidden.bs.modal', function (e) {
+        $('#thumbnail-modal video').get(0).pause();
+        $('#thumbnail-modal video').get(0).currentTime = 0;
     });
 
     load_manuals();
