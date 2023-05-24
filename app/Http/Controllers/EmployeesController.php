@@ -394,6 +394,7 @@ class EmployeesController extends Controller
                 $image_path = '/storage/employees/'.$filenametostore;
             }
 
+
             $employee = new User;
             $employee->user_id = $request->user_id;
             $employee->department_id = $request->department;
@@ -430,6 +431,8 @@ class EmployeesController extends Controller
 
             $department = Department::find($employee->department_id);
             $designation = Designation::find($employee->designation_id);
+            $reporting_to = User::find($employee->reporting_to);
+            $branch = DB::table('branch')->where('branch_id', $employee->branch)->pluck('branch_name')->first();
 
             switch ($employee->branch) {
                 case 3:
@@ -455,7 +458,22 @@ class EmployeesController extends Controller
                     $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
                 } catch (\Throwable $th) {}
             }
-            
+
+            $admin_data = [
+                'employee_id' => $employee->employee_id,
+                'biometric_id' => $employee->user_id,
+                'name' => $employee->employee_name,
+                'birthday' => $employee->birth_date,
+                'department' => $department->department,
+                'designation' => $designation->designation,
+                'reporting_to' => $reporting_to->employee_name,
+                'location' => $branch
+            ];
+    
+            try {
+                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', 'it@fumaco.local', $admin_data);
+            } catch (\Throwable $th) {}
+
             DB::commit();
             return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully added!']);
         } catch (\Throwable $th) {
