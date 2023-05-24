@@ -118,16 +118,6 @@
                         We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.
                     </div>
 
-                    <div class="thumbnail" data-title="IT Guidelines and Policies" data-url="{{ asset('storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4') }}">
-                        <div class="policy-thumbnail">
-                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(255, 255, 255, .4)"></i>
-                        </div>
-                        <div class="container" style="font-weight: 600; margin-top: 10px;">
-                            <span>IT Guidelines and Policies</span><br/>
-                            <span class="text-muted">General IT Concern</span>
-                        </div>
-                    </div>
-
                     <div class="alert alert-info" style="margin-top: 10px;">
                         <h4>REMINDER</h4>
                         <br>
@@ -135,11 +125,31 @@
                         <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
                         <p>3. Log off each terminal after use</p>
                     </div>
-                    
+
                     <div class="alert alert-warning" style="margin-top: 15px;">
                         <h4>Need for Support?</h4>
                         <br>
                         <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
+                    </div>
+
+                    <div class="thumbnail" data-title="IT Guidelines and Policies" data-url="{{ asset('storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4') }}">
+                        <div class="policy-thumbnail">
+                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .4);"></i>
+                        </div>
+                        <div class="container" style="font-weight: 600; margin-top: 10px;">
+                            <span>IT Guidelines and Policies</span><br/>
+                            <span class="text-muted">General IT Concern</span>
+                        </div>
+                    </div>
+
+                    <div class="thumbnail" data-title="Internet Services Proxy Configuration" data-url="{{ asset('storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4') }}">
+                        <div class="proxy-thumbnail">
+                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .3);"></i>
+                        </div>
+                        <div class="container" style="font-weight: 600; margin-top: 10px;">
+                            <span>Internet Services Proxy Configuration</span><br/>
+                            <span class="text-muted">General IT Concern</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,13 +277,26 @@
 
         .thumbnail:hover{
             cursor: pointer;
-            text-decoration: underline;
         }
 
         .policy-thumbnail{
             background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
+            opacity: .8;
             height: 200px;
             background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .proxy-thumbnail{
+            background: url("{{ asset('storage/thumbnail/internet_services.png') }}") no-repeat;
+            opacity: .8;
+            height: 200px;
+            background-size: cover;
+            background-color: black !important;
             background-repeat: no-repeat;
             background-position: center center;
             display: flex;
