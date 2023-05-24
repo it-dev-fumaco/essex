@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
 use Carbon\Carbon;
+use DB;
 
 class BirthdayEmailCommand extends Command
 {
@@ -15,7 +16,7 @@ class BirthdayEmailCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'emails:birthday';
+    protected $signature = 'emails:birthday {--id=}';
 
     /**
      * The console command description.
@@ -41,19 +42,37 @@ class BirthdayEmailCommand extends Command
      */
     public function handle()
     {
+
         $users = User::where('status', 'Active');
         $users = $users->whereMonth('birth_date', Carbon::now()->format('m'));
         $users = $users->whereDay('birth_date', Carbon::now()->format('d'));
+        $users = $users->when($this->option('id'), function ($q){
+            $q->where('id', $this->option('id'));
+        });
         $users = $users->where('user_type', 'Employee');
-        $users = $users->select('employee_name', 'nick_name', 'email');
+        $users = $users->select('id', 'employee_name', 'nick_name', 'email');
         $users = $users->get();
+
+        $sent_notifications = DB::table('email_notifications')->where('type', 'Birthday Email')->whereDate('created_at', Carbon::now()->startOfDay())->where('email_sent', 1)
+            ->when($this->option('id'), function ($q){
+                $q->where('user_id', $this->option('id'));
+            })
+            ->get();
 
         foreach ($users as $user) {
             $name = $user->nick_name ? $user->nick_name : explode(' ', $user->employee_name)[0];
+            $subject = 'Happy Birthday '.$name.'!';
     
-            $data = ['name' => $name];
+            $mail = $this->send_mail($subject, 'admin.email_template.birthday', $user->email, ['name' => $name]);
 
-            $mail = $this->send_mail('Happy Birthday '.$name.'!', 'admin.email_template.birthday', $user->email, $data);
+            if(!in_array($user->id, collect($sent_notifications)->pluck('user_id')->toArray())){
+                DB::table('email_notifications')->insert([
+                    'type' => 'Birthday Email',
+                    'user_id' => $user->id,
+                    'subject' => $subject,
+                    'email_sent' => $mail['success']
+                ]);
+            }
         }
     }
 
