@@ -251,6 +251,7 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/crudDeleteQuestion', 'BackgroundCheckController@delete');
         
 });
+Route::get('/testing', 'EmployeesController@testing');
 
 // A D M I N
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){

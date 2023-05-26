@@ -20,7 +20,7 @@ class Gallery extends Model implements Searchable
         $cat= 'Gallery';
         return new SearchResult(
             $this,
-            $this->name.' -   ',
+            $this->name,
             $this->description,
             $cat,
             $null,
