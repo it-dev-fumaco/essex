@@ -132,25 +132,29 @@
                         <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
                     </div>
 
-                    <div class="thumbnail" data-title="IT Guidelines and Policies" data-url="{{ asset('storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4') }}">
-                        <div class="policy-thumbnail">
-                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .4);"></i>
+                    @if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4'))
+                        <div class="thumbnail" data-title="IT Guidelines and Policies" data-url="{{ asset('storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4') }}">
+                            <div class="policy-thumbnail">
+                                <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .4);"></i>
+                            </div>
+                            <div class="container" style="font-weight: 600; margin-top: 10px;">
+                                <span>IT Guidelines and Policies</span><br/>
+                                <span class="text-muted">General IT Concern</span>
+                            </div>
                         </div>
-                        <div class="container" style="font-weight: 600; margin-top: 10px;">
-                            <span>IT Guidelines and Policies</span><br/>
-                            <span class="text-muted">General IT Concern</span>
-                        </div>
-                    </div>
+                    @endif
 
-                    <div class="thumbnail" data-title="Internet Services Proxy Configuration" data-url="{{ asset('storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4') }}">
-                        <div class="proxy-thumbnail">
-                            <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .3);"></i>
+                    @if (Storage::disk('public')->exists('videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4'))
+                        <div class="thumbnail" data-title="Internet Services Proxy Configuration" data-url="{{ asset('storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4') }}">
+                            <div class="proxy-thumbnail">
+                                <i class="fa fa-play-circle-o" style="font-size: 80pt; color: rgba(0, 0, 0, .3);"></i>
+                            </div>
+                            <div class="container" style="font-weight: 600; margin-top: 10px;">
+                                <span>Internet Services Proxy Configuration</span><br/>
+                                <span class="text-muted">General IT Concern</span>
+                            </div>
                         </div>
-                        <div class="container" style="font-weight: 600; margin-top: 10px;">
-                            <span>Internet Services Proxy Configuration</span><br/>
-                            <span class="text-muted">General IT Concern</span>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
