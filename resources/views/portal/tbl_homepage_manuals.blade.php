@@ -34,9 +34,9 @@
                     </div>
                     <div class="col-md-11">
                         <a href="/article/{{ $concern->slug }}">
-                            @if ($department && $concern->is_private)
+                            {{-- @if ($department && $concern->is_private)
                                 <span class="badge bg-primary">{{ $department }}</span>&nbsp;
-                            @endif
+                            @endif --}}
                             <span style="font-style: italic">{{ $concern->category }}</span>
                             <br/>
                             <b>{{ $concern->title }}</b><br>

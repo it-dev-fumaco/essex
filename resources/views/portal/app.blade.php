@@ -117,8 +117,10 @@
         font-size: 8pt;
         cursor: pointer;
         display:inline-block;
-        border: 1px solid #000;
-        padding: 1px 5px 1px 5px;
+        border: 1px solid #6C757D;
+        border-radius: 5px;
+        color: #6C757D;
+        padding: 0 5px 0 5px !important;
     }
 
     .badge{
