@@ -37,7 +37,7 @@
                             {{-- @if ($department && $concern->is_private)
                                 <span class="badge bg-primary">{{ $department }}</span>&nbsp;
                             @endif --}}
-                            <span style="font-style: italic">{{ $concern->category }}</span>
+                            <span style="font-style: italic; font-size: 13px;">{{ $concern->category }}</span>
                             <br/>
                             <b>{{ $concern->title }}</b><br>
                             <small class="text-muted">
