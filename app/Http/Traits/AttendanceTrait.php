@@ -329,7 +329,8 @@ trait AttendanceTrait
 
         $hasNotice = $this->getNotices($transaction_date, $employee);
    
-        $isHoliday = DB::table('holidays')->where('holiday_date', $transaction_date)->first();
+        $isHoliday = DB::table('holidays')->where('holiday_date', $transaction_date)
+            ->orWhere('category', 'Regular Holiday')->whereMonth('holiday_date', Carbon::parse($transaction_date)->format('m'))->whereDay('holiday_date', Carbon::parse($transaction_date)->format('d'))->first();
 
         if ($hasNotice) {
             $status = $hasNotice['absence_type'];

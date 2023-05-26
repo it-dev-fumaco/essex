@@ -128,10 +128,18 @@
 			<div class="widget property-agent">
 				<h3 class="widget-title">Today's Memo</h3>
 				<div class="agent-info">
-					<p><b>Upcoming 2019 Holiday/Events </b></p>
-					@foreach($getholiday as $holiday)
-					<p>{{ $holiday->description }} — {{ \Carbon\Carbon::parse($holiday->holiday_date)->format('F d')}}</p>
-					@endforeach
+					<p><b>Upcoming {{ Carbon\Carbon::now()->format('Y') }} Holiday/Events </b></p>
+					@forelse($getholiday as $holiday)
+						@if (Carbon\Carbon::parse($holiday->holiday_date) < Carbon\Carbon::now())
+							@continue
+						@endif
+						@php
+							$week_map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+						@endphp
+						<p>{{ $holiday->description }} — {{ \Carbon\Carbon::parse($holiday->holiday_date)->format('F d')}}{{ isset($week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek]) ? ', '.$week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek] : null }}</p>
+					@empty
+						<p>Np upcoming holiday/event</p>
+					@endforelse
 				</div>
 			</div>
 		</div>

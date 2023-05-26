@@ -1,6 +1,6 @@
 <!-- The Modal -->
 <div class="modal fade" id="add-holiday-modal">
-   <div class="modal-dialog modal-sm">
+   <div class="modal-dialog">
       <form action="/module/attendance/holiday/create" method="POST">
                @csrf
       <div class="modal-content">

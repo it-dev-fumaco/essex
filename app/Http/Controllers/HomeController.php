@@ -109,7 +109,7 @@ class HomeController extends Controller
                 ->count();        
         }
 
-        $departmentHeads = DB::table('department_head_list')->distinct('employee_id')->pluck('employee_id');
+        $departmentHeads = DB::table('department_head_list')->distinct()->pluck('employee_id');
         
         $awaiting_approval = $awaiting_notices + $awaiting_gatepass;
 
@@ -152,7 +152,10 @@ class HomeController extends Controller
 
         $date = new Carbon();
         $date->addDays(93);
-        $getholiday= CalendarEvent::whereBetween('holiday_date',[new Carbon(),$date])->get();
+        $getholiday = CalendarEvent::whereBetween('holiday_date',[new Carbon(),$date])
+            ->orWhere('category', 'Regular Holiday')
+            ->whereMonth('holiday_date', '>=', Carbon::now()->format('m'))->whereMonth('holiday_date', '<=', Carbon::now()->addMonth(3)->format('m'))
+            ->select('description', DB::raw('DATE_FORMAT(holiday_date, "2023-%m-%d") as holiday_date'))->distinct('holiday_date')->orderBy('holiday_date')->get();
 
         $department_heads= DB::table('department_head_list')
             ->join('departments','department_head_list.department_id','=','departments.department_id')
