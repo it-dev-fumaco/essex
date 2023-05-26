@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="EstateX">
-    <title>ESSEX v7.0</title>
+    <title>ESSEX</title>
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
@@ -70,8 +70,22 @@
     ];
 @endphp
 <style type="text/css">
-    *{
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    @font-face{
+        font-family: 'Poppins-Regular';
+        src: url('{{ asset("fonts/Poppins/Poppins-Regular.ttf") }}') format('truetype');
+    }
+
+    @font-face{
+        font-family: 'Poppins-Bold';
+        src: url('{{ asset("fonts/Poppins/Poppins-Bold.ttf") }}') format('truetype');
+    }
+
+    @font-face{
+        font-family: 'Poppins-Light';
+        src: url('{{ asset("fonts/Poppins/Poppins-Light.ttf") }}') format('truetype');
+    }
+    html, body{
+        font-family: 'Poppins-Regular' !important;
     }
     .login-content{
         background-color: transparent;
@@ -143,6 +157,17 @@
         width: 95%;
     }
 
+    .profile-image{
+        display: inline-block;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: cover;
+    }
+
     @media (max-width: 1199.98px) {
         .header-text{
             font-size: 12pt;
@@ -165,6 +190,10 @@
 
     .border-{{ $color['title'] }}{
         border: 1px solid {{ $color["color"] }};
+    }
+
+    .text-{{ $color['title'] }}{
+        color: {{ $color["color"] }};
     }
 </style>
 @endforeach

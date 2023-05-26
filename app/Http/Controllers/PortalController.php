@@ -89,14 +89,14 @@ class PortalController extends Controller
     }
 
     public function phoneEmailDirectory(){
-        $departments = DB::table('departments')->select('departments.department_id', 'department', DB::raw('(select count(id) from users where department_id = departments.department_id and telephone != "") as users'))->orderBy('order_no', 'asc')->get();
-
         $employees = DB::table('users')->where('user_type', 'Employee')
-                    ->where('telephone', '!=', null)
-                    ->join('designation', 'designation.des_id', '=', 'users.designation_id')
-                    ->get();
+            ->join('designation', 'designation.des_id', 'users.designation_id')
+            ->join('departments', 'departments.department_id', 'users.department_id')
+            ->where('users.status', 'Active')->where('employment_status', 'Regular')
+            ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderBy('department')
+            ->get()->groupBy('department');
 
-        return view('portal.directory', compact('departments', 'employees'));
+        return view('portal.directory', compact('employees'));
     }
 
     public function internetServices(){

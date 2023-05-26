@@ -42,7 +42,8 @@
                            <li><a href="/itguidelines">IT Guidelines and Policy</a></li>
                         </ul>
                      </li>
-                     <li><a href="/services/directory"><i class="icon-briefcase"></i>Phone & Email Directory</a>
+                     <li>
+                        <a href="/services/directory"><i class="icon-briefcase"></i>&nbsp;Employee Directory</a>
                      </li>
                   </ul>
       
