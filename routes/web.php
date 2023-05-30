@@ -34,7 +34,7 @@ Route::get('/policies', 'PortalController@showMemorandum');
 Route::get('/updates', 'PortalController@showUpdates');
 Route::get('/itguidelines', 'PortalController@showitGuidelines');
 
-Route::post('/search', 'SearchController@search')->name('search');
+Route::get('/search', 'SearchController@search')->name('search');
 
 
 

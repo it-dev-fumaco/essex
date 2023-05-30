@@ -83,7 +83,7 @@ class SearchController extends Controller
                 return [
                     'searchable' => [],
                     'title' => $title,
-                    'description' => $title,
+                    'description' => null,
                     'category' => 'Files',
                     'url' => $url,
                     'type' => 'Files',

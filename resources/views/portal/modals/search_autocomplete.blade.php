@@ -18,7 +18,7 @@
                     }
                 @endphp
                 <a href="{{ $url }}">
-                    <b>{{ $title }}</b> - {{ $category }}<br/>
+                    <b>{{ $title }}</b> - <span style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span><br/>
                     {!! str_limit($description , $limit = 70, $end = '...') !!}
                 </a>
                 <hr style="border: 1px solid rgba(0,0,0,.1);">
