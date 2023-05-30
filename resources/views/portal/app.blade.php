@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="EstateX">
-    <title>ESSEX v7.0</title>
+    <title>ESSEX</title>
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
@@ -20,10 +20,72 @@
     <link rel="stylesheet" href="{{ asset('css/css/slicknav.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 </head>
-
+@php
+    $colors_array = [
+        [
+            'title' => 'primary',
+            'color' => '#0069D9',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'secondary',
+            'color' => '#6C757D',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'success',
+            'color' => '#28A745',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'danger',
+            'color' => '#DC3545',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'warning',
+            'color' => '#E0A800',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'info',
+            'color' => '#138496',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'light',
+            'color' => '#E2E6EA',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'dark',
+            'color' => '#343A40',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'white',
+            'color' => '#fff',
+            'font-color' => 'black'
+        ]
+    ];
+@endphp
 <style type="text/css">
-    *{
-        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    @font-face{
+        font-family: 'Poppins-Regular';
+        src: url('{{ asset("fonts/Poppins/Poppins-Regular.ttf") }}') format('truetype');
+    }
+
+    @font-face{
+        font-family: 'Poppins-Bold';
+        src: url('{{ asset("fonts/Poppins/Poppins-Bold.ttf") }}') format('truetype');
+    }
+
+    @font-face{
+        font-family: 'Poppins-Light';
+        src: url('{{ asset("fonts/Poppins/Poppins-Light.ttf") }}') format('truetype');
+    }
+    html, body{
+        font-family: 'Poppins-Regular' !important;
     }
     .login-content{
         background-color: transparent;
@@ -34,58 +96,136 @@
         border: 0;
         margin-top: 100px;
     }
+
+    .card{
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+    .card-kb{
+        min-height: 175px;
+        border: 1px solid rgba(175, 175, 175, .4);
+        border-top: 2px solid #4CAF50;
+    }
+
+    .card-greeting{
+        background-color: #11703C;
+        color: #fff;
+    }
+
+    .tag{
+        font-size: 8pt;
+        cursor: pointer;
+        display:inline-block;
+        border: 1px solid #6C757D;
+        border-radius: 5px;
+        color: #6C757D;
+        padding: 0 5px 0 5px !important;
+    }
+
+    .badge{
+        padding: 4px;
+        font-size: 9pt;
+        font-weight: 700;
+        border-radius: 5px;
+    }
+
+    .header-text{
+        font-size: 14pt;
+        font-weight: 200;
+    }
+
+    .dashboard-btn{
+        margin-top: 16px;
+    }
+
+    .d-none{
+        display: none;
+    }
+
+    .d-block{
+        display: block;
+    }
+
+    .d-inline{
+        display: inline;
+    }
+
+    #autocomplete-container{
+        z-index: 1000 !important;
+        position: absolute;
+        top: 20;
+        left: 50 !important;
+        width: 95%;
+    }
+
+    .profile-image{
+        display: inline-block;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: cover;
+    }
+
+    @media (max-width: 1199.98px) {
+        .header-text{
+            font-size: 12pt;
+        }
+
+        .nav li{
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid red;
+        }
+    }
 </style>
 
+@foreach ($colors_array as $color)
+<style>
+    .bg-{{ $color['title'] }}{
+        background-color: {{ $color["color"] }};
+        color: {{ $color["font-color"] }};
+    }
+
+    .border-{{ $color['title'] }}{
+        border: 1px solid {{ $color["color"] }};
+    }
+
+    .text-{{ $color['title'] }}{
+        color: {{ $color["color"] }};
+    }
+</style>
+@endforeach
 @include('portal.modals.login_modal')
 
 <div class="header">
     <div class="top-bar">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-7 col-sm-6">
-                    <ul class="contact-details">
-                        <li>
-                            <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-md-5 col-sm-6">
-                    <div class="account-setting">
-                        @if(Auth::user())
-                        <strong>Welcome {{ Auth::user()->employee_name }}</strong>
-                        <a href="{{ url('/userLogout') }}">
-                            <i class="icon-logout"></i><span>Logout</span>
-                        </a>
-                        @else
-                        <a href="#"  data-toggle="modal" data-target="#loginModal">
-                            <i class="icon-login"></i> <span>Login</span>
-                        </a>
-                        @endif
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-7 col-sm-6">
+                        <ul class="contact-details">
+                            <li>
+                                <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
+                            </li>
+                        </ul>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="top-bar-bottom">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-7 col-sm-6">
-                    <div class="header-logo">
-                        <a href="/">
-                            <img src="{{ asset('storage/img/logo5.png') }}" alt="">
-                        </a>
-                    </div>
-                    <div class="name-title"><img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span style="font-size: 14pt; font-weight: 150;">Employee Portal</span></div>
-                </div>
-                <div class="col-md-5 col-sm-12 pull-right" style="margin: 15px 0 0 0;">
-                    <div class="widget widget-search">
-                        <form action="{{ route('search') }}" method="POST">
-                            @csrf
-                            <input class="form-control" type="search" name="query"  placeholder="Start Searching...">
-                            <button class="search-btn" name="search" type="submit">
-                                <i class=" icon-magnifier"></i>
-                            </button>
-                        </form>
+                    <div class="col-md-5 col-sm-6">
+                        <div class="account-setting">
+                            @if(Auth::user())
+                            <strong>Welcome {{ Auth::user()->employee_name }}</strong>
+                            <a href="{{ url('/userLogout') }}">
+                                <i class="icon-logout"></i><span>Logout</span>
+                            </a>
+                            @else
+                            <a href="#"  data-toggle="modal" data-target="#loginModal">
+                                <i class="icon-login"></i> <span>Login</span>
+                            </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

@@ -60,12 +60,14 @@ class LoginController extends Controller
                 'user_id' => 'required',
                 'password' => 'required'
             ]);
-    
-            $success = '';
+
+            $success = $id = null;
             if ($request->login_as == 'ldap-login') {
                 $email = $request->user_id . '@fumaco.local';
                 $is_user = DB::table('users')->where('email', $email)->first();
+
                 if ($is_user) {
+                    $id = $is_user->id;
                     if ($is_user->email) {
                         $adldap = new adLDAP();
                         $authUser = $adldap->user()->authenticate(explode('@', $is_user->email)[0], $request->password);
@@ -80,8 +82,18 @@ class LoginController extends Controller
             } else {
                 if (Auth::attempt(['user_id' => $request->user_id,'password' => $request->password], $request->remember)) {
                     $success = 1;
+                    $is_user = DB::table('users')->where('user_id', $request->user_id)->first();
+                    $id = $is_user ? $is_user->id : $id;
+
                     DB::table('users')->where('user_id', $request->user_id)->update(['last_login_date' => Carbon::now()->toDateTimeString()]);
                 }
+            }
+
+            if($success){
+                try {
+                    exec('cd '.ENV('BASE_PATH').' && php artisan emails:birthday --id='.$id);
+                    exec('cd '.ENV('BASE_PATH').' && php artisan emails:worksary --id='.$id);
+                } catch (\Throwable $th) {}
             }
 
             DB::commit();

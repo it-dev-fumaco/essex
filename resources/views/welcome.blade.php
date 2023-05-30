@@ -242,8 +242,7 @@ $(document).ready(function(){
                     <div class="page-login-form box" style="background-color: white;">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal">&times;</button>
-                            <h4 class="modal-title">Login to Essex
-</h4>
+                            <h4 class="modal-title">Login to Essex</h4>
                         </div>
 
                          <div class="form-group">

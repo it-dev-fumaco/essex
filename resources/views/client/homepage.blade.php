@@ -9,6 +9,32 @@
 	@include('client.modals.edit_evaluation_file')
 	@include('client.modals.delete_evaluation_file')
 	@include('client.modals.exam_modal')
+	@if ($holiday_reminder)
+		<!-- The modal -->
+		<div class="modal fade" id="reminder-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" style="font-weight: 600;">
+					<div class="modal-header bg-success">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title" id="modalLabel">
+							<i class="fa fa-info-circle" style="font-size: 15pt;"></i> Reminder
+						</h4>
+					</div>
+					<div class="modal-body text-center" style="padding: 30px 0 30px 0 !important;">
+						<span style="font-size: 13pt;">
+							There are no Special Holiday(s) registered for this year yet.
+						</span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn bg-secondary" data-dismiss="modal" style="font-weight: 600;">Close</button>
+						<a href="/module/attendance/holiday_entry" class="btn bg-primary" style="font-weight: 600;">Go to Holiday(s) list&nbsp;<i class="fa fa-external-link"></i></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	@endif
 <div class="row">
 	<div class="col-md-9">
 		<div class="inner-box featured">
@@ -128,10 +154,18 @@
 			<div class="widget property-agent">
 				<h3 class="widget-title">Today's Memo</h3>
 				<div class="agent-info">
-					<p><b>Upcoming 2019 Holiday/Events </b></p>
-					@foreach($getholiday as $holiday)
-					<p>{{ $holiday->description }} — {{ \Carbon\Carbon::parse($holiday->holiday_date)->format('F d')}}</p>
-					@endforeach
+					<p><b>Upcoming {{ Carbon\Carbon::now()->format('Y') }} Holiday/Events</b></p>
+					@forelse($getholiday as $holiday)
+						@if (Carbon\Carbon::parse($holiday->holiday_date) < Carbon\Carbon::now())
+							@continue
+						@endif
+						@php
+							$week_map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+						@endphp
+						<p>{{ $holiday->description }} — {{ \Carbon\Carbon::parse($holiday->holiday_date)->format('F d') }}{{ isset($week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek]) ? ', '.$week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek] : null }}</p>
+					@empty
+						<p>Np upcoming holiday/event</p>
+					@endforelse
 				</div>
 			</div>
 		</div>
@@ -152,6 +186,8 @@
 			</div>
 		</div>
 	</div>
+
+	
 </div>
 
 <iframe id="iframe-print" hidden></iframe>
@@ -231,7 +267,9 @@ $(document).ready(function(){
 			stackup_spacing: 20
 		});
 	@endif
-	
+
+	$('#reminder-modal').modal('show');
+
 	// initialize input widgets first
    $('.time').timepicker({
       'timeFormat': 'g:i A'

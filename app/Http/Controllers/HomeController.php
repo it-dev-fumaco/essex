@@ -109,7 +109,7 @@ class HomeController extends Controller
                 ->count();        
         }
 
-        $departmentHeads = DB::table('department_head_list')->distinct('employee_id')->pluck('employee_id');
+        $departmentHeads = DB::table('department_head_list')->distinct()->pluck('employee_id');
         
         $awaiting_approval = $awaiting_notices + $awaiting_gatepass;
 
@@ -152,7 +152,10 @@ class HomeController extends Controller
 
         $date = new Carbon();
         $date->addDays(93);
-        $getholiday= CalendarEvent::whereBetween('holiday_date',[new Carbon(),$date])->get();
+        $getholiday = CalendarEvent::whereBetween('holiday_date',[new Carbon(),$date])
+            ->orWhere('category', 'Regular Holiday')
+            ->whereMonth('holiday_date', '>=', Carbon::now()->format('m'))->whereMonth('holiday_date', '<=', Carbon::now()->addMonth(3)->format('m'))
+            ->select('description', DB::raw('DATE_FORMAT(holiday_date, "'.Carbon::now()->format('Y').'-%m-%d") as holiday_date'))->distinct('holiday_date')->orderBy('holiday_date')->get();
 
         $department_heads= DB::table('department_head_list')
             ->join('departments','department_head_list.department_id','=','departments.department_id')
@@ -171,7 +174,14 @@ class HomeController extends Controller
 
         $kpi_schedules = $this->getKpiNextSched();
 
-        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability','getholiday', 'departmentHeads','department_heads','depart', 'kpi_schedules'));
+        $holiday_reminder = 0;
+        $department = DB::table('departments')->where('department_id', Auth::user()->department_id)->pluck('department')->first();
+        if($department == 'Human Resources'){
+            $special_holidays = DB::table('holidays')->where('category', 'Special Holiday')->whereYear('holiday_date', Carbon::now()->format('Y'))->exists();
+            $holiday_reminder = !$special_holidays ? 1 : 0;
+        }
+
+        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability','getholiday', 'departmentHeads','department_heads','depart', 'kpi_schedules', 'holiday_reminder'));
 
     }
 

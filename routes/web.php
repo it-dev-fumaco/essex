@@ -14,6 +14,7 @@ Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus')
 
 // E M P L O Y E E  P O R T A L
 Route::get('/', 'PortalController@index')->name('portal');
+Route::get('/tbl_manuals', 'PortalController@load_manuals');
 
 // G A L L E R Y
 Route::get('/gallery', 'PortalController@showGallery');
@@ -21,13 +22,14 @@ Route::get('/gallery/fetchAlbums', 'PortalController@fetchAlbums');
 
 // M A N U A L S
 Route::get('/manuals', 'PortalController@showManuals');
+Route::get('/article/{slug}', 'PortalController@showArticle');
 Route::get('/services/directory', 'PortalController@phoneEmailDirectory');
 Route::get('/services/internet', 'PortalController@showInternet');
 Route::get('/services/email', 'PortalController@email');
 Route::get('/services/system', 'PortalController@system');
 Route::get('/gallery/album/{id}', 'PortalController@showAlbum');
 Route::get('/historical_milestones', 'PortalController@showHistoricalMilestones');
-Route::get('/manuals', 'PortalController@showManuals');
+// Route::get('/manuals', 'PortalController@showManuals');
 Route::get('/policies', 'PortalController@showMemorandum');
 Route::get('/updates', 'PortalController@showUpdates');
 Route::get('/itguidelines', 'PortalController@showitGuidelines');
@@ -249,6 +251,7 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/crudDeleteQuestion', 'BackgroundCheckController@delete');
         
 });
+Route::get('/testing', 'EmployeesController@testing');
 
 // A D M I N
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){

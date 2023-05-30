@@ -21,7 +21,55 @@
 <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ asset('css/datatables/dataTables.bootstrap.min.css') }}">
 </head>
-
+@php
+    $colors_array = [
+        [
+            'title' => 'primary',
+            'color' => '#0069D9',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'secondary',
+            'color' => '#6C757D',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'success',
+            'color' => '#28A745',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'danger',
+            'color' => '#DC3545',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'warning',
+            'color' => '#E0A800',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'info',
+            'color' => '#138496',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'light',
+            'color' => '#E2E6EA',
+            'font-color' => 'black'
+        ],
+        [
+            'title' => 'dark',
+            'color' => '#343A40',
+            'font-color' => 'white'
+        ],
+        [
+            'title' => 'white',
+            'color' => '#fff',
+            'font-color' => 'black'
+        ]
+    ];
+@endphp
 <style type="text/css">
   *{
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -248,7 +296,22 @@ button.switch-month:hover {
   padding: 5px;
 }
 </style>
+@foreach ($colors_array as $color)
+<style>
+    .bg-{{ $color['title'] }}{
+        background-color: {{ $color["color"] }};
+        color: {{ $color["font-color"] }};
+    }
 
+    .border-{{ $color['title'] }}{
+        border: 1px solid {{ $color["color"] }};
+    }
+
+    .text-{{ $color['title'] }}{
+        color: {{ $color["color"] }};
+    }
+</style>
+@endforeach
 
 <body>
   <div class="header">
@@ -277,36 +340,38 @@ button.switch-month:hover {
     </div>
 
     <div class="top-bar-bottom">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-5 col-sm-6">
-            <div class="header-logo">
-              <a href="/">
-                <img src="{{ asset('storage/img/logo5.png') }}" alt="">
-              </a>
+      <div class="container-fluid">
+        <div class="col-md-10 col-md-offset-1">
+          <div class="row">
+            <div class="col-md-5 col-sm-6">
+              <div class="header-logo">
+                <a href="/">
+                  <img src="{{ asset('storage/img/logo5.png') }}" alt="">
+                </a>
+              </div>
+              <div class="name-title">FUMACO Inc. <br> The Art of Science & Lighting</div>
             </div>
-            <div class="name-title">FUMACO Inc. <br> The Art of Science & Lighting</div>
-          </div>
-          <div class="col-md-7 col-sm-6">
-            <div class="pull-right">
-              <div class="row" style="padding: 3px;">
-                <div style="float: left; margin-right: 5px;">
-                    @php
-                   $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png'
-                   @endphp
-                  <img src="{{ asset($img) }}" width="60" height="60" class="user-image">
-                </div>
-                <div style="float: right; margin-top: 8px;">
-                  <span style="display: block;">
-                    <h4>{{ Auth::user()->employee_name }}</h4>
-                  </span>
-                  @if($designation)
-                  <span style="display: block;">{{ $designation }} | {{ $department }}</span>
-                  @endif
-                  <a href="#" data-toggle="modal" data-target="#user_profile" onclick="profileFunction()"><i class="fa fa-user" aria-hidden="true" title="User Profile"></i> User Profile</a>
-                  @include('client.modals.user_profile') &nbsp;
-                  <a href="#" data-toggle="modal" data-target="#changePassword"><i class="fa fa-cog" aria-hidden="true" title="Update Password"></i> Update Password</a>
-                  @include('client.modals.change_password')
+            <div class="col-md-7 col-sm-6">
+              <div class="pull-right">
+                <div class="row" style="padding: 3px;">
+                  <div style="float: left; margin-right: 5px;">
+                      @php
+                     $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png'
+                     @endphp
+                    <img src="{{ asset($img) }}" width="60" height="60" class="user-image">
+                  </div>
+                  <div style="float: right; margin-top: 8px;">
+                    <span style="display: block;">
+                      <h4>{{ Auth::user()->employee_name }}</h4>
+                    </span>
+                    @if($designation)
+                    <span style="display: block;">{{ $designation }} | {{ $department }}</span>
+                    @endif
+                    <a href="#" data-toggle="modal" data-target="#user_profile" onclick="profileFunction()"><i class="fa fa-user" aria-hidden="true" title="User Profile"></i> User Profile</a>
+                    @include('client.modals.user_profile') &nbsp;
+                    <a href="#" data-toggle="modal" data-target="#changePassword"><i class="fa fa-cog" aria-hidden="true" title="Update Password"></i> Update Password</a>
+                    @include('client.modals.change_password')
+                  </div>
                 </div>
               </div>
             </div>
@@ -317,13 +382,15 @@ button.switch-month:hover {
 </div>
 
 <div class="main-container section">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12 col-sm-12">
-        <div class="columns-wrapper">
-
-          @yield('content')
-
+  <div class="container-fluid">
+    <div class="col-md-10 col-md-offset-1">
+      <div class="row">
+        <div class="col-md-12 col-sm-12">
+          <div class="columns-wrapper">
+  
+            @yield('content')
+  
+          </div>
         </div>
       </div>
     </div>

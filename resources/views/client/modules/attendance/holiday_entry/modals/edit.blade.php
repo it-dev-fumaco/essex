@@ -1,6 +1,6 @@
 <!-- The Modal -->
 <div class="modal fade" id="edit-holiday-{{ $holiday->id }}">
-   <div class="modal-dialog modal-sm">
+   <div class="modal-dialog">
       <form action="/module/attendance/holiday/update" method="POST">
                @csrf
       <div class="modal-content">

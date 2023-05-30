@@ -57,9 +57,7 @@ class HolidayController extends Controller
     public function indexholiday(){
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        $holidays = DB::table('holidays')
-        ->orderBy('id', 'desc')
-        ->get();
+        $holidays = DB::table('holidays')->orderBy('id', 'desc')->get();
 
         return view('client.modules.attendance.holiday_entry.index', compact('holidays', 'designation', 'department'));
     }
