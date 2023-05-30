@@ -23,57 +23,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EmployeesController extends Controller
 {
-    public function testing(){
-        // $data['mail_config'] = [
-        //         'subject' => 'Test',
-        //         'template' => 'admin.email_template.welcome'
-        //     ];
-
-        // $data['data'] = [
-        //     'name' => 'testing'
-        // ];
-
-        // // return $data;
-        // Mail::to('jave.kulong@fumaco.local')->send(new SendMail_General($data));
-        /*
-                [Employee Name]
-                [Department]
-                [Job Title
-                \\kimberly
-                1 - Plant 2
-                2 - FU
-                3 - Ortigas
-            */
-        // $users = User::where('status', 'Active');
-        // $users = $users->whereMonth('date_joined', Carbon::parse('June 7, 2021')->format('m'));
-        // $users = $users->whereDay('date_joined', Carbon::parse('June 7, 2021')->format('d'));
-        // $users = $users->whereYear('date_joined', '<', Carbon::now()->format('Y'));
-        // $users = $users->where('user_type', 'Employee');
-        // $users = $users->select('employee_name', 'nick_name', 'email', 'date_joined');
-        // $users = $users->get();
-
-        // foreach ($users as $user) {
-        //     $name = $user->nick_name ? $user->nick_name : explode(' ', $user->employee_name)[0];
-        //     $no_of_years = Carbon::now()->diffInYears(Carbon::parse($user->date_joined));
-    
-        //     $data = [
-        //         'name' => $name,
-        //         'no_of_years' => $no_of_years
-        //     ];
-
-        //     return $mail = $this->send_mail('Happy Work Anniversary '.$name.'!', 'admin.email_template.work_anniv', $user->email, $data);
-        // }
-        // return $time_from = date('G:i', strtotime('12:30 AM'));
-        $time_from = Carbon::parse('12:30 AM');
-        $time_to = Carbon::parse('1:30 PM');
-
-        return $hrs = $time_to->diffInHours($time_from) / 8;
-        // $interval = new DateInterval('P1D'); // 1 Day
-        // return collect($interval);
-
-        // return view('portal.approve_notice');
-    }
-
     private function send_mail($subject, $template, $recipient, $data_arr){
         try {
             $data['mail_config'] = [
