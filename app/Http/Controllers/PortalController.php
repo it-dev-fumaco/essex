@@ -92,8 +92,8 @@ class PortalController extends Controller
         $employees = DB::table('users')->where('user_type', 'Employee')
             ->join('designation', 'designation.des_id', 'users.designation_id')
             ->join('departments', 'departments.department_id', 'users.department_id')
-            ->where('users.status', 'Active')->where('employment_status', 'Regular')
-            ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderBy('department')
+            ->where('users.status', 'Active')->where('employment_status', 'Regular')->where('users.email', '!=', 'essex.admin@fumaco.local')
+            ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
             ->get()->groupBy('department');
 
         return view('portal.directory', compact('employees'));
