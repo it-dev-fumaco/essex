@@ -20,7 +20,7 @@ Instructions using GUI and Commands
             DB_ERP=_3f2ec5a818bccb73
             DB_KB=fumaco_knowledge_base
             LINK_KB=http://10.0.49.72:8085 # Knowledgebase URL
-            MAIL_RECIPIENT='it@fumaco.local'
+            MAIL_RECIPIENT=it@fumaco.local
             
             BASE_PATH="C:/xampp/htdocs/essex" # Project folder of essex, for artisan command
     Type php artisan key:generate
