@@ -420,7 +420,7 @@ class EmployeesController extends Controller
             ];
     
             try {
-                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', 'it@fumaco.local', $admin_data);
+                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data);
             } catch (\Throwable $th) {}
 
             DB::commit();
