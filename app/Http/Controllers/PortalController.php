@@ -88,15 +88,27 @@ class PortalController extends Controller
         return view('portal.tbl_homepage_manuals', compact('general_concerns', 'department', 'tags_array'));
     }
 
-    public function phoneEmailDirectory(){
-        $employees = DB::table('users')->where('user_type', 'Employee')
-            ->join('designation', 'designation.des_id', 'users.designation_id')
-            ->join('departments', 'departments.department_id', 'users.department_id')
-            ->where('users.status', 'Active')->where('employment_status', 'Regular')->where('users.email', '!=', 'essex.admin@fumaco.local')
-            ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
-            ->get()->groupBy('department');
-
-        return view('portal.directory', compact('employees'));
+    public function phoneEmailDirectory(Request $request){
+        if($request->ajax()){
+            $employees = DB::table('users')->where('user_type', 'Employee')
+                ->join('designation', 'designation.des_id', 'users.designation_id')
+                ->join('departments', 'departments.department_id', 'users.department_id')
+                ->where('users.status', 'Active')->where('employment_status', 'Regular')->where('users.email', '!=', 'essex.admin@fumaco.local')
+                ->when($request->search, function ($q) use ($request){
+                    return $q->where('users.employee_name', 'LIKE', '%'.$request->search.'%')
+                        ->orWhere('users.nick_name', 'LIKE', '%'.$request->search.'%')
+                        ->orWhere('users.telephone', 'LIKE', '%'.$request->search.'%')
+                        ->orWhere('designation.designation', 'LIKE', '%'.$request->search.'%')
+                        ->orWhere('departments.department', 'LIKE', '%'.$request->search.'%')
+                        ->orWhere('users.email', 'LIKE', '%'.$request->search.'%');
+                })
+                ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
+                ->get()->groupBy('department');
+            
+            return view('portal.tbl_directory', compact('employees'));
+        }
+        
+        return view('portal.directory');
     }
 
     public function internetServices(){
