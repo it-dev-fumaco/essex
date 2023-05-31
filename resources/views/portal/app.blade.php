@@ -170,6 +170,56 @@
         background-size: cover;
     }
 
+    #imagecontainer {
+        background: url("{{ asset('storage/img/slider/businessman.jpg') }}") no-repeat;
+        height: 175px;
+        background-size: 100% auto;
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+
+    .carousel-search{
+        border-radius: 25px 0 0 25px;
+        font-family: 'Trebuchet MS';
+        font-size: 17px;
+    }
+
+    .thumbnail{
+        transition: .4s;
+        margin-top: 10px;
+        border-radius: 0;
+        box-shadow: 1px 1px 4px 2px rgba(0,0,0,.3);
+    }
+
+    .thumbnail:hover{
+        cursor: pointer;
+    }
+
+    .policy-thumbnail{
+        background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
+        opacity: .8;
+        height: 200px;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .proxy-thumbnail{
+        background: url("{{ asset('storage/thumbnail/internet_services.png') }}") no-repeat;
+        opacity: .8;
+        height: 200px;
+        background-size: cover;
+        background-color: black !important;
+        background-repeat: no-repeat;
+        background-position: center center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
     @media (max-width: 1199.98px) {
         .header-text{
             font-size: 12pt;

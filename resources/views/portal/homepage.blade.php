@@ -14,8 +14,7 @@
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
                             </div>
                             <div class="col-md-8">
-                                <form action="{{ route('search') }}" id="searh-form" method="POST">
-                                    @csrf
+                                <form action="{{ route('search') }}" id="searh-form" method="get">
                                     <div class="row" style="padding: 0; margin:0 ">
                                         <div class="col-md-9" style="padding: 0; margin: 0">
                                             <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off">
@@ -241,11 +240,7 @@
             display: flex;
             flex-direction: column;
         }
-        .carousel-search{
-            border-radius: 25px 0 0 25px;
-            font-family: 'Trebuchet MS';
-            font-size: 17px;
-        }
+        
         .custom-badge{
             border-radius: 5px;
             padding: 5px;
@@ -261,51 +256,6 @@
         .badge-success{
             color: #fff;
             background-color: #28A745;
-        }
-
-        #imagecontainer {
-            background: url("{{ asset('storage/img/slider/businessman.jpg') }}") no-repeat;
-            height: 175px;
-            /* border: 1px solid; */
-            background-size: 100% auto;
-            background-repeat: no-repeat;
-            background-position: center center;
-        }
-
-        .thumbnail{
-            transition: .4s;
-            margin-top: 10px;
-            border-radius: 0;
-            box-shadow: 1px 1px 4px 2px rgba(0,0,0,.3);
-        }
-
-        .thumbnail:hover{
-            cursor: pointer;
-        }
-
-        .policy-thumbnail{
-            background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
-            opacity: .8;
-            height: 200px;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .proxy-thumbnail{
-            background: url("{{ asset('storage/thumbnail/internet_services.png') }}") no-repeat;
-            opacity: .8;
-            height: 200px;
-            background-size: cover;
-            background-color: black !important;
-            background-repeat: no-repeat;
-            background-position: center center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
      </style>
 @endsection
@@ -372,10 +322,9 @@
         if($(this).val() != ''){
             $.ajax({
                 url: '/search',
-                type: 'POST',
+                type: 'get',
                 data: {
-                    query: $(this).val(),
-                    _token: '{{ csrf_token() }}'
+                    query: $(this).val()
                 },
                 success:function(response){
                     $('#autocomplete-container').removeClass('d-none').html(response);

@@ -4,78 +4,102 @@
 @include('portal.modals.add_policy_modal')
 @include('portal.modals.edit_policy_modal')
 @include('portal.modals.delete_policy_modal')
-@php
+  @php
     $chunk_count = count($searchResults) / 2;
-    $chunk_count = round($chunk_count) < 1 ? count($searchResults) : round($chunk_count);
-    $chunk = $searchResults->chunk($chunk_count);
-@endphp
-<div class="main-container">
-   <div class="section">
-    <div class="container-fluid">
-      <div class="col-md-10 col-md-offset-1">
-         <div class="card">
-           <div class="card-header" align="center">
-            <h3>{{ count($searchResults) }} results found for "{{ request('query') }}"</h3>
-           </div>
-           <br>
-             <div class="card-body">
+    $chunk_count = round($chunk_count) < 1 ? count($searchResults) : round($chunk_count); $chunk=$searchResults->
+    chunk($chunk_count);
+  @endphp
+  <div class="main-container">
+    <div class="section" style="padding: 0 !important; min-height: 80vh">
+      <div id="imagecontainer" class="container-fluid">
+        <div class="container-fluid">
+          <div class="col-md-offset-2 col-md-8" style="padding-top: 30px;">
+            <form action="{{ route('search') }}" id="searh-form" method="get">
+              @csrf
+              <div class="row" style="padding: 0; margin:0 ">
+                <div class="col-md-12 text-center">
+                  <h3 style="color: #fff;">{{ count($searchResults) }} results found for "{{ request('query') }}"</h3>
+                </div>
+                <div class="col-md-9" style="padding: 0; margin: 0">
+                  <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off" value="{{ request('query') }}">
+                </div>
+                <div class="col-md-3" style="padding: 0; margin: 0">
+                  <button type="submit" class="btn bg-success"
+                    style="padding: 16px; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>
+                </div>
+              </div>
+            </form>
+            <div id="autocomplete-container" class="card bg-white border-secondary d-none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="container-fluid">
+        <div class="col-md-10 col-md-offset-1">
+          <div class="card">
+            <div class="card-body">
               <div class="row">
                 @foreach ($chunk as $searchResults)
                 <div class="col-md-6" style="padding: 10px;">
                   @foreach($searchResults as $searchResult)
-                    @php
-                      if(is_object($searchResult)){
-                        $url = $searchResult->url;
-                        $title = $searchResult->title;
-                        $category = $searchResult->category;
-                        $description = $searchResult->description;
-                        $icon = 'icon-info';
-                      }else{
-                        $url = $searchResult['url'];
-                        $title = $searchResult['title'];
-                        $category = $searchResult['category'];
-                        $description = $searchResult['description'];
-                        $icon = 'fa fa-file';
-                      }
-                    @endphp
-                      <div class="row" style="margin: 20px 0 20px 0;">
-                        <div class="col-md-1 text-center">
-                          <i class="{{ $icon }}" style="font-size: 25pt;"></i>
-                        </div>
-                        <div class="col-md-11" style="padding: 0;">
-                          <a href="{{ $url }}" class="url text-primary"><h5>{{ $title }}</h5></a>
-                          <span class="text-muted">{{ $category }}</span>
-                          <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p>
-                        </div>
-                      </div>
-                      <hr style="border: 1px solid rgba(0,0,0,.1)">
-                    @endforeach
+                  @php
+                  if(is_object($searchResult)){
+                    $url = $searchResult->url;
+                    $title = $searchResult->title;
+                    $category = $searchResult->category;
+                    $description = $searchResult->description;
+                    $icon = 'icon-info';
+                  }else{
+                    $url = $searchResult['url'];
+                    $title = $searchResult['title'];
+                    $category = $searchResult['category'];
+                    $description = $searchResult['description'];
+                    $icon = 'fa fa-file-pdf-o';
+                  }
+                  @endphp
+                  <div class="row"
+                    style="margin: 20px 0 20px 0; display: flex; justify-content: center; align-items: center;">
+                    <div class="col-md-1 text-center">
+                      <i class="{{ $icon }}" style="font-size: 25pt;"></i>
+                    </div>
+                    <div class="col-md-11" style="padding: 0;">
+                      <a href="{{ $url }}" class="url text-primary">
+                        <h5>{{ $title }}</h5>
+                      </a>
+                      <span class="text-muted" style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span>
+                      <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p>
+                    </div>
                   </div>
+                  <hr style="border: 1px solid rgba(0,0,0,.1)">
+                  @endforeach
+                </div>
                 @endforeach
               </div>
-             </div>
-           </div>
-     </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-      
-   </div>
-</div>
+  </div>
 
-<style type="text/css">
-.uppercase { text-transform: uppercase; }
-.url:hover{
-  transition: .4s;
-  text-decoration: underline
-}
-</style>
+  <style type="text/css">
+    .uppercase {
+      text-transform: uppercase;
+    }
 
-@endsection
+    .url:hover {
+      transition: .4s;
+      text-decoration: underline
+    }
+  </style>
 
-@section('script')
+  @endsection
 
-<script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
-<script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
-<script>
+  @section('script')
+
+  <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
+  <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
+  <script>
     $(document).on('click', '#addPolicyBtn', function(event){
         event.preventDefault();
         $('#addPolicyModal').modal('show');
@@ -98,6 +122,42 @@
         $('#deletePolicyModal').modal('show');
     });
 
+    $(document).on('keyup', '.carousel-search', function (e){
+        e.preventDefault();
+        if($(this).val() != ''){
+            $.ajax({
+                url: '/search',
+                type: 'get',
+                data: {
+                    query: $(this).val()
+                },
+                success:function(response){
+                    $('#autocomplete-container').removeClass('d-none').html(response);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR, textStatus, errorThrown);
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.submit-search', function (e){
+        e.preventDefault();
+        $('#searh-form').submit();
+    });
+
+    $(document).mouseup(function(e){
+        var container = $("#autocomplete-container");
+
+        if (!container.is(e.target) && container.has(e.target).length === 0){
+            container.addClass('d-none');
+        }
+    });
+
+    $(document).on('scroll', function (e){
+        $("#autocomplete-container").addClass('d-none');
+    });
+
     // CKEDITOR.config.height = 450;
-</script>
-@endsection
+  </script>
+  @endsection

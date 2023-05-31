@@ -34,7 +34,7 @@ Route::get('/policies', 'PortalController@showMemorandum');
 Route::get('/updates', 'PortalController@showUpdates');
 Route::get('/itguidelines', 'PortalController@showitGuidelines');
 
-Route::post('/search', 'SearchController@search')->name('search');
+Route::get('/search', 'SearchController@search')->name('search');
 
 
 
@@ -251,7 +251,6 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/crudDeleteQuestion', 'BackgroundCheckController@delete');
         
 });
-Route::get('/testing', 'EmployeesController@testing');
 
 // A D M I N
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
