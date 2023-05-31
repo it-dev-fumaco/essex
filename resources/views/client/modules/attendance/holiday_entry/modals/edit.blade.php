@@ -25,11 +25,14 @@
                   </div>
                   <div class="form-group" style="padding: 0 10px;">
                         <label>Category:</label>
+                        @php
+                            $holidays = ['Regular Holiday', 'Special Holiday', 'Company Activity'];
+                        @endphp
                          <select id="category" name="category">
                            <option value="">--Select Category--</option>
-                           <option value="Regular Holiday">Regular Holiday</option>
-                           <option value="Special Holiday">Special Holiday</option>
-                           <option value="Company Activity">Company Activity</option>
+                           @foreach ($holidays as $h)
+                              <option value="{{ $h }}" {{ $h == 'Regular Holiday' ? 'selected' : null }}>{{ $h }}</option>
+                           @endforeach
                          </select>
                   </div>
                   <div style="font-size: 8pt; padding-right: 5%;float: right;">
