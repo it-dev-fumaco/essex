@@ -13,17 +13,16 @@
     <div class="section" style="padding: 0 !important; min-height: 80vh">
       <div id="imagecontainer" class="container-fluid">
         <div class="container-fluid">
-          <div class="col-md-offset-2 col-md-8" style="padding-top: 30px;">
+          <div class="col-md-offset-3 col-md-6" style="padding-top: 30px;">
             <form action="{{ route('search') }}" id="searh-form" method="get">
-              @csrf
               <div class="row" style="padding: 0; margin:0 ">
                 <div class="col-md-12 text-center">
                   <h3 style="color: #fff;">{{ count($searchResults) }} results found for "{{ request('query') }}"</h3>
                 </div>
-                <div class="col-md-9" style="padding: 0; margin: 0">
+                <div class="col-md-10" style="padding: 0; margin: 0">
                   <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off" value="{{ request('query') }}">
                 </div>
-                <div class="col-md-3" style="padding: 0; margin: 0">
+                <div class="col-md-2" style="padding: 0; margin: 0">
                   <button type="submit" class="btn bg-success"
                     style="padding: 16px; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>
                 </div>
@@ -42,19 +41,33 @@
                 <div class="col-md-6" style="padding: 10px;">
                   @foreach($searchResults as $searchResult)
                   @php
-                  if(is_object($searchResult)){
-                    $url = $searchResult->url;
-                    $title = $searchResult->title;
-                    $category = $searchResult->category;
-                    $description = $searchResult->description;
-                    $icon = 'icon-info';
-                  }else{
-                    $url = $searchResult['url'];
-                    $title = $searchResult['title'];
-                    $category = $searchResult['category'];
-                    $description = $searchResult['description'];
-                    $icon = 'fa fa-file-pdf-o';
-                  }
+                    if(is_object($searchResult)){
+                      $url = $searchResult->url;
+                      $title = $searchResult->title;
+                      $category = $searchResult->category;
+                      $description = $searchResult->description;
+                      $phone = $searchResult->phone;
+                      $type = $searchResult->type;
+                    }else{
+                      $url = $searchResult['url'];
+                      $title = $searchResult['title'];
+                      $category = $searchResult['category'];
+                      $description = $searchResult['description'];
+                      $phone = $searchResult['phone'];
+                      $type = $searchResult['type'];
+                    }
+
+                    switch ($type) {
+                      case 'users':
+                        $icon = 'fa fa-user';
+                        break;
+                      case 'Files':
+                        $icon = 'fa fa-file-pdf-o';
+                        break;
+                      default:
+                        $icon = 'icon-info';
+                        break;
+                    }
                   @endphp
                   <div class="row"
                     style="margin: 20px 0 20px 0; display: flex; justify-content: center; align-items: center;">
@@ -66,7 +79,17 @@
                         <h5>{{ $title }}</h5>
                       </a>
                       <span class="text-muted" style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span>
-                      <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p>
+                      @if ($type == 'users')
+                        <p>
+                          <i class="fa fa-envelope"></i>&nbsp;{{ $description}}
+                          @if ($phone)
+                            <br/>
+                            <i class="fa fa-phone"></i>&nbsp;{{ $phone }}
+                          @endif
+                        </p>
+                      @else
+                        <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p>
+                      @endif
                     </div>
                   </div>
                   <hr style="border: 1px solid rgba(0,0,0,.1)">
