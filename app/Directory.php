@@ -21,7 +21,7 @@ class Directory extends Model implements Searchable
         $cat = 'Phone and Email Directory';
         return new SearchResult(
             $this,
-            $this->employee_name.' - '.$designation,
+            $this->employee_name.($designation ? ' - '.$designation : null),
             $this->email,
             $cat,
             $this->telephone,
