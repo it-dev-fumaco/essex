@@ -81,7 +81,9 @@
                       <span class="text-muted" style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span>
                       @if ($type == 'users')
                         <p>
-                          <i class="fa fa-envelope"></i>&nbsp;{{ $description}}
+                          @if ($description)
+                            <i class="fa fa-envelope"></i>&nbsp;{{ $description }}
+                          @endif
                           @if ($phone)
                             <br/>
                             <i class="fa fa-phone"></i>&nbsp;{{ $phone }}
