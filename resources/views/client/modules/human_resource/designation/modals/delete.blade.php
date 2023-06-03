@@ -10,7 +10,7 @@
          <!-- Modal body -->
          <div class="modal-body">
             <div class="row" style="margin: 7px;">
-              <form action="/client/designation/delete" method="POST">
+              <form action="/module/hr/designation/delete" method="POST">
                @csrf
                <input type="hidden" name="id" value="{{ $desig->des_id }}">
                <input type="hidden" name="designation" value="{{ $desig->designation }}">

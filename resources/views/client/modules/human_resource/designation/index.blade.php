@@ -29,12 +29,15 @@
                   <h2 class="title-2">Designation List</h2>
                   <div class="row">
                      <div class="col-md-12">
-                        @if(session("message"))
-                        <div class='alert alert-success alert-dismissible'>
-                           <button type='button' class='close' data-dismiss='alert'>&times;</button>
-                           <center>{!! session("message") !!}</center>
-                        </div>
+                        @if (session()->has('success'))
+                           @if(session("message"))
+                           <div class='alert alert-{{ session('success') ? 'success' : 'danger' }} alert-dismissible'>
+                              <button type='button' class='close' data-dismiss='alert'>&times;</button>
+                              <center>{!! session("message") !!}</center>
+                           </div>
+                           @endif
                         @endif
+                        
                         <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#add-desig-modal" style="float: left; margin-bottom: -55px; z-index: 1;">
                            <i class="fa fa-plus"></i> Designation
                         </a>

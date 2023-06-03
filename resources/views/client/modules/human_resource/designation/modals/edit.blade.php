@@ -10,7 +10,7 @@
          <!-- Modal body -->
          <div class="modal-body">
             <div class="row" style="margin: 7px;">
-               <form method="POST" action="/client/designation/update">
+               <form method="POST" action="/module/hr/designation/update">
                @csrf
                <input type="hidden" name="id" value="{{ $desig->des_id }}">
                 <div class="col-sm-12">
