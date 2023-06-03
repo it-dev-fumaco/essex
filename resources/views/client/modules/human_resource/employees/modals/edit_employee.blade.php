@@ -112,112 +112,152 @@
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Employee ID:</label>
-                                 <input type="text" name="employee_id" placeholder="Enter Employee ID" value="{{ $employee_profile->employee_id }}" required>
+                                 <input type="text" name="employee_id" placeholder="Enter Employee ID" required>
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>ID Security Key:</label>
+                                 <input type="password" name="id_key" placeholder="Enter ID Security Key">
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Date Joined:</label>
+                                 <input type="date" name="date_joined" placeholder="Enter Date Joined" required>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Company:</label>
+                                 <select name="company" required>
+                                    <option value="">Select Company</option>
+                                    @foreach ($companies as $company)
+                                       <option value="{{ $company }}">{{ $company }}</option>
+                                    @endforeach
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Branch:</label>
+                                 <select name="branch" required>
+                                    <option value="">Select Branch</option>
+                                       @forelse($branch as $loc)
+                                       <option value="{{ $loc->branch_id }}">{{ $loc->branch_name }}</option>
+                                       @empty
+                                       <option>No Branch Found.</option>
+                                       @endforelse
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>User Group:</label>
+                                 <select name="user_group" required>
+                                    <option value="">Select User Group</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="HR Personnel">HR Personnel</option>
+                                    <option value="Editor">Editor</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Department:</label>
                                  @if(isset($departments))
-                                 <select name="department">
-                                    <option value="" disabled>Select Department</option>
+                                 <select name="department" required>
+                                    <option value="">Select Department</option>
                                     @forelse($departments as $department)
-                                    <option value="{{ $department->department_id }}" {{ $employee_profile->department_id == $department->department_id ? 'selected' : '' }}>{{ $department->department }}</option>
+                                    <option value="{{ $department->department_id }}">{{ $department->department }}</option>
                                     @empty
                                     <option>No Department(s) Found.</option>
                                     @endforelse
                                  </select>
                                  @endif
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <input type="hidden" name="designation_name" class="designation_name">
                               <div class="form-group">
                                  <label>Designation:</label>
                                  @if(isset($designations))
-                                 <select name="designation" class="designation">
-                                    <option value="" disabled>Select Designation</option>
+                                 <select name="designation" class="designation" required>
+                                    <option value="">Select Designation</option>
                                     @forelse($designations as $designation)
-                                    <option value="{{ $designation->des_id }}" {{ $employee_profile->designation_id == $designation->des_id ? 'selected' : '' }}>{{ $designation->designation }}</option>
+                                    <option value="{{ $designation->des_id }}">{{ $designation->designation }}</option>
                                     @empty
                                     <option>No Designation(s) Found.</option>
                                     @endforelse
                                  </select>
                                  @endif
                               </div>
-                              
-                              <input type="hidden" name="designation_name" value="{{ $employee_profile->designation_name }}" class="designation_name">
-                              
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Employment Status:</label>
-                                 <select name="employment_status">
-                                    <option value="">Select Employment Status</option>
-                                    <option value="Regular" {{ $employee_profile->employment_status == 'Regular' ? 'selected' : '' }}>Regular</option>
-                                    <option value="Contractual" {{ $employee_profile->employment_status == 'Contractual' ? 'selected' : '' }}>Contractual</option>
-                                    <option value="Probationary" {{ $employee_profile->employment_status == 'Probationary' ? 'selected' : '' }}>Probationary</option>
+                                 <label>Reporting to:</label>
+                                 <select name="reporting_to" required>
+                                    <option value="">Select an Employee</option>
+                                    @foreach ($regular_employees as $emp)
+                                       <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
+                                    @endforeach
                                  </select>
                               </div>
                            </div>
+                           
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Shift:</label>
-                                 <select name="shift">
-                                    <option value="" disabled>Select Shift</option>
+                                 <select name="shift" required>
+                                    <option value="">Select Shift</option>
                                     @forelse($shifts as $shift)
-                                    <option value="{{ $shift->id }}" {{ $employee_profile->shift_group_id == $shift->id ? 'selected' : '' }}>{{ $shift->shift_group_name }}</option>
+                                    <option value="{{ $shift->id }}">{{ $shift->shift_group_name }}</option>
                                     @empty
                                     <option>No Shift(s) Found.</option>
                                     @endforelse
                                  </select>
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Branch:</label>
-                                 <select name="branch">
-                                    <option value="" disabled>Select Branch</option>
-                                       @forelse($branch as $loc)
-                                       <option value="{{ $loc->branch_id }}" {{ $employee_profile->branch == $loc->branch_id  }}>{{ $loc->branch_name }}</option>
-                                       @empty
-                                       <option>No Branch Found.</option>
-                                       @endforelse
-                                 </select>
-                              </div>
-                              
-                              <div class="form-group">
-                                 <label>Date Joined:</label>
-                                 <input type="date" name="date_joined" value="{{ $employee_profile->date_joined }}" placeholder="Enter Date Joined">
-                              </div>
-                              <div class="form-group">
-                                 <label>User Group:</label>
-                                 <select name="user_group">
-                                    <option value="" disabled>Select User Group</option>
-                                    <option value="Employee" {{ $employee_profile->user_group == 'Employee' ? 'selected' : '' }}>Employee</option>
-                                    <option value="Manager" {{ $employee_profile->user_group == 'Manager' ? 'selected' : '' }}>Manager</option>
-                                    <option value="HR Personnel" {{ $employee_profile->user_group == 'HR Personnel' ? 'selected' : '' }}>HR Personnel</option>
-                                    <option value="Editor" {{ $employee_profile->user_group == 'Editor' ? 'selected' : '' }}>Editor</option>
+                                 <label>Employment Status:</label>
+                                 <select name="employment_status" required>
+                                    <option value="">Select Employment Status</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Contractual">Contractual</option>
+                                    <option value="Probationary">Probationary</option>
                                  </select>
                               </div>
                            </div>
+
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Telephone (Local No.):</label>
-                                 <input type="number" value="{{ $employee_profile->telephone }}" name="telephone" placeholder="Enter Local No.">
+                                 <input type="number" name="telephone" placeholder="Enter Local No.">
                               </div>
-                              
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Email:</label>
-                                 <input type="email" value="{{ $employee_profile->email }}" name="email" placeholder="Enter Email">
+                                 <label>Local Email:</label>
+                                 <input type="text" name="email" placeholder="Enter Email" required>
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Status:</label>
-                                 <select name="status" class="status">
-                                    <option value="Active" {{ $employee_profile->status == 'Active' ? 'selected' : '' }}>Active</option>
-                                    <option value="Inactive" {{ $employee_profile->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="Resigned" {{ $employee_profile->status == 'Resigned' ? 'selected' : '' }}>Resigned</option>
-                                    <option value="Retired" {{ $employee_profile->status == 'Retired' ? 'selected' : '' }}>Retired</option>
-                                 </select>
-                              </div>
-                              <div class="form-group resignation-date-div">
-                                 <label>Date of Resignation:</label>
-                                 <input type="date" name="resignation_date" value="{{ $employee_profile->resignation_date }}" class="resignation-date">
-                              </div>
-                              <div class="form-group">
-                                 <label>ID Security Key:</label>
-                                 <input type="text" name="id_key" value="{{ $employee_profile->id_security_key }}" placeholder="Enter ID Security Key">
+                                 <label>Password:</label>
+                                 <input type="password" name="password" placeholder="Enter Password" required>
                               </div>
                            </div>
                         </div>

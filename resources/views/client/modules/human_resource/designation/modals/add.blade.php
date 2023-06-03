@@ -10,7 +10,7 @@
          <!-- Modal body -->
          <div class="modal-body">
             <div class="row" style="margin: 7px;">
-               <form action="/client/designation/create" method="POST">
+               <form action="/module/hr/designation/create" method="POST">
                @csrf
                <div class="col-sm-12">
                   <div class="form-group">

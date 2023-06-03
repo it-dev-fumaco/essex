@@ -283,6 +283,8 @@ class EmployeesController extends Controller
         $shifts = DB::table('shift_groups')->get(); 
         $branch = DB::table('branch')->get();
 
+        $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
+
         $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
 
         $data = [
@@ -293,7 +295,8 @@ class EmployeesController extends Controller
             'branch' => $branch,
             'department' => $department,
             'designation' => $designation,
-            'regular_employees' => $regular_employees
+            'regular_employees' => $regular_employees,
+            'companies' => $companies
         ];
 
         return view('client.modules.human_resource.employees.index', $data);
@@ -376,6 +379,7 @@ class EmployeesController extends Controller
             $employee->designation_name = $request->designation_name;
             $employee->status = 'Active';
             $employee->id_security_key = $request->id_key;
+            $employee->company = $request->company;
             $employee->save();
 
             $department = Department::find($employee->department_id);
@@ -489,6 +493,7 @@ class EmployeesController extends Controller
         $employee->id_security_key = $request->id_key;
         $employee->designation_name = $request->designation_name;
         $employee->last_modified_by = Auth::user()->employee_name;
+        $employee->company = $request->company;
 
         if ($request->status == 'Resigned') {
             $employee->resignation_date = $request->resignation_date;

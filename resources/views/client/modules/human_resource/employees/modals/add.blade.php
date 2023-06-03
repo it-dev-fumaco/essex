@@ -109,6 +109,62 @@
                                  <label>Employee ID:</label>
                                  <input type="text" name="employee_id" placeholder="Enter Employee ID" required>
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>ID Security Key:</label>
+                                 <input type="password" name="id_key" placeholder="Enter ID Security Key">
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Date Joined:</label>
+                                 <input type="date" name="date_joined" placeholder="Enter Date Joined" required>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Company:</label>
+                                 <select name="company" required>
+                                    <option value="">Select Company</option>
+                                    @foreach ($companies as $company)
+                                       <option value="{{ $company }}">{{ $company }}</option>
+                                    @endforeach
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Branch:</label>
+                                 <select name="branch" required>
+                                    <option value="">Select Branch</option>
+                                       @forelse($branch as $loc)
+                                       <option value="{{ $loc->branch_id }}">{{ $loc->branch_name }}</option>
+                                       @empty
+                                       <option>No Branch Found.</option>
+                                       @endforelse
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>User Group:</label>
+                                 <select name="user_group" required>
+                                    <option value="">Select User Group</option>
+                                    <option value="Employee">Employee</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="HR Personnel">HR Personnel</option>
+                                    <option value="Editor">Editor</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Department:</label>
                                  @if(isset($departments))
@@ -122,6 +178,10 @@
                                  </select>
                                  @endif
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <input type="hidden" name="designation_name" class="designation_name">
                               <div class="form-group">
                                  <label>Designation:</label>
                                  @if(isset($designations))
@@ -135,24 +195,20 @@
                                  </select>
                                  @endif
                               </div>
-                              
-                              <input type="hidden" name="designation_name" class="designation_name">
-                              
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Employment Status:</label>
-                                 <select name="employment_status" required>
-                                    <option value="">Select Employment Status</option>
-                                    <option value="Regular">Regular</option>
-                                    <option value="Contractual">Contractual</option>
-                                    <option value="Probationary">Probationary</option>
+                                 <label>Reporting to:</label>
+                                 <select name="reporting_to" required>
+                                    <option value="">Select an Employee</option>
+                                    @foreach ($regular_employees as $emp)
+                                       <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
+                                    @endforeach
                                  </select>
                               </div>
-
-                              <div class="form-group">
-                                 <label>Date Joined:</label>
-                                 <input type="date" name="date_joined" placeholder="Enter Date Joined" required>
-                              </div>
                            </div>
+                           
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Shift:</label>
@@ -165,63 +221,43 @@
                                     @endforelse
                                  </select>
                               </div>
-                               <div class="form-group">
-                                 <label>Branch:</label>
-                                 <select name="branch" required>
-                                    <option value="">Select Branch</option>
-                                       @forelse($branch as $loc)
-                                       <option value="{{ $loc->branch_id }}">{{ $loc->branch_name }}</option>
-                                       @empty
-                                       <option>No Branch Found.</option>
-                                       @endforelse
-                                 </select>
-                              </div>
-                              <div class="form-group">
-                                 <label>Reporting to:</label>
-                                 <select name="reporting_to" required>
-                                    <option value="">Select an Employee</option>
-                                    @foreach ($regular_employees as $emp)
-                                       <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
-                                    @endforeach
-                                 </select>
-                              </div>
-                              
-                              <div class="form-group">
-                                 <label>User Group:</label>
-                                 <select name="user_group" required>
-                                    <option value="">Select User Group</option>
-                                    <option value="Employee">Employee</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="HR Personnel">HR Personnel</option>
-                                    <option value="Editor">Editor</option>
-                                 </select>
-                              </div>
-                              
                            </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Employment Status:</label>
+                                 <select name="employment_status" required>
+                                    <option value="">Select Employment Status</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Contractual">Contractual</option>
+                                    <option value="Probationary">Probationary</option>
+                                 </select>
+                              </div>
+                           </div>
+
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Telephone (Local No.):</label>
                                  <input type="number" name="telephone" placeholder="Enter Local No.">
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Local Email:</label>
                                  <input type="text" name="email" placeholder="Enter Email" required>
                               </div>
+                           </div>
+
+                           <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Password:</label>
                                  <input type="password" name="password" placeholder="Enter Password" required>
-                              </div>
-                              <div class="form-group">
-                                 <label>ID Security Key:</label>
-                                 <input type="password" name="id_key" placeholder="Enter ID Security Key">
                               </div>
                            </div>
                         </div>
                      </div>
                   </div>
-                  
-                  
-                  
                </div>
             </div>
             <div class="modal-footer" style="margin-top: -30px;">
