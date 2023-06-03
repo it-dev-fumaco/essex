@@ -84,7 +84,7 @@
         font-family: 'Poppins-Light';
         src: url('{{ asset("fonts/Poppins/Poppins-Light.ttf") }}') format('truetype');
     }
-    html, body{
+    html, body, h3{
         font-family: 'Poppins-Regular' !important;
     }
     .login-content{
@@ -160,11 +160,10 @@
     }
 
     .profile-image{
-        display: inline-block;
-        width: 90px;
-        height: 90px;
+        display: block;
+        width: 57px;
+        height: 57px;
         border-radius: 50%;
-
         background-repeat: no-repeat;
         background-position: center center;
         background-size: cover;
@@ -387,7 +386,7 @@ $(document).ready(function(){
         <div class="row">
             <div class="col-md-12">
                 <div class="site-info text-center">
-                    <p>&copy; All rights reserved 2019</p>
+                    <p>&copy; All rights reserved 2023</p>
                 </div>
             </div>
         </div>

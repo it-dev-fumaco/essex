@@ -93,7 +93,7 @@ class PortalController extends Controller
             $employees = DB::table('users')->where('user_type', 'Employee')
                 ->join('designation', 'designation.des_id', 'users.designation_id')
                 ->join('departments', 'departments.department_id', 'users.department_id')
-                ->where('users.status', 'Active')->where('employment_status', 'Regular')->where('users.email', '!=', 'essex.admin@fumaco.local')
+                ->where('users.status', 'Active')->whereIn('employment_status', ['Regular', 'Probationary'])->where('users.email', '!=', 'essex.admin@fumaco.local')
                 ->when($request->search, function ($q) use ($request){
                     return $q->where('users.employee_name', 'LIKE', '%'.$request->search.'%')
                         ->orWhere('users.nick_name', 'LIKE', '%'.$request->search.'%')
@@ -102,8 +102,14 @@ class PortalController extends Controller
                         ->orWhere('departments.department', 'LIKE', '%'.$request->search.'%')
                         ->orWhere('users.email', 'LIKE', '%'.$request->search.'%');
                 })
-                ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
-                ->get()->groupBy('department');
+                ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department','designation.designation', 'users.branch', 'users.company')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
+                ->get();
+
+            if ($request->total) {
+                return collect($employees)->count();
+            }
+
+            $employees = collect($employees)->groupBy('department');
             
             return view('portal.tbl_directory', compact('employees'));
         }
