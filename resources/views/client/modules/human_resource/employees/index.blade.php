@@ -225,7 +225,6 @@ textarea{
                $('#edit-employee-form .designation').val(response.designation_id);
                $('#edit-employee-form .designation_name').val(response.designation_name);
                $('#edit-employee-form .employment_status').val(response.employment_status);
-               $('#edit-employee-form .shift').val(response.shift_group_id);
                $('#edit-employee-form .branch').val(response.branch);
                $('#edit-employee-form .date_joined').val(response.date_joined);
                $('#edit-employee-form .user_group').val(response.user_group);
@@ -237,6 +236,19 @@ textarea{
                $('#edit-employee-form .modified_name').text(response.last_modified_by);
                $('#edit-employee-form .id-key').val(response.id_security_key);
                $('#edit-employee-form .gender').val(response.gender);
+               $('#edit-employee-form input[name="employee_id"]').val(response.employee_id);
+               $('#edit-employee-form input[name="id_key"]').val(response.id_security_key);
+               $('#edit-employee-form input[name="date_joined"]').val(response.date_joined);
+               $('#edit-employee-form select[name="company"]').val(response.company);
+               $('#edit-employee-form select[name="branch"]').val(response.branch);
+               $('#edit-employee-form select[name="user_group"]').val(response.user_type);
+               $('#edit-employee-form select[name="department"]').val(response.department_id);
+               $('#edit-employee-form select[name="reporting_to"]').val(response.reporting_to);
+               $('#edit-employee-form select[name="shift"]').val(response.shift_group_id);
+               $('#edit-employee-form select[name="employment_status"]').val(response.employment_status);
+               $('#edit-employee-form input[name="telephone"]').val(response.telephone);
+               $('#edit-employee-form input[name="email"]').val(response.email);
+               $('#edit-employee-form select[name="status"]').val(response.status);
                $('#edit-employee-modal').modal('show');
             },
             error: function(data) {
