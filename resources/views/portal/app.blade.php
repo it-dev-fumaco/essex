@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="EstateX">
     <title>ESSEX</title>
-    <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css">
+    {{-- <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css"> --}}
+    <link rel="stylesheet" href="{{ asset('bootstrap-5.0.2-dist/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/main.css') }}" type="text/css">
@@ -17,10 +18,10 @@
     <link rel="stylesheet" href="{{ asset('css/extras/settings.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/extras/nivo-lightbox.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/responsive.css') }}" type="text/css">
-    <link rel="stylesheet" href="{{ asset('css/css/slicknav.css') }}" type="text/css">
+    {{-- <link rel="stylesheet" href="{{ asset('css/css/slicknav.css') }}" type="text/css"> --}}
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 </head>
-@php
+{{-- @php
     $colors_array = [
         [
             'title' => 'primary',
@@ -68,7 +69,7 @@
             'font-color' => 'black'
         ]
     ];
-@endphp
+@endphp --}}
 <style type="text/css">
     @font-face{
         font-family: 'Poppins-Regular';
@@ -113,16 +114,6 @@
         color: #fff;
     }
 
-    .tag{
-        font-size: 8pt;
-        cursor: pointer;
-        display:inline-block;
-        border: 1px solid #6C757D;
-        border-radius: 5px;
-        color: #6C757D;
-        padding: 0 5px 0 5px !important;
-    }
-
     .badge{
         padding: 4px;
         font-size: 9pt;
@@ -137,6 +128,7 @@
 
     .dashboard-btn{
         margin-top: 16px;
+        background-color: #5CB85C !important;
     }
 
     .d-none{
@@ -194,29 +186,16 @@
         cursor: pointer;
     }
 
-    .policy-thumbnail{
-        background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
-        opacity: .8;
-        height: 200px;
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .video-play-icon{
+        font-size: 80pt;
+        color: rgba(0, 0, 0, .3);
     }
 
-    .proxy-thumbnail{
-        background: url("{{ asset('storage/thumbnail/internet_services.png') }}") no-repeat;
-        opacity: .8;
-        height: 200px;
-        background-size: cover;
-        background-color: black !important;
-        background-repeat: no-repeat;
-        background-position: center center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .absolute-center{
+        position: absolute;
+        left:50%;
+        top:50%;
+        transform: translate(-50%, -50%)
     }
 
     @media (max-width: 1199.98px) {
@@ -232,7 +211,7 @@
     }
 </style>
 
-@foreach ($colors_array as $color)
+{{-- @foreach ($colors_array as $color)
 <style>
     .bg-{{ $color['title'] }}{
         background-color: {{ $color["color"] }};
@@ -247,7 +226,7 @@
         color: {{ $color["color"] }};
     }
 </style>
-@endforeach
+@endforeach --}}
 @include('portal.modals.login_modal')
 
 <div class="header">
@@ -301,7 +280,8 @@
 
 <script src="{{ asset('css/js/ajax.min.js') }}"></script> 
 <script type="text/javascript" src="{{ asset('css/js/jquery-min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script>
+{{-- <script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script> --}}
+<script type="text/javascript" src="{{ asset('bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.parallax.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/owl.carousel.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/wow.js') }}"></script>
