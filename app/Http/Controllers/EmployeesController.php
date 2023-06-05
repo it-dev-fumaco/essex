@@ -591,6 +591,9 @@ class EmployeesController extends Controller
         $newly=$neww + $newcodeID;
         $newwwly='FUM'.'-'.$newly;
 
+        $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
+        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
+
         $data = [
             'employee_profile' => $employee_profile,
             'regular_shift' => $regular_shift,
@@ -608,7 +611,9 @@ class EmployeesController extends Controller
             'branch' => $branch,
             'approvers' => $approvers,
             'year_list' => $year_list,
-            'training' => $training
+            'training' => $training,
+            'companies' => $companies,
+            'regular_employees' => $regular_employees
         ];
         return view('client.modules.human_resource.employees.profile')->with($data);
     }
