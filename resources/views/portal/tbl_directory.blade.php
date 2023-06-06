@@ -4,22 +4,24 @@
     </div>
     @foreach ($employee as $emp)
         <div class="col-md-3" style="padding: 8px;">
-            <div class="card" style="background-color: #fff; box-shadow: 1px 1px 4px rgba(0,0,0,.4); padding-top: 5px; padding-bottom: 5px;">
-                <div class="row">
-                    <div class="col-md-3 text-center" style="padding-top: 10px; padding-bottom: 10px;">
-                        @php
-                            $image = $emp->image ? $emp->image : 'storage/img/user.png';
-                            if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
-                                $image = 'storage/img/user.png';
-                            }
-                        @endphp
-                        <div class="profile-image" style="background-image: url({{ asset($image) }}); border: 1px solid rgba(0,0,0,.3)"></div>
-                    </div>
-                    <div class="col-md-9" style="padding: 0;">
-                        <span style="font-weight: 600; font-size: 14px; line-height: 20px;" class="d-block">{{ $emp->employee_name }}</span>
-                        <small class="text-muted d-block" style="font-size: 13px;line-height: 19px;">{{ $emp->designation }}</small>
-                        <small class="d-block" style="white-space: nowrap !important;font-size: 11px; line-height: 19px;"><i class="fa fa-envelope"></i>&nbsp;{{ $emp->email ? $emp->email : 'N/A' }}</small>
-                        <small class="d-block" style="white-space: nowrap !important; font-size: 11px; line-height: 19px;"><i class="fa fa-phone"></i>&nbsp;{{ $emp->telephone ? $emp->telephone : 'N/A' }}</small>
+            <div class="card shadow p-0" style="background-color: #fff;">
+                <div class="card-body p-1">
+                    <div class="row">
+                        <div class="col-3 text-center" style="display: flex; justify-content: center; align-items: center;">
+                            @php
+                                $image = $emp->image ? $emp->image : 'storage/img/user.png';
+                                if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
+                                    $image = 'storage/img/user.png';
+                                }
+                            @endphp
+                            <div class="profile-image" style="background-image: url({{ asset($image) }}); border: 1px solid rgba(0,0,0,.3)"></div>
+                        </div>
+                        <div class="col-9" style="padding: 0;">
+                            <span style="font-weight: 600; font-size: 14px; line-height: 20px;" class="d-block">{{ $emp->employee_name }}</span>
+                            <small class="text-muted d-block" style="font-size: 13px;line-height: 19px;">{{ $emp->designation }}</small>
+                            <small class="d-block" style="white-space: nowrap !important;font-size: 11px; line-height: 19px;"><i class="fa fa-envelope"></i>&nbsp;{{ $emp->email ? $emp->email : 'N/A' }}</small>
+                            <small class="d-block" style="white-space: nowrap !important; font-size: 11px; line-height: 19px;"><i class="fa fa-phone"></i>&nbsp;{{ $emp->telephone ? $emp->telephone : 'N/A' }}</small>
+                        </div>
                     </div>
                 </div>
             </div>

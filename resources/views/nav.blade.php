@@ -1,5 +1,5 @@
-<div class="row border border-danger">
-    <div class="col-3 border border-primary">
+<div class="row">
+    <div class="col-3">
         <div class="row" style="display: flex; justify-content: center; align-items: center;">
             <div class="col-md-4 col-md-offset-1" style="padding: 0;">
                 <a href="/">
@@ -12,9 +12,9 @@
             </div>
         </div>
     </div>
-    <div class="col-7 border border-primary" style="display: flex; justify-content: center; align-items: center;">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light border border-success">
-            <div class="container-fluid border border-danger">
+    <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -57,21 +57,23 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/services/directory"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/services/directory"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
-                        </li>
+                        @if(Auth::user())
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('/home') }}"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             </div>
         </nav>
     </div>
-    @if(Auth::user())
-        <div class="col-2 border border-danger">
+    {{-- @if(Auth::user())
+        <div class="col-2">
             <div class="col-10 offset-2" style="display: flex; justify-content: center; align-items: center;">
                 <a href="{{ url('/home') }}" class="btn dashboard-btn"><i class="fa fa-users"></i> &nbsp;Essex Dashboard</a>
             </div>
         </div>
-    @endif
+    @endif --}}
     
 </div>
 <style>

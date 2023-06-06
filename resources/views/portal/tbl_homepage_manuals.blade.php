@@ -1,59 +1,90 @@
 <div class="row">
+    <h3>Helpful Articles</h3>
+</div>
+{{-- <div class="row">
+    <form action="/tbl_manuals" id="manuals-form" method="get">
+        @foreach ($categories as $id => $category)
+            <label class="PillList-item">
+                <input type="checkbox" name="category[]" class="category-checkbox" value="{{ $id }}" {{ in_array($id, $request_category) ? 'checked' : null }}>
+                <span class="PillList-label">{{ $category }}</span>
+            </label>
+        @endforeach
+    </form>
+</div> --}}
+<div class="row mt-2">
+    @foreach ($general_concerns as $concern)
+        @php
+            $tag = isset($tags[$concern->id]) ? $tags[$concern->id] : [];
+        @endphp
+        <div class="col-4 p-2">
+            <i class="fa fa-caret-right"></i> &nbsp;
+            <a href="/article/{{ $concern->slug }}" class="text-decoration-none">
+                <b>{{ $concern->title }}</b>
+            </a>
+        </div>
+    @endforeach
+</div>
+{{-- <div class="row">
+    @foreach ($general_concerns as $concern)
+        @php
+            $tag = isset($tags[$concern->id]) ? $tags[$concern->id] : [];
+        @endphp
+        <div class="col-6 p-2">
+            <i class="fa fa-caret-right"></i> &nbsp;
+            <a href="/article/{{ $concern->slug }}" class="text-decoration-none">
+                <b>{{ $concern->title }}</b>
+            </a>
+        </div>
+    @endforeach
+</div> --}}
+{{-- <div class="row">
     @php
-        $chunk_count = count($general_concerns) / 2;
+        $chunk_count = count($general_concerns) / 3;
         $chunk_count = round($chunk_count) < 1 ? count($general_concerns) : round($chunk_count);
         $chunk = $general_concerns->chunk($chunk_count);
-        $tags_input = null;
-        $selected_tags = [];
-        if(isset($tags_array['selected_tags']) && $tags_array['selected_tags']){
-            $tags_input = collect(array_keys($tags_array['selected_tags']->toArray()))->implode(',');
-            $selected_tags = $tags_array['selected_tags'];
-        }
-
-        $tags = isset($tags_array['tags']) ? $tags_array['tags'] : [];
     @endphp
-    <input type="text" class="tag-input" value="{{ $tags_input }}" style="display: none">
-    @if (count($selected_tags) > 0)
-        <div class="col-md-12">
-            Tags: 
-            @foreach ($selected_tags as $tag_id => $tagname)
-                <span class="tag" data-id="{{ $tagname }}">{{ $tagname }}&nbsp;<i class="fa fa-remove remove-tag" data-id="{{ $tag_id }}"></i></span>
-            @endforeach
-        </div>
-    @endif
     @foreach ($chunk as $gen_concerns)
-    <div class="col-md-6" style="padding: 10px 20px 10px 20px;">
+    <div class="col-md-4" style="padding: 0 20px 0 20px;">
         @foreach ($gen_concerns as $concern)
-            @php
-                $tag = isset($tags[$concern->id]) ? $tags[$concern->id] : [];
-            @endphp
-            <div class="container-fluid card" style="box-shadow: 1px 1px 4px #999999; margin-top: 20px;">
-                <div class="row equal-height">
-                    <div class="col-md-1" style="display: flex; justify-content: center; align-items: center;">
-                        <i class="fa fa-question-circle" style="font-size: 23px;"></i>
-                    </div>
-                    <div class="col-md-11">
-                        <a href="/article/{{ $concern->slug }}">
-                            {{-- @if ($department && $concern->is_private)
-                                <span class="badge bg-primary">{{ $department }}</span>&nbsp;
-                            @endif --}}
-                            <span style="font-style: italic; font-size: 13px;">{{ $concern->category }}</span>
-                            <br/>
-                            <b>{{ $concern->title }}</b><br>
-                            <small class="text-muted">
-                                {{ substr($concern->short_text, 0, 45) }}...
-                            </small>
-                        </a>
-                        <small style="margin-top: 10px;">
-                            <b>Tags:</b> 
-                            @foreach ($tag as $t)
-                                <span class="tag add-tag" data-id="{{ $t->id }}">{{ $t->name }}</span>
-                            @endforeach
-                        </small>
-                    </div>
-                </div>
+            <div class="col-md-12" style="padding: 10px; margin: 10px 0 10px 0">
+                <i class="fa fa-caret-right"></i> &nbsp;
+                <a href="/article/{{ $concern->slug }}">
+                    <b>{{ $concern->title }}</b>
+                </a>
             </div>
+            <hr >
         @endforeach
     </div>
     @endforeach
-</div>
+</div> --}}
+<style>
+    .PillList-item {
+        cursor: pointer;
+        display: inline-block;
+        float: left;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 20px;
+        margin: 0 12px 12px 0;
+        text-transform: capitalize;
+    }
+
+    .PillList-item input[type="checkbox"] {
+        display: none;
+    }
+
+    .PillList-item input[type="checkbox"]:checked + .PillList-label {
+        background-color: #28A745;
+        border: 1px solid #28A745;
+        color: #fff;
+    }
+    
+    .PillList-label {
+        border: 1px solid #28A745;
+        border-radius: 20px;
+        color: #28A745;
+        display: block;
+        padding: 7px 28px;
+        text-decoration: none;
+    }
+</style>

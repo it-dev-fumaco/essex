@@ -1,7 +1,7 @@
-<section class="latest-property">
+<section class="latest-property mt-5">
   <div class="container-fluid" style="margin-top: -50px;">
     <div class="row">
-      <div class="col-md-10 col-md-offset-1 wow fadeIn" data-wow-delay="0.8s">
+      <div class="col-10 offset-1 wow fadeIn" data-wow-delay="0.8s">
         <h3 class="section-title center">Company Events</h3>
         <div id="latest-property" class="owl-carousel">
           @foreach($albums as $album)

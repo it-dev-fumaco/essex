@@ -17,7 +17,7 @@ class PortalController extends Controller
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
         $milestones = DB::table('posts')
             ->where('category', 'historical_milestones')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at')
             ->get();
 
         $it_policy = DB::connection('mysql_kb')->table('articles')->where('title', 'IT Guidelines and Policies')->pluck('slug')->first();
@@ -26,41 +26,79 @@ class PortalController extends Controller
         if(Auth::check()){
             $approvals = DB::table('notice_slip')
                 ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
-                ->where('notice_slip.user_id', Auth::user()->user_id)
-                ->whereDate('date_from', '>=', Carbon::now())
-                ->whereDate('date_to', '>=', Carbon::now())
-                ->where('notice_slip.status', 'FOR APPROVAL')
+                ->where('notice_slip.user_id', Auth::user()->user_id)->whereDate('date_from', '>=', Carbon::now())->whereDate('date_to', '>=', Carbon::now())->where('notice_slip.status', 'FOR APPROVAL')
                 ->select('leave_types.leave_type', 'notice_slip.*')
                 ->get();
         }
 
-        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals'));
+        $categories = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->whereNull('articles.deleted_at')
+            ->when(!Auth::check(), function ($q){
+                $q->where('articles.is_private', 0);
+            })
+            ->select('articles.allowed_departments', 'categories.id', 'categories.name', 'articles.is_private')
+            ->get();
+
+        $approvers = [];
+        if(Auth::check()){
+            $approvers = DB::table('department_approvers')
+                ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+                ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+                ->where('department_approvers.department_id', '=', Auth::user()->department_id)
+                ->select('users.employee_name', 'users.image', 'designation.designation', 'department_approvers.employee_id')
+                ->get();
+
+            $categories = collect($categories)->filter(function ($query){
+                $allowed_departments = $query->allowed_departments ? explode(',', $query->allowed_departments) : [];
+                $query->allowed_departments = $allowed_departments;
+                return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+            });
+        }
+
+        $categories = $categories->pluck('name', 'id')->unique();
+
+        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers'));
     }
 
     public function load_manuals(Request $request){
         // return $request->all();
-        $articles_by_tag = $selected_tags = [];
-        if($request->tags){
-            $tags_query = DB::connection('mysql_kb')->table('article_tag as at')
-                ->join('tags as t', 't.id', 'at.tag_id')
-                ->whereIn('t.id', array_filter(explode(',', $request->tags)))
-                ->select('t.id', 't.name', 'at.article_id')->get();
+        // $articles_by_tag = $selected_tags = [];
+        // if($request->tags){
+        //     $tags_query = DB::connection('mysql_kb')->table('article_tag as at')
+        //         ->join('tags as t', 't.id', 'at.tag_id')
+        //         ->whereIn('t.id', array_filter(explode(',', $request->tags)))
+        //         ->select('t.id', 't.name', 'at.article_id')->get();
 
-            $selected_tags = collect($tags_query)->pluck('name', 'id');
-            $articles_by_tag = collect($tags_query)->pluck('article_id');
-        }
+        //     $selected_tags = collect($tags_query)->pluck('name', 'id');
+        //     $articles_by_tag = collect($tags_query)->pluck('article_id');
+        // }
+
+        $request_category = $request->category ? $request->category : [];
 
         $general_concerns = DB::connection('mysql_kb')->table('articles')
             ->join('categories', 'articles.category_id', 'categories.id')
             ->when(!Auth::check(), function ($q){
                 $q->where('articles.is_private', 0);
             })
-            ->when($request->tags, function ($q) use ($articles_by_tag){
-                return $q->whereIn('articles.id', $articles_by_tag);
+            // ->when($request->tags, function ($q) use ($articles_by_tag){
+            //     return $q->whereIn('articles.id', $articles_by_tag);
+            // })
+            ->when($request_category, function ($q) use ($request_category){
+                return $q->whereIn('articles.category_id', $request_category);
             })
             ->whereNull('articles.deleted_at')
             ->select('articles.*', 'categories.name as category')
-            ->orderBy('articles.views_count', 'desc')//->limit(6)
+            ->orderBy('articles.views_count', 'desc')
+            ->get();
+
+        $categories = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->whereNull('articles.deleted_at')
+            ->when(!Auth::check(), function ($q){
+                $q->where('articles.is_private', 0);
+            })
+            ->select('articles.allowed_departments', 'categories.id', 'categories.name', 'articles.is_private')
             ->get();
 
         $department = null;
@@ -71,8 +109,14 @@ class PortalController extends Controller
                 return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
             });
 
-            $department = DB::table('departments')->where('department_id', Auth::user()->department_id)->pluck('department')->first();
+            $categories = collect($categories)->filter(function ($query){
+                $allowed_departments = $query->allowed_departments ? explode(',', $query->allowed_departments) : [];
+                $query->allowed_departments = $allowed_departments;
+                return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+            });
         }
+
+        $categories = $categories->pluck('name', 'id')->unique();
 
         $tags = DB::connection('mysql_kb')->table('tags as t')
             ->join('article_tag as a', 'a.tag_id', 't.id')
@@ -80,12 +124,7 @@ class PortalController extends Controller
             ->select('a.article_id', 't.name', 't.slug', 't.id')
             ->orderBy('t.name')->get()->groupBy('article_id');
 
-        $tags_array = [
-            'selected_tags' => $selected_tags,
-            'tags' => $tags
-        ];
-
-        return view('portal.tbl_homepage_manuals', compact('general_concerns', 'department', 'tags_array'));
+        return view('portal.tbl_homepage_manuals', compact('general_concerns', 'categories', 'request_category'));
     }
 
     public function phoneEmailDirectory(Request $request){

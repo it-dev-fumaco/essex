@@ -7,25 +7,29 @@
 <div class="main-container">
     <div class="section">
         <div class="container-fluid">
-            <div class="col-md-10 col-md-offset-1">
-                <div class="row" style="margin-top: -40px; margin-left: 20px;">
+            <div class="col-10 mx-auto">
+                {{-- <div class="row" style="margin-top: -40px; margin-left: 20px;">
                     <div class="col-md-6">
                         <h1 class="title-2" style="border: 0;">User Manuals</h1>
                     </div>
                     <div class="col-md-4 col-md-offset-2">
                         <input type="text" id="search-string" class="form-control" placeholder="Search Manuals..." style="font-size: 9pt !important; height: 20px;" value='{{ request("search") ? request("search") : null }}'>
                     </div>
-                </div>
+                </div> --}}
+
+                <div class="row">
+					<div class="col-6">
+						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 18pt; border: 0;">User Manuals</h1>
+					</div>
+					<div class="col-4 offset-2" style="padding: 0 !important;">
+						<input type="text" id="search-string" placeholder="Search Manuals..." style="box-shadow: 1px 1px 4px rgba(0,0,0,.4); border-radius: 25px; padding: 8px 20px !important; border: 1px solid #EFF3F6; width: 100%;">
+					</div>
+				</div>
     
                 @if (session()->has('error'))
                     <div class="alert alert-danger alert-dismissable">
                         <span>{{ session()->get('error') }}</span>
                     </div>
-                @endif
-                
-                @if ($tag)
-                    <h3>Tag: {{ $tag }}</h3>
-                    <br>
                 @endif
                 <div id="manuals-tbl" class="row"></div>
             </div>
@@ -55,10 +59,13 @@
         $('#editPostModal').modal('show');
     });
 
+    $(document).on('keyup', '#search-string', function (e){
+        e.preventDefault();
+        load_tbl();
+    })
+
     load_tbl();
     function load_tbl(){
-        // var search_string = '{{ request("search") ? request("search") : null }}';
-        // search_string = $('#search-string').val() ? $('#search-string').val() : search_string;
         $.ajax({
             type:'GET',
             url:'/manuals',
