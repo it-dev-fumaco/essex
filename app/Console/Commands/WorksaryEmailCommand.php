@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
 use Carbon\Carbon;
 use DB;
+use App\Traits\EmailsTrait;
 
 class WorksaryEmailCommand extends Command
 {
+    use EmailsTrait;
     /**
      * The name and signature of the console command.
      *
@@ -62,45 +64,21 @@ class WorksaryEmailCommand extends Command
         foreach ($users as $user) {
             $name = $user->nick_name ? $user->nick_name : explode(' ', $user->employee_name)[0];
             $no_of_years = Carbon::now()->diffInYears(Carbon::parse($user->date_joined));
-
             $subject = 'Happy Work Anniversary '.$name.'!';
-    
+
             $data = [
                 'name' => $name,
                 'no_of_years' => $no_of_years
             ];
-
-            $mail = $this->send_mail($subject, 'admin.email_template.work_anniv', $user->email, $data);
-
-            if(!in_array($user->id, collect($sent_notifications)->pluck('user_id')->toArray())){
-                DB::table('email_notifications')->insert([
-                    'type' => 'Work Anniversary Email',
-                    'user_id' => $user->id,
-                    'subject' => $subject,
-                    'email_sent' => $mail['success']
-                ]);
-            }
-        }
-    }
-
-    private function send_mail($subject, $template, $recipient, $data_arr){
-        try {
-            $data['mail_config'] = [
+    
+            $log = [
+                'type' => 'Work Anniversary Email',
+                'recipient' => $user->email,
                 'subject' => $subject,
-                'template' => $template
+                'template' => 'admin.email_template.work_anniv',
+                'template_data' => json_encode($data)
             ];
-    
-            $data['data'] = $data_arr;
-    
-            Mail::to($recipient)->send(new SendMail_General($data));
-            if(Mail::failures()){
-                return ['success' => 0, 'message' => 'An error occured. Please try again.'];
-            }
-
-            return ['success' => 1, 'message' => 'email sent!'];
-        } catch (\Exception $e) {
-            // return $e->getMessage();
-            return ['success' => 0, 'message' => $e->getMessage()];
+            $mail = $this->send_mail($subject, 'admin.email_template.work_anniv', $user->email, $data, $log);
         }
     }
 }

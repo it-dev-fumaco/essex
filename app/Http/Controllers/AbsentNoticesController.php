@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use DateInterval;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Exception;
 
 class AbsentNoticesController extends Controller
 {
@@ -163,6 +164,15 @@ class AbsentNoticesController extends Controller
                 $data['approver'] = $user_id;
                 try {
                     Mail::to($email)->send(new SendMail_notice($data));
+
+                    DB::table('email_notifications')->insert([
+                        'type' => 'Absent Notice Slip',
+                        'recipient' => $email,
+                        'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
+                        'template' => 'kiosk.Mail.template.notice_template',
+                        'template_data' => json_encode($data),
+                        'email_sent' => Mail::failures() ? 0 : 1
+                    ]);
                 } catch (\Throwable $th) {}
             }
     

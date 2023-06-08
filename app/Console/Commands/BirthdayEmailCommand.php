@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
 use Carbon\Carbon;
 use DB;
+use App\Traits\EmailsTrait;
 
 class BirthdayEmailCommand extends Command
 {
+    use EmailsTrait;
     /**
      * The name and signature of the console command.
      *
@@ -42,7 +44,6 @@ class BirthdayEmailCommand extends Command
      */
     public function handle()
     {
-
         $users = User::where('status', 'Active');
         $users = $users->whereMonth('birth_date', Carbon::now()->format('m'));
         $users = $users->whereDay('birth_date', Carbon::now()->format('d'));
@@ -63,37 +64,14 @@ class BirthdayEmailCommand extends Command
             $name = $user->nick_name ? $user->nick_name : explode(' ', $user->employee_name)[0];
             $subject = 'Happy Birthday '.$name.'!';
     
-            $mail = $this->send_mail($subject, 'admin.email_template.birthday', $user->email, ['name' => $name]);
-
-            if(!in_array($user->id, collect($sent_notifications)->pluck('user_id')->toArray())){
-                DB::table('email_notifications')->insert([
-                    'type' => 'Birthday Email',
-                    'user_id' => $user->id,
-                    'subject' => $subject,
-                    'email_sent' => $mail['success']
-                ]);
-            }
-        }
-    }
-
-    private function send_mail($subject, $template, $recipient, $data_arr){
-        try {
-            $data['mail_config'] = [
+            $log = [
+                'type' => 'Birthday Email',
+                'recipient' => $user->email,
                 'subject' => $subject,
-                'template' => $template
+                'template' => 'admin.email_template.birthday',
+                'template_data' => json_encode(['name' => $name])
             ];
-    
-            $data['data'] = $data_arr;
-    
-            Mail::to($recipient)->send(new SendMail_General($data));
-            if(Mail::failures()){
-                return ['success' => 0, 'message' => 'An error occured. Please try again.'];
-            }
-
-            return ['success' => 1, 'message' => 'email sent!'];
-        } catch (\Exception $e) {
-            // return $e->getMessage();
-            return ['success' => 0, 'message' => $e->getMessage()];
+            $mail = $this->send_mail($subject, 'admin.email_template.birthday', $user->email, ['name' => $name], $log);
         }
     }
 }

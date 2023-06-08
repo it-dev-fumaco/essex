@@ -20,30 +20,10 @@ use DateInterval;
 use DatePeriod;
 use DateTime;
 use Illuminate\Pagination\LengthAwarePaginator;
-
+use App\Traits\EmailsTrait;
 class EmployeesController extends Controller
 {
-    private function send_mail($subject, $template, $recipient, $data_arr){
-        try {
-            $data['mail_config'] = [
-                'subject' => $subject,
-                'template' => $template
-            ];
-    
-            $data['data'] = $data_arr;
-    
-            Mail::to($recipient)->send(new SendMail_General($data));
-            if(Mail::failures()){
-                return ['success' => 0, 'message' => 'An error occured. Please try again.'];
-            }
-
-            return ['success' => 1, 'message' => 'email sent!'];
-        } catch (\Exception $e) {
-            // return $e->getMessage();
-            return ['success' => 0, 'message' => $e->getMessage()];
-        }
-    }
-
+    use EmailsTrait;
     public function index(){
         $employees = DB::table("users")
             ->join("departments", "users.department_id", "=", "departments.department_id")
@@ -107,9 +87,17 @@ class EmployeesController extends Controller
                 'job_title' => $designation->designation,
                 'file_server' => $file_server
             ];
+
+            $log = [
+                'type' => 'Welcome Email',
+                'recipient' => $employee->email,
+                'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
+                'template' => 'admin.email_template.welcome',
+                'template_data' => json_encode($data)
+            ];
     
             if($request->email){
-                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
                 if(!$mail['success']){
                     return response()->json(['success' => 0, 'message' => $mail['message']]);
                 }
@@ -407,8 +395,16 @@ class EmployeesController extends Controller
                     'file_server' => $file_server
                 ];
 
+                $log = [
+                    'type' => 'Welcome Email',
+                    'recipient' => $employee->email,
+                    'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
+                    'template' => 'admin.email_template.welcome',
+                    'template_data' => json_encode($data)
+                ];
+
                 try {
-                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
                 } catch (\Throwable $th) {}
             }
 
@@ -422,9 +418,17 @@ class EmployeesController extends Controller
                 'reporting_to' => $reporting_to->employee_name,
                 'location' => $branch
             ];
+
+            $admin_log = [
+                'type' => 'New Employee',
+                'recipient' => ENV('MAIL_RECIPIENT', 'it@fumaco.local'),
+                'subject' => 'New Employee ['.$employee->employee_name.']',
+                'template' => 'admin.email_template.new_employee',
+                'template_data' => json_encode($admin_data)
+            ];
     
             try {
-                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data);
+                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
             } catch (\Throwable $th) {}
 
             DB::commit();
