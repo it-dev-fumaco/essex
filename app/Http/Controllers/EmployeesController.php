@@ -422,13 +422,13 @@ class EmployeesController extends Controller
             $admin_log = [
                 'type' => 'New Employee',
                 'recipient' => ENV('MAIL_RECIPIENT', 'it@fumaco.local'),
-                'subject' => 'New Employee ['.$employee->employee_name.']',
+                'subject' =>'[Action Required] New Employee for Onboarding',
                 'template' => 'admin.email_template.new_employee',
                 'template_data' => json_encode($admin_data)
             ];
     
             try {
-                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
+                $mail = $this->send_mail($admin_log['subject'], 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
             } catch (\Throwable $th) {}
 
             DB::commit();
