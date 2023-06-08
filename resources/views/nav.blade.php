@@ -12,7 +12,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-7 col-lg-9" style="display: flex; justify-content: center; align-items: center;">
+    <div class="col-xl-{{ Auth::check() && Auth::user()->department_id == 9 ? 8 : 7 }} col-lg-9" style="display: flex; justify-content: center; align-items: center;">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
@@ -57,23 +57,21 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/services/directory"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
                         </li>
-                        @if(Auth::user())
+                        @if(Auth::check())
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url('/home') }}"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
                             </li>
+                            @if (Auth::user()->department_id == 9)
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/email_logs"><i class="fa fa-envelope"></i> &nbsp;EMAIL LOGS</a>
+                                </li>
+                            @endif
                         @endif
                     </ul>
                 </div>
             </div>
         </nav>
     </div>
-    {{-- @if(Auth::user())
-        <div class="col-2">
-            <div class="col-10 offset-2" style="display: flex; justify-content: center; align-items: center;">
-                <a href="{{ url('/home') }}" class="btn dashboard-btn"><i class="fa fa-users"></i> &nbsp;Essex Dashboard</a>
-            </div>
-        </div>
-    @endif --}}
     
 </div>
 <style>

@@ -610,4 +610,18 @@ class PortalController extends Controller
     public function showitGuidelines (){
         return view ('portal.it_guidelines');
     }
+
+    public function email_logs(Request $request){
+        if($request->ajax()){
+            $logs = DB::table('email_notifications')
+            ->when($request->search, function ($q) use ($request){
+                return $q->where('type', 'like', '%'.$request->search.'%')
+                    ->orWhere('subject', 'like', '%'.$request->search.'%')
+                    ->orWhere('recipient', 'like', '%'.$request->search.'%');
+            })
+            ->orderBy('created_at', 'desc')->paginate(10);
+            return view('portal.tbl_email_logs', compact('logs'));
+        }
+        return view('portal.email_logs');
+    }
 }
