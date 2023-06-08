@@ -16,6 +16,7 @@ Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus')
 Route::get('/', 'PortalController@index')->name('portal');
 Route::get('/tbl_manuals', 'PortalController@load_manuals');
 Route::get('/email_logs', 'PortalController@email_logs');
+Route::get('/resend_email/{id}', 'PortalController@resend_email');
 
 // G A L L E R Y
 Route::get('/gallery', 'PortalController@showGallery');

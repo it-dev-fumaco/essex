@@ -9,9 +9,14 @@ use Auth;
 use DB;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendMail_notice;
+use App\Mail\SendMail_General;
+use App\Traits\EmailsTrait;
 
 class PortalController extends Controller
 {
+    use EmailsTrait;
 
     public function index(){
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
@@ -614,14 +619,53 @@ class PortalController extends Controller
     public function email_logs(Request $request){
         if($request->ajax()){
             $logs = DB::table('email_notifications')
-            ->when($request->search, function ($q) use ($request){
-                return $q->where('type', 'like', '%'.$request->search.'%')
-                    ->orWhere('subject', 'like', '%'.$request->search.'%')
-                    ->orWhere('recipient', 'like', '%'.$request->search.'%');
-            })
-            ->orderBy('created_at', 'desc')->paginate(10);
-            return view('portal.tbl_email_logs', compact('logs'));
+                ->when($request->search, function ($q) use ($request){
+                    return $q->where('type', 'like', '%'.$request->search.'%')
+                        ->orWhere('subject', 'like', '%'.$request->search.'%')
+                        ->orWhere('recipient', 'like', '%'.$request->search.'%');
+                })
+                ->orderBy('created_at', 'desc')->paginate(10);
+
+            $erp_email = DB::connection('mysql_erp')->table('tabUser')->whereIn('email', collect($logs->items())->pluck('recipient'))->pluck('email')->toArray();
+            return view('portal.tbl_email_logs', compact('logs', 'erp_email'));
         }
         return view('portal.email_logs');
+    }
+
+    public function resend_email($id){
+        try {
+            $log = DB::table('email_notifications')->where('id', $id)->first();
+            if(!$log){
+                return response()->json(['success' => 0, 'message' => 'Email log not found.']);
+            }
+
+            $data = json_decode($log->template_data, true);
+
+            $success = 0;
+            if($log->recipient){
+                if($log->type == 'Absent Notice Slip'){
+                    Mail::to($log->recipient)->send(new SendMail_notice($data));
+                    
+                    $success = Mail::failures() ? 0 : 1;
+                }else{
+                    $mail = $this->send_mail($log->subject, $log->template, $log->recipient, $data);
+                    $success = $mail['success'];
+                }
+            }
+
+            DB::table('email_notifications')->where('id', $id)->update([
+                'email_sent' => $success,
+                'last_modified_at' => Carbon::now()->toDateTimeString()
+            ]);
+
+            if($success){
+                return response()->json(['success' => 1, 'message' => 'Email Sent!']);
+            }else{
+                return response()->json(['success' => 0, 'message' => 'Failed to send email.']);
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again.']);
+        }
     }
 }
