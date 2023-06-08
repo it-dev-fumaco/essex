@@ -3,10 +3,21 @@
 @section('content')
 @include('portal.modals.edit_post_modal')
 @include('portal.modals.delete_post_modal')
+@php
+    $week = [
+        0 => 'Sun',
+        1 => 'Mon',
+        2 => 'Tue',
+        3 => 'Wed',
+        4 => 'Thu',
+        5 => 'Fri',
+        6 => 'Sat',
+    ];
+@endphp
     <div class="container-fluid">
         <div class="col-md-12 col-sm-10">
             <div class="row">
-                <div class="col-md-9">
+                <div class="col-9">
                     <div id="imagecontainer" class="container-fluid">
                         <div class="container-fluid">
                             <div class="col-md-12">
@@ -15,22 +26,22 @@
                             </div>
                             <div class="col-md-8">
                                 <form action="{{ route('search') }}" id="searh-form" method="get">
-                                    <div class="row" style="padding: 0; margin:0 ">
-                                        <div class="col-md-9" style="padding: 0; margin: 0">
+                                    <div class="row p-0 m-0">
+                                        <div class="col-md-9 p-0 m-0">
                                             <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off">
                                         </div>
-                                        <div class="col-md-3" style="padding: 0; margin: 0">
-                                            <button type="submit" class="btn bg-success" style="height: 100%; width: 100%; border-radius: 0 25px 25px 0; font-weight: 700">Search</button>
+                                        <div class="col-md-3 p-0 m-0">
+                                            <button type="button" class="btn h-100 w-100 fw-bold submit-search" style="border-radius: 0 25px 25px 0; background-color: #0dc761">Search</button>
                                         </div>
                                     </div>
                                 </form>
-                                <div id="autocomplete-container" class="card bg-white border-secondary d-none"></div>
+                                <div id="autocomplete-container" class="container w-50 p-0 d-none"></div>
                             </div>
                         </div>
                     </div>
-                    {{-- <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section> --}}
+                    <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section>
                     <section id="videos-container" style="margin-top: 10px; z-index: 999 !important">
-                        <div class="container-fluid">
+                        <div class="container-fluid p-0">
                             @php
                                 $videos_array = [];
                                 if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4')){
@@ -59,8 +70,6 @@
                                             <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
                                             <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
                                             <p>3. Log off each terminal after use</p>
-                                            <br>
-                                            <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
                                         </div>
                                     </div>
                                 </div>
@@ -68,25 +77,25 @@
                                     <div class="col-4 p-3">
                                         <div class="card thumbnail h-100 shadow" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
                                             <div class="card-body p-0">
-                                                <div class="h-100 position-relative">
-                                                    <img src="{{ $video['thumbnail'] }}" class="w-100" style="opacity: .7; height: 100% !important">
+                                                <div class="h-100 position-relative" style="background-color: #000">
+                                                    <img src="{{ $video['thumbnail'] }}" class="w-100 h-100" style="opacity: .9">
                                                     <i class="fa fa-play-circle-o video-play-icon absolute-center"></i>
                                                 </div>
                                             </div>
-                                            <div class="card-footer fw-bold">
+                                            {{-- <div class="card-footer fw-bold">
                                                 <span>{{ $video['title'] }}</span><br/>
                                                 <span class="text-muted">General IT Concern</span>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
                     </section>
-                    <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section>
+                    {{-- <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section> --}}
                 </div>
-                <div class="col-md-3" style="padding: 0 20px 0 50px;">
-                    <div class="card card-greeting">
+                <div class="col-3">
+                    {{-- <div class="card card-greeting">
                         <div class="row">
                             <div class="col-md-3 col-md-offset-1">
                                 <i class="fa fa-cloud" style="font-size: 30pt;"></i>
@@ -103,9 +112,66 @@
                                 <span style="display: block; font-size: 10pt; font-weight: 600">{{ Carbon\Carbon::now()->format('M d, Y') }}</span>
                             </div>
                         </div>
+                    </div> --}}
+
+                    <div id="carouselExampleCaptions" class="carousel slide mt-2 shadow" data-bs-ride="carousel">
+                        <div class="carousel-inner" style="border-radius: 5px;">
+                            <div class="carousel-item bg-dark active" style="min-height: 350px;">
+                                <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
+                                <div class="carousel-caption d-none d-md-block" style="top: 45%; transform: translateY(-50%);">
+                                    <h5 style="text-shadow: 2px 2px 8px #000">Mission</h5>
+                                    <br>
+                                    <p style="text-shadow: 2px 2px 8px #000">To design and provide excellent, affordable, quality, energy efficient lighting solutions that doesn't jeopardize the environment.</p>
+                                </div>
+                            </div>
+                            <div class="carousel-item bg-dark" style="min-height: 350px;">
+                                <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
+                                {{-- <img src="{{ asset('storage/img/featured/3.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover;"> --}}
+                                <div class="carousel-caption d-none d-md-block" style="top: 38%; transform: translateY(-50%);">
+                                    <h5 style="text-shadow: 2px 2px 4px #000">Vision</h5>
+                                    <p style="text-shadow: 2px 2px 8px #000"><b>FUMACO</b> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
+                                    <br>
+                                    <p style="text-shadow: 2px 2px 8px #000">We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
+
+                    <div class="card mt-2 shadow" style="border-top: 3px solid #11703C">
+                        <div class="card-body">
+                            <div class="row">
+                                @php
+                                    $greet = 'Morning';
+                                    if(Carbon\Carbon::now()->format('A') == 'PM'){
+                                        $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
+                                    }
+                                @endphp
+                                <div class="col-5" style="display: flex; justify-content: center; align-items: center;">
+                                    <div class="text-center">
+                                        <i class="fa fa-cloud" style="font-size: 30pt;"></i>
+                                        <span class="fw-bold d-block" style="font-size: 10pt;">Good {{ $greet }}!</span>
+                                    </div>
+                                </div>
+                                <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
+                                    <div class="text-center">
+                                        <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem;"></span>
+                                        <span id="current-date" class="fw-bold d-block mt-2" style="font-size: 11pt;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     @if (Auth::check())
-                        <div class="card card-primary" style="margin-top: 10px; text-align: left; border-top: 3px solid #0D6EFD">
+                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
                             <div class="card-header">
                                 <span style="font-size: 12pt; font-weight: 700 !important">Pending for Approval</span>
                             </div>
@@ -179,78 +245,18 @@
                             </div>
                         </div>
                     @endif
-                    
-                    <div class="card card-primary" style="margin-top: 10px; padding: 0;">
-                        <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
-                            <div class="carousel-inner" style="border-radius: 5px;">
-                                <div class="carousel-item active" style="min-height: 350px;">
-                                    <img src="{{ asset('storage/img/featured/3.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover;">
-                                    <div class="carousel-caption d-none d-md-block" style="top: 50%; transform: translateY(-50%);">
-                                        <h5>Mission</h5>
-                                        <p>To design and provide excellent, affordable, quality, energy efficient lighting solutions that doesn't jeopardize the environment.</p>
-                                    </div>
-                                </div>
-                                <div class="carousel-item" style="min-height: 350px;">
-                                    <img src="{{ asset('storage/img/featured/3.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover;">
-                                    <div class="carousel-caption d-none d-md-block" style="top: 36%; transform: translateY(-50%);">
-                                        <h5>Vision</h5>
-                                        <p><b>FUMACO</b> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
-                                        <br>
-                                        <p>We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Previous</span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Next</span>
-                            </button>
+
+                    <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
+                        <div class="card-header">
+                            <span class="fw-bold" style="font-size: 12pt;">Need for Support?</span>
                         </div>
-                        <!-- Carousel container -->
-                        {{-- <div id="my-pics" class="carousel slide" data-ride="carousel" style="margin: 0;">
-
-                            <!-- Indicators -->
-
-                            <!-- Content -->
-                            <div class="carousel-inner" role="listbox" style=" border-radius: 5px;">
-                                <!-- Slide 1 -->
-                                <div class="item active" style="min-height: 350px;">
-                                    <img src="{{ asset('storage/img/featured/3.jpg') }}" style="height: 350px; object-fit: cover;">
-                                    <div class="carousel-caption" style="height: 100% !important; display: flex; justify-content: center; align-items: center;">
-                                        <div style="padding-top: 40px">
-                                            <h3>Mission</h3>
-                                            <p>To design and provide excellent, affordable, quality, energy efficient lighting solutions that doesn't jeopardize the environment.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="item" style="min-height: 350px;">
-                                    <img src="{{ asset('storage/img/featured/3.jpg') }}" style="height: 350px; object-fit: cover;">
-                                    <div class="carousel-caption" style="height: 100% !important; display: flex; justify-content: center; align-items: center;">
-                                        <div style="padding-top: 40px"> 
-                                            <h3>Vision</h3>
-                                            <p>FUMACO is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
-                                            <br>
-                                            <p>We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Previous/Next controls -->
-                            <a class="left carousel-control" href="#my-pics" role="button" data-slide="prev">
-                                <span class="icon-prev" aria-hidden="true"></span>
-                                <span class="sr-only">Previous</span>
-                            </a>
-                            <a class="right carousel-control" href="#my-pics" role="button" data-slide="next">
-                                <span class="icon-next" aria-hidden="true"></span>
-                                <span class="sr-only">Next</span>
-                            </a>
-
-                        </div> --}}
+                        <div class="card-body">
+                            {{-- <b>1. FIRST TIME USERS - please read the <a class="text-decoration-underline" href="/article/{{ $it_policy }}" style="color: inherit;">IT Guidelines and Policies</a>.</b>
+                            <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
+                            <p>3. Log off each terminal after use</p>
+                            <br> --}}
+                            <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
+                        </div>
                     </div>
 
                     {{-- <div class="card card-border" style="margin-top: 10px; color: #313B99; border: 1px solid #313B99; text-align: center">
@@ -330,7 +336,6 @@
     </div>
     @include('portal.includes.events')
     @include('portal.includes.milestones')
-    {{-- @include('portal.includes.instructions') --}}
     @if (session()->has('notice_data'))
         @php
             $data = session()->get('notice_data');
@@ -417,7 +422,7 @@
                 $('#noticeModal').modal('show');
             @endif
         });
-    	 $(document).on('click', '#editPostBtn', function(event){
+        $(document).on('click', '#editPostBtn', function(event){
         event.preventDefault();
         $('#editPostModal .post_id').val($(this).data('id'));
         $('#editPostModal .post_title').val($(this).data('title'));
@@ -439,10 +444,7 @@
 
         CKEDITOR.config.height = 450;
 
-    $(document).on('click', '#reload-manual', function (e){
-        e.preventDefault();
-        load_manuals();
-    });
+    $
 
     $(document).on('click', '.category-checkbox', function (e){
         $.ajax({
@@ -479,7 +481,9 @@
 
     $(document).on('click', '.submit-search', function (e){
         e.preventDefault();
-        $('#searh-form').submit();
+        if($('.carousel-search').val() != ''){
+            $('#searh-form').submit();
+        }
     });
 
     $(document).mouseup(function(e){
@@ -526,6 +530,17 @@
                 console.log(jqXHR, textStatus, errorThrown);
             }
         });
+    }
+
+    load_time();
+    function load_time(){
+        setInterval(function() {
+            var d = new Date();
+            var date_options = { year: 'numeric', month: 'short', day: 'numeric' };
+            var time_options = { hour: 'numeric', minute: 'numeric' };
+            $('#current-date').html('{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : null }}, ' + d.toLocaleDateString('en-US', date_options));
+            $('#current-time').html(d.toLocaleTimeString('en-US', time_options));
+        }, 1000);
     }
     
     </script>

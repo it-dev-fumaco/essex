@@ -12,7 +12,7 @@
             </div>
         </div>
     </div>
-    <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
+    <div class="col-xl-7 col-lg-9" style="display: flex; justify-content: center; align-items: center;">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"

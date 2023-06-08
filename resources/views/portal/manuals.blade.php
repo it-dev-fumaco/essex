@@ -8,15 +8,6 @@
     <div class="section">
         <div class="container-fluid">
             <div class="col-10 mx-auto">
-                {{-- <div class="row" style="margin-top: -40px; margin-left: 20px;">
-                    <div class="col-md-6">
-                        <h1 class="title-2" style="border: 0;">User Manuals</h1>
-                    </div>
-                    <div class="col-md-4 col-md-offset-2">
-                        <input type="text" id="search-string" class="form-control" placeholder="Search Manuals..." style="font-size: 9pt !important; height: 20px;" value='{{ request("search") ? request("search") : null }}'>
-                    </div>
-                </div> --}}
-
                 <div class="row">
 					<div class="col-6">
 						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 18pt; border: 0;">User Manuals</h1>
@@ -36,8 +27,6 @@
         </div>
     </div>
 </div>
-
-
 @endsection
 
 @section('script')

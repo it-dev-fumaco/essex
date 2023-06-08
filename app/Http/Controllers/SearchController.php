@@ -19,6 +19,9 @@ class SearchController extends Controller
 
     public function search(Request $request){
         $search_term = $request->input('query');
+        if(!$search_term){
+            return redirect()->back();
+        }
         $searchResults = (new Search())
             ->registerModel(Poste::class, ['title', 'short_text'])
             ->registerModel(Directory::class, ['employee_name', 'telephone', 'email'])

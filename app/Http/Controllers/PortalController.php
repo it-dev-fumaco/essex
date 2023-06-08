@@ -350,7 +350,7 @@ class PortalController extends Controller
     }
 
     public function fetchAlbums(Request $request){
-        // if ($request->ajax()) {
+        if ($request->ajax()) {
             $albums = DB::table('photo_albums');
             
             if ($request->activity) {
@@ -359,7 +359,7 @@ class PortalController extends Controller
             $albums = $albums->orderBy('created_at', 'desc')->paginate(8);
 
             return view('portal.lists.album_list', compact('albums'))->render();
-        // }
+        }
     }
 
     public function addAlbum(Request $request){

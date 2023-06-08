@@ -23,10 +23,10 @@
                 </div>
                 <hr>
             @endif
-            <div class="row">
-                <b>Tags</b>
+            <div class="container-fluid">
+                <b>Tags:</b> <br>
                 @foreach ($tags as $tag)
-                    <a href="/manuals?tag={{ $tag->id }}" style="padding: 8px; border: 1px solid #ADADAD;">{{ $tag->name }}</a>
+                    <a href="/manuals?tag={{ $tag->id }}" class="badge bg-light text-secondary text-decoration-none border border-secondary">{{ $tag->name }}</a>
                 @endforeach
             </div>
         </div>
