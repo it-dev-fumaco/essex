@@ -37,7 +37,7 @@ trait EmailsTrait{
             return ['success' => $success , 'message' => $success ? 'email sent!' : 'An error occured. Please try again.'];
         } catch (\Throwable $e) {
             // return $e->getMessage();
-            // throw $e;
+            throw $e;
             return ['success' => 0, 'message' => $e->getMessage()];
         }
     }

@@ -139,6 +139,13 @@
                               </div>
                            </div>
 
+                           <div id="resignation-date-field" class="col-sm-4" style="display: none">
+                              <div class="form-group">
+                                 <label>Resignation Date:</label>
+                                 <input type="date" name="resignation_date" placeholder="Enter Date Joined" required>
+                              </div>
+                           </div>
+
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Company:</label>
@@ -263,12 +270,12 @@
                               </div>
                            </div>
 
-                           <div class="col-sm-4">
+                           {{-- <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Password:</label>
-                                 <input type="password" name="password" placeholder="Enter Password" required>
+                                 <input type="password" name="password" placeholder="Enter Password">
                               </div>
-                           </div>
+                           </div> --}}
                         </div>
                      </div>
                   </div>

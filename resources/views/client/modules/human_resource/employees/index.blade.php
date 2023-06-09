@@ -271,6 +271,15 @@ textarea{
          $(this).find('form')[0].reset();
       });
    });
+
+   $(document).on('change', 'select[name="status"]', function (e){
+      e.preventDefault();
+      if($(this).val() == 'Resigned'){
+         $('#resignation-date-field').css('display', 'inline-block');
+      }else{
+         $('#resignation-date-field').css('display', 'none');
+      }
+   });
 </script>
 
 @endsection
