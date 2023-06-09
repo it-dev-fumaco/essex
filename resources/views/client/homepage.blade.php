@@ -1816,8 +1816,8 @@
     <script type="text/javascript">
         function loadKpiResult(page) {
             var user_id = {{ Auth::user()->user_id }};
-            var filmonth = document.getElementById('monthfilterresult').value;
-            var filyear = document.getElementById('yearfilterresult').value;
+            var filmonth = document.getElementById('monthfilter').value;
+            var filyear = document.getElementById('yearfilter').value;
             data = {
                 filmonth: filmonth,
                 filyear: filyear

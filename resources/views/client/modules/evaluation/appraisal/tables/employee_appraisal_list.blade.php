@@ -25,7 +25,7 @@
       </tr>
       @empty
       <tr>
-         <td colspan="7" style="text-align: center;">No record(s) found.</td>
+         <td colspan="7" class="text-center text-uppercase text-muted">No record(s) found.</td>
       </tr>
       @endforelse
    </tbody>
