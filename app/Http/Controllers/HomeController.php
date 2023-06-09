@@ -38,14 +38,12 @@ class HomeController extends Controller
         $all_departments = DB::table('departments')->get();
         $absent_type_list = DB::table('leave_types')->get();
         $absence_types = DB::table('leave_types')
-            ->where('applied_to_all', '=', 1)
-            ->get();
+            ->where('applied_to_all', '=', 1)->get();
 
         $regular_shift = DB::table('shifts')
             ->join('users', 'shifts.shift_group_id', '=','users.shift_group_id')
             ->where('user_id', Auth::user()->user_id)
-            ->select('shifts.*')
-            ->get();
+            ->select('shifts.*')->get();
 
         $emp_item_accountability = DB::table('issued_item')->where('issued_to', Auth::user()->user_id)->get();
 
@@ -90,7 +88,7 @@ class HomeController extends Controller
             ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
             ->join('designation', 'users.designation_id', '=', 'designation.des_id')
             ->where('department_approvers.department_id', '=', Auth::user()->department_id)
-            ->select('users.employee_name', 'designation.designation', 'department_approvers.employee_id')
+            ->select('users.employee_name', 'designation.designation', 'department_approvers.employee_id', 'users.image')
             ->get();
 
         $awaiting_notices = DB::table('notice_slip')
@@ -180,8 +178,10 @@ class HomeController extends Controller
             $special_holidays = DB::table('holidays')->where('category', 'Special Holiday')->whereYear('holiday_date', Carbon::now()->format('Y'))->exists();
             $holiday_reminder = !$special_holidays ? 1 : 0;
         }
+        
+        $reports_to = DB::table('users')->join('designation','users.designation_id','designation.des_id')->where('user_id', Auth::user()->reporting_to)->first();
 
-        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability','getholiday', 'departmentHeads','department_heads','depart', 'kpi_schedules', 'holiday_reminder'));
+        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability','getholiday', 'departmentHeads','department_heads','depart', 'kpi_schedules', 'holiday_reminder', 'reports_to'));
 
     }
 

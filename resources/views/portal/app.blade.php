@@ -8,7 +8,7 @@
     <meta name="author" content="EstateX">
     <title>ESSEX</title>
     <link rel="stylesheet" href="{{ asset('bootstrap-5.0.2-dist/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('css/fonts/all.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/main.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/extras/animate.css') }}" type="text/css">
@@ -186,7 +186,6 @@
         <div class="sk-cube3 sk-cube"></div>
     </div>
 </div>
-
 <script src="{{ asset('css/js/ajax.min.js') }}"></script> 
 <script type="text/javascript" src="{{ asset('css/js/jquery-min.js') }}"></script>
 {{-- <script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script> --}}
