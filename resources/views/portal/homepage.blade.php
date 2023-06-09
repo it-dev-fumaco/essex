@@ -79,7 +79,7 @@
                                             <div class="card-body p-0">
                                                 <div class="h-100 position-relative" style="background-color: #000">
                                                     <img src="{{ $video['thumbnail'] }}" class="w-100 h-100" style="opacity: .9">
-                                                    <i class="fa fa-play-circle-o video-play-icon absolute-center"></i>
+                                                    <i class="far fa-play-circle video-play-icon absolute-center"></i>
                                                 </div>
                                             </div>
                                             {{-- <div class="card-footer fw-bold">
@@ -95,25 +95,6 @@
                     {{-- <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section> --}}
                 </div>
                 <div class="col-3">
-                    {{-- <div class="card card-greeting">
-                        <div class="row">
-                            <div class="col-md-3 col-md-offset-1">
-                                <i class="fa fa-cloud" style="font-size: 30pt;"></i>
-                            </div>
-                            @php
-                                $greet = 'Morning';
-                                if(Carbon\Carbon::now()->format('A') == 'PM'){
-                                    $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
-                                }
-                            @endphp
-                            <div class="col-md-8" style="padding: 0;">
-                                <h5>Good {{ $greet }}</h5>
-                                <span style="display: block; font-size: 10pt; font-weight: 600">{{ Carbon\Carbon::now()->format('l') }}</span>
-                                <span style="display: block; font-size: 10pt; font-weight: 600">{{ Carbon\Carbon::now()->format('M d, Y') }}</span>
-                            </div>
-                        </div>
-                    </div> --}}
-
                     <div id="carouselExampleCaptions" class="carousel slide mt-2 shadow" data-bs-ride="carousel">
                         <div class="carousel-inner" style="border-radius: 5px;">
                             <div class="carousel-item bg-dark active" style="min-height: 350px;">
@@ -126,7 +107,6 @@
                             </div>
                             <div class="carousel-item bg-dark" style="min-height: 350px;">
                                 <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
-                                {{-- <img src="{{ asset('storage/img/featured/3.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover;"> --}}
                                 <div class="carousel-caption d-none d-md-block" style="top: 38%; transform: translateY(-50%);">
                                     <h5 style="text-shadow: 2px 2px 4px #000">Vision</h5>
                                     <p style="text-shadow: 2px 2px 8px #000"><b>FUMACO</b> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
@@ -169,6 +149,45 @@
                             </div>
                         </div>
                     </div>
+
+                    @if (count($celebrants) > 0)
+                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
+                            <div class="card-header">
+                                <span class="fw-bold" style="font-size: 12pt;">Today's Celebration</span>
+                            </div>
+                            <div class="card-body">
+                                @foreach ($celebrants as $celebrant)
+                                    @php
+                                        $image = 'storage/img/user.png';
+                                        if($celebrant->image && Storage::disk('public')->exists(str_replace('storage/', null, $celebrant->image))){
+                                            $image = $celebrant->image;
+                                        }
+
+                                        $celebration = 'Birthday';
+                                        $celebration_icon = 'fa-birthday-cake';
+                                        if($celebrant->date_joined && Carbon\Carbon::parse($celebrant->date_joined)->format('m-d') == Carbon\Carbon::now()->format('m-d')){
+                                            $celebration = 'Work Anniversary';
+                                            $celebration_icon = 'fa-glass-cheers';
+                                        }
+                                    @endphp
+                                    <div class="row" style="font-size: 9pt !important">
+                                        <div class="col-2 d-flex justify-content-center align-items-center">
+                                            <div class="profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                        </div>
+                                        <div class="col-8 p-0 d-flex justify-content-center align-items-center">
+                                            <div class="container-fluid p-0">
+                                                <span style="font-size: 10pt;" class="fw-bold">{{ $celebrant->employee_name }}</span><br>
+                                                <small class="text-muted">{{ $celebration }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-2 d-flex justify-content-center align-items-center">
+                                            <i class="fas {{ $celebration_icon }}" style="font-size: 25pt; color: rgba(0,0,0,.3)"></i>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     @if (Auth::check())
                         <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
@@ -233,7 +252,7 @@
                                         @endphp
                                         <div class="row container-fluid" style="display: flex; justify-content: center; align-items: center;">
                                             <div class="col-md-2" style="padding: 5px !important">
-                                                <img src="{{ asset($image) }}" style="width: 100% !important;">
+                                                <div class="profile-image" style="background-image: url({{ asset($image) }});"></div>
                                             </div>
                                             <div class="col-md-9">
                                                 <span style="font-weight: 600; font-size: 9pt;">{{ $approver->employee_name }}</span><br>
@@ -251,62 +270,9 @@
                             <span class="fw-bold" style="font-size: 12pt;">Need for Support?</span>
                         </div>
                         <div class="card-body">
-                            {{-- <b>1. FIRST TIME USERS - please read the <a class="text-decoration-underline" href="/article/{{ $it_policy }}" style="color: inherit;">IT Guidelines and Policies</a>.</b>
-                            <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                            <p>3. Log off each terminal after use</p>
-                            <br> --}}
                             <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
                         </div>
                     </div>
-
-                    {{-- <div class="card card-border" style="margin-top: 10px; color: #313B99; border: 1px solid #313B99; text-align: center">
-                        <span style="font-size: 12pt; font-weight: 700 !important">Our Mission</span>
-                        <hr style="border: 1px solid rgba(175, 175, 175, .4); margin: 10px !important">
-                        To design and provide excellent, affordable, quality, energy efficient lighting solutions that doesn't jeopardize the environment
-                    </div>
-               
-                    <div class="card card-border" style="margin-top: 10px; color: #D55E33; border: 1px solid #D55E33; text-align: center">
-                        <span style="font-size: 12pt; font-weight: 700 !important">Our Vision</span>
-                        <hr style="border: 1px solid rgba(175, 175, 175, .4); margin: 10px !important">
-                        FUMACO is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.
-                        <br>
-                        <br>
-                        We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.
-                    </div> --}}
-
-                    {{-- <div class="card mt-2" style="border-top: 3px solid #0D6EFD">
-                        <div class="card-header">
-                            <span style="font-size: 12pt; font-weight: 700 !important">Reminder</span>
-                        </div>
-                        <div class="card-body">
-                            <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                            <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                            <p>3. Log off each terminal after use</p>
-                        </div>
-                    </div> --}}
-
-                    {{-- <div class="card mt-2" style="border-top: 3px solid #0D6EFD">
-                        <div class="card-header">
-                            <span style="font-size: 12pt; font-weight: 700 !important">Need for Support?</span>
-                        </div>
-                        <div class="card-body">
-                            <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
-                        </div>
-                    </div> --}}
-
-                    {{-- <div class="alert alert-info" style="margin-top: 10px;">
-                        <h4>REMINDER</h4>
-                        <br>
-                        <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                        <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                        <p>3. Log off each terminal after use</p>
-                    </div>
-
-                    <div class="alert alert-warning" style="margin-top: 15px;">
-                        <h4>Need for Support?</h4>
-                        <br>
-                        <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
-                    </div> --}}
                 </div>
             </div>
         </div>
@@ -443,22 +409,6 @@
         {{-- $('textarea').ckeditor(); --}}
 
         CKEDITOR.config.height = 450;
-
-    $
-
-    $(document).on('click', '.category-checkbox', function (e){
-        $.ajax({
-            url: '/tbl_manuals',
-            type: 'get',
-            data: $('#manuals-form').serialize(),
-            success:function(response){
-                $('#tbl-manuals').html(response);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR, textStatus, errorThrown);
-            }
-        });
-    });
 
     $(document).on('keyup', '.carousel-search', function (e){
         e.preventDefault();

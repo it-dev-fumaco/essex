@@ -20,21 +20,9 @@ class PortalController extends Controller
 
     public function index(){
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
-        $milestones = DB::table('posts')
-            ->where('category', 'historical_milestones')
-            ->orderBy('created_at')
-            ->get();
+        $milestones = DB::table('posts')->where('category', 'historical_milestones')->orderBy('created_at')->get();
 
         $it_policy = DB::connection('mysql_kb')->table('articles')->where('title', 'IT Guidelines and Policies')->pluck('slug')->first();
-
-        $approvals = [];
-        if(Auth::check()){
-            $approvals = DB::table('notice_slip')
-                ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
-                ->where('notice_slip.user_id', Auth::user()->user_id)->whereDate('date_from', '>=', Carbon::now())->whereDate('date_to', '>=', Carbon::now())->where('notice_slip.status', 'FOR APPROVAL')
-                ->select('leave_types.leave_type', 'notice_slip.*')
-                ->get();
-        }
 
         $categories = DB::connection('mysql_kb')->table('articles')
             ->join('categories', 'articles.category_id', 'categories.id')
@@ -45,8 +33,22 @@ class PortalController extends Controller
             ->select('articles.allowed_departments', 'categories.id', 'categories.name', 'articles.is_private')
             ->get();
 
-        $approvers = [];
+        $celebrants = DB::table('users')
+            // ->where('status', 'Active')->where('user_type', 'Employee')
+            ->where(function($q){
+                return $q->whereMonth('date_joined', Carbon::now()->format('m'))->whereDay('date_joined', Carbon::now()->format('d'))
+                    ->orWhereMonth('birth_date', Carbon::now()->format('m'))->whereDay('birth_date', Carbon::now()->format('d'));
+            })
+            ->get();
+
+        $approvals = $approvers = [];
         if(Auth::check()){
+            $approvals = DB::table('notice_slip')
+                ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+                ->where('notice_slip.user_id', Auth::user()->user_id)->whereDate('date_from', '>=', Carbon::now())->whereDate('date_to', '>=', Carbon::now())->where('notice_slip.status', 'FOR APPROVAL')
+                ->select('leave_types.leave_type', 'notice_slip.*')
+                ->get();
+
             $approvers = DB::table('department_approvers')
                 ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
                 ->join('designation', 'users.designation_id', '=', 'designation.des_id')
@@ -63,7 +65,7 @@ class PortalController extends Controller
 
         $categories = $categories->pluck('name', 'id')->unique();
 
-        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers'));
+        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers', 'celebrants'));
     }
 
     public function load_manuals(Request $request){
