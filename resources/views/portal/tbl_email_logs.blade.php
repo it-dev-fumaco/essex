@@ -14,7 +14,7 @@
             <td class="text-center">{{ $log->subject }}</td>
             <td class="text-center">
                 @if (!in_array($log->recipient, $erp_email))
-                    <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="This email does not exist in ERP" style="font-size: 10pt">!</span> &nbsp;
+                    <span class="badge bg-warning text-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="This email does not exist in ERP" style="font-size: 9pt"><i class="fas fa-exclamation"></i></span> &nbsp;
                 @endif
                 {{ $log->recipient }}</td>
             <td class="text-center">

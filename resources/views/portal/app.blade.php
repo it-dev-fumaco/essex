@@ -82,6 +82,7 @@
         width: 57px;
         height: 57px;
         border-radius: 50%;
+        border: 1px solid rgba(0,0,0,.3);
         background-repeat: no-repeat;
         background-position: center center;
         background-size: cover;
