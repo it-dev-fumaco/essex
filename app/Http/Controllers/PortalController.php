@@ -34,7 +34,7 @@ class PortalController extends Controller
             ->get();
 
         $celebrants = DB::table('users')
-            // ->where('status', 'Active')->where('user_type', 'Employee')
+            ->where('status', 'Active')->where('user_type', 'Employee')
             ->where(function($q){
                 return $q->whereMonth('date_joined', Carbon::now()->format('m'))->whereDay('date_joined', Carbon::now()->format('d'))
                     ->orWhereMonth('birth_date', Carbon::now()->format('m'))->whereDay('birth_date', Carbon::now()->format('d'));
