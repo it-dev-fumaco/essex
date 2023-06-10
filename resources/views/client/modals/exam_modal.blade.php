@@ -1,4 +1,4 @@
-<div class="modal fade" id="examModal">
+{{-- <div class="modal fade" id="examModal">
     <div class="modal-dialog modal-lg" style="width: 50%;">
         <div class="modal-content">
             <div class="modal-header">
@@ -137,4 +137,4 @@
          </form>
       </div>
    </div>
-</div>
+</div> --}}

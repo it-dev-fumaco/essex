@@ -7,7 +7,7 @@
     @include('client.modals.add_evaluation_file')
     @include('client.modals.edit_evaluation_file')
     @include('client.modals.delete_evaluation_file')
-    @include('client.modals.exam_modal')
+    {{-- @include('client.modals.exam_modal') --}}
     @if ($holiday_reminder)
         <!-- The modal -->
         <div class="modal fade" id="reminder-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -101,30 +101,11 @@
                                 </div>
                             </li>
                         </ul>
-                        <a href="#" class="btn btn-primary d-block btn-sm"><b>Change Password</b></a>
+                        <a href="#" class="btn btn-primary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
+                            <i class="fas fa-cog"></i> Change Password</b></a>
+                        @include('client.modals.change_password')
                     </div>
                 </div>
-{{-- 
-                <div class="inner-box featured">
-                    <div class="widget property-agent">
-                        <h3 class="widget-title">Calendar</h3>
-                        <div class="agent-info">
-                            <div class="calendar calendar-first" id="calendar_first">
-                                <div class="calendar_header">
-                                    <button class="switch-month switch-left"> <i class="icon-arrow-left"
-                                            style="color: #87b633;"></i></button>
-                                    <a href="/calendar">
-                                        <h2></h2>
-                                    </a>
-                                    <button class="switch-month switch-right"> <i class="icon-arrow-right"
-                                            style="color: #87b633;"></i></button>
-                                </div>
-                                <div class="calendar_weekdays"></div>
-                                <div class="calendar_content"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
             </div>
 
             <div class="col-md-6">
@@ -132,8 +113,6 @@
                     <div class="tabs-section">
                         <ul class="nav nav-pills" id="profile-tabs">
                             <li class="nav-item border rounded border-success"><a href="#tab-overview" class="nav-link active"> Overview</a></li>
-                            {{-- <li class="nav-item"><a href="#tab-my-shifts" class="nav-link">My Shift(s)</a></li>
-                            <li class="nav-item"><a href="#tab-my-attendance" class="nav-link">My Attendance</a></li> --}}
                             <li class="nav-item border rounded border-success"><a href="#tab-my-leaves" class="nav-link">My Leave History</a></li>
                             <li class="nav-item border rounded border-success"><a href="#tab-my-gatepasses" class="nav-link">My Gatepasses</a></li>
                             <li class="nav-item border rounded border-success"><a href="#tab-my-itinerary" class="nav-link">My Itinerary</a></li>
@@ -147,30 +126,37 @@
                                 </div>
                             </div>
                             <div class="tab-pane" id="tab-my-exam-history">
-                                tab-my-exam-history
-                                {{-- <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="pull-right">
-                                            <button type="button" class="btn btn-primary" id="refreshAttendance"
-                                                style="font-size: 9pt;">
-                                                <i class="fa fa-refresh"></i> Refresh
-                                            </button>
-                                        </div>
-                                        <div id="datepairExample">
-                                            <label>From</label>
-                                            <input type="text" class="date attendanceFilter" autocomplete="off"
-                                                id="attendanceFilter_start"
-                                                value="{{ Carbon\Carbon::parse('this week -7 days')->format('Y-m-d') }}">
-                                            <label>To</label>
-                                            <input type="text" class="date attendanceFilter" autocomplete="off"
-                                                id="attendanceFilter_end"
-                                                value="{{ Carbon\Carbon::parse('now')->format('Y-m-d') }}">
-                                        </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <table class="table" style="font-size: 12px;">
+                                            <thead class="text-uppercase">
+                                        <th class="text-center">Exam Date</th>
+                                        <th class="text-center">Exam Title</th>
+                                        <th class="text-center">Exam Group</th>
+                                        <th class="text-center">Date Taken</th>
+                                        <th class="text-center">Validity Date</th>
+                                        <th class="text-center">Action</th>
+                                    </thead>
+                                   @forelse($clientexams as $exam)
+                                    <tr>
+                                       @if($exam->start_time != null)
+                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_of_exam)->format('M. d, Y') }}</td>
+                                           <td class="text-center align-middle">{{$exam->exam_title}}</td>
+                                           <td class="text-center align-middle">{{$exam->exam_group_description}}</td>
+                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_taken)->format('M. d, Y') }}</td>
+                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</td>
+                                           <td class="text-center align-middle">
+                                            <span class="badge bg-success">Completed
+                                            </span>
+                                        </td>
+                                       @endif
+                                    </tr>
+                                   @empty
+                                       <tr> <td colspan="6" class="text-center text-muted text-uppercase p-2">No records found</td></tr>
+                                   @endforelse
+                                </table>
                                     </div>
-                                    <div class="col-md-12">
-                                        <div id="my-attendance"></div>
-                                    </div>
-                                </div> --}}
+                                </div>
                             </div>
                             <div class="tab-pane" id="tab-my-leaves">
                                 <div class="row">
@@ -193,34 +179,6 @@
                                     </div>
                                 </div>
                             </div>
-                            {{-- <div class="tab-pane" id="tab-my-shifts">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Day of Week</th>
-                                                    <th>Time In</th>
-                                                    <th>Time Out</th>
-                                                    <th>Breaktime</th>
-                                                    <th>Grace Period</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($regular_shift as $row)
-                                                    <tr>
-                                                        <td>{{ $row->day_of_week }}</td>
-                                                        <td>{{ date('g:i a', strtotime($row->time_in)) }}</td>
-                                                        <td>{{ date('g:i a', strtotime($row->time_out)) }}</td>
-                                                        <td>{{ $row->breaktime_by_hour }} hr(s)</td>
-                                                        <td>{{ $row->grace_period_in_mins }} min(s)</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div> --}}
                             <div class="tab-pane in active" id="tab-memorandum">
                                 <div class="row">
                                     <div class="col-sm-12" id="memo-tab"></div>
@@ -274,43 +232,11 @@
 									<div id="my-attendance"></div>
 								</div>
 							</div>
-                            {{-- <p><b>Upcoming {{ Carbon\Carbon::now()->format('Y') }} Holiday/Events</b></p>
-                            @forelse($getholiday as $holiday)
-                                @if (Carbon\Carbon::parse($holiday->holiday_date) < Carbon\Carbon::now())
-                                    @continue
-                                @endif
-                                @php
-                                    $week_map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                                @endphp
-                                <p>{{ $holiday->description }} —
-                                    {{ \Carbon\Carbon::parse($holiday->holiday_date)->format('F d') }}{{ isset($week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek]) ? ', ' . $week_map[Carbon\Carbon::parse($holiday->holiday_date)->dayOfWeek] : null }}
-                                </p>
-                            @empty
-                                <p>Np upcoming holiday/event</p>
-                            @endforelse --}}
+
                         </div>
                     </div>
                 </div>
-                {{-- <div class="inner-box featured">
-                    <div class="widget property-agent">
-                        <h3 class="widget-title">Calendar</h3>
-                        <div class="agent-info">
-                            <div class="calendar calendar-first" id="calendar_first">
-                                <div class="calendar_header">
-                                    <button class="switch-month switch-left"> <i class="icon-arrow-left"
-                                            style="color: #87b633;"></i></button>
-                                    <a href="/calendar">
-                                        <h2></h2>
-                                    </a>
-                                    <button class="switch-month switch-right"> <i class="icon-arrow-right"
-                                            style="color: #87b633;"></i></button>
-                                </div>
-                                <div class="calendar_weekdays"></div>
-                                <div class="calendar_content"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
+             
             </div>
         </div>
     </div>
@@ -532,8 +458,6 @@
 
     <script>
         $(document).ready(function() {
-
-
 			$("#profile-tabs li a").click(function(e){
 				e.preventDefault();
 				$(this).tab("show");
@@ -1171,7 +1095,7 @@
                             case 'approved':
                                 $('#edit-notice-form :input').attr('disabled', true);
                                 $("#edit-notice-form .status").html(
-                                    "<h3><span class=\"label label-primary\"><i class=\"fa fa-thumbs-o-up\"></i> Approved</span></h3>"
+                                    "<h3><span class=\"badge bg-primary\"><i class=\"fa fa-thumbs-o-up\"></i> Approved</span></h3>"
                                     );
                                 $("#iframe-print").attr("src", "/printNotice/" + data
                                 .notice_id);
@@ -1181,21 +1105,21 @@
                             case 'cancelled':
                                 $('#edit-notice-form :input').attr('disabled', false);
                                 $("#edit-notice-form .status").html(
-                                    "<h3><span class=\"label label-danger\"><i class=\"fa fa-ban\"></i> Cancelled</span></h3>"
+                                    "<h3><span class=\"badge bg-danger\"><i class=\"fa fa-ban\"></i> Cancelled</span></h3>"
                                     );
                                 $("#edit-notice-form .divStatus").hide();
                                 break;
                             case 'disapproved':
                                 $('#edit-notice-form :input').attr('disabled', true);
                                 $("#edit-notice-form .status").html(
-                                    "<h3><span class=\"label label-danger\"><i class=\"fa fa-thumbs-o-down\"></i> Disapproved</span></h3>"
+                                    "<h3><span class=\"badge bg-danger\"><i class=\"fa fa-thumbs-o-down\"></i> Disapproved</span></h3>"
                                     );
                                 $("#edit-notice-form .divStatus").hide();
                                 break;
                             case 'deferred':
                                 $('#edit-notice-form :input').attr('disabled', true);
                                 $("#edit-notice-form .status").html(
-                                    "<h3><span class=\"label label-danger\"><i class=\"fa fa-thumbs-o-down\"></i> Deferred</span></h3>"
+                                    "<h3><span class=\"badge bg-danger\"><i class=\"fa fa-thumbs-o-down\"></i> Deferred</span></h3>"
                                     );
                                 $("#edit-notice-form .divStatus").hide();
                                 break;
@@ -1203,7 +1127,7 @@
                                 $('#edit-notice-form :input').attr('disabled', false);
                                 $("#edit-notice-form .divStatus").hide();
                                 $("#edit-notice-form .status").html(
-                                    "<h3><span class=\"label label-warning\"><i class=\"fa fa-clock-o\"></i> For Approval</span></h3>"
+                                    "<h3><span class=\"badge bg-warning\"><i class=\"fa fa-clock-o\"></i> For Approval</span></h3>"
                                     );
                         }
 
@@ -1351,7 +1275,8 @@
                     'leave_id': leave_id,
                     'date_from': from_date,
                     'date_to': to_date,
-                    'user_id': user_id
+                    'user_id': user_id,
+                    '_token': '{{ csrf_token() }}'
                 }
 
                 $.ajax({

@@ -4,8 +4,8 @@
       <div class="modal-content">
          <!-- Modal Header -->
          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Change Password</h4>
+            <h5 class="modal-title">Change Password</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          </div>
          <!-- Modal body -->
          <div class="modal-body">
@@ -18,7 +18,7 @@
                   
                <div class="modal-footer">
                     <button type="submit" class="btn btn-primary" id="savePass"><i class="fa fa-check"></i> Submit</button>
-                    <button type="button" class="btn btn-danger" id="closeAddQuestion" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                    <button type="button" class="btn btn-danger" id="closeAddQuestion" data-bs-dismiss="modal"><i class="fa fa-times"></i> Close</button>
                 </div>
                </form>
 

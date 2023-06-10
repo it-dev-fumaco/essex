@@ -474,23 +474,21 @@ class AbsentNoticesController extends Controller
     public function fetchNotices(Request $request){
         if ($request->ajax()) {
             $notice_slips = DB::table('notice_slip')
-                        ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
-                        ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-                        ->where('notice_slip.user_id', '=', Auth::user()->user_id)
-                        ->orderBy('notice_slip.notice_id', 'desc')
-                        ->select('users.*', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
-                        ->paginate(8);
+                ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
+                ->join('departments', 'users.department_id', '=', 'departments.department_id')
+                ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+                ->where('notice_slip.user_id', '=', Auth::user()->user_id)
+                ->orderBy('notice_slip.notice_id', 'desc')
+                ->select('users.*', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
+                ->paginate(15);
 
-            $absence_types = DB::table('leave_types')
-                        ->where('applied_to_all', '=', 1)
-                        ->get();
+            $absence_types = DB::table('leave_types')->where('applied_to_all', '=', 1)->get();
 
             $leave_types = DB::table('employee_leaves')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
-                        ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'employee_leaves.*')
-                        ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
-                        ->get();
+                ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
+                ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'employee_leaves.*')
+                ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
+                ->get();
 
             return view('client.tables.notices_table', compact('notice_slips', 'absence_types', 'leave_types'))->render();
         }

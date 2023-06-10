@@ -135,12 +135,14 @@
                     <div class="d-flex flex-row bd-highlight align-items-center">
                         <div class="col-1 p-1 text-center bd-highlight"><i class="far fa-calendar fs-4"></i></div>
                         <div class="col-5 p-1 bd-highlight">
-                            @if ($notice->date_from == $notice->date_to)
-                            <span class="d-block fw-bold">{{ \Carbon\Carbon::parse($notice->date_from)->format('M. d, Y') }}</span>
-                            @else
-                            <span class="d-block fw-bold">{{ \Carbon\Carbon::parse($notice->date_from)->format('M. d, Y') . ' - ' . \Carbon\Carbon::parse($notice->date_to)->format('M. d, Y') }}</span>
-                            @endif
-                            <small class="d-block text-muted">{{ $notice->leave_type }}</small>
+                            <a href="#" data-id="{{ $notice->notice_id }}" id="editAbsent" class="hover-icon text-decoration-none">
+                                @if ($notice->date_from == $notice->date_to)
+                                <span class="d-block fw-bold">{{ \Carbon\Carbon::parse($notice->date_from)->format('M. d, Y') }}</span>
+                                @else
+                                <span class="d-block fw-bold">{{ \Carbon\Carbon::parse($notice->date_from)->format('M. d, Y') . ' - ' . \Carbon\Carbon::parse($notice->date_to)->format('M. d, Y') }}</span>
+                                @endif
+                                <small class="d-block text-muted">{{ $notice->leave_type }}</small>
+                            </a>
                         </div>
                         <div class="col-6 p-1 bd-highlight">{{ $notice->reason }}</div>
                     </div>
