@@ -437,22 +437,15 @@ class HomeController extends Controller
     public function getEvaluations(Request $request){
         $designation = $this->sessionDetails('designation');
 
-        // $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
-
         $files = DB::table('evaluation_files')
-                    ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id');
+            ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id');
                     
-        if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
-            $files = $files;
-        // }elseif (count($handledDepts) > 0) {
-        //     $files = $files->whereIn('users.department_id', $handledDepts);
-        }else{
+        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
             $files = $files->where('evaluation_files.employee_id', Auth::user()->user_id);
         }
         
         $files = $files->select('users.employee_name', 'evaluation_files.*', DB::raw('(select employee_name from users where user_id = evaluation_files.evaluated_by) as evaluated_by'))
-                    ->orderBy('id', 'desc')
-                    ->paginate(8);
+            ->orderBy('id', 'desc')->paginate(8);
 
         return view('client.tables.evaluation_table', compact('files', 'designation'))->render();
     }

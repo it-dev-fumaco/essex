@@ -1260,11 +1260,10 @@ class EvaluationController extends Controller
     
     public function getEmpAppraisal($user){
         $appraisal_list = DB::table('appraisal_result')
-                // ->join('users', 'users.user_id', 'appraisal_result.evaluated_by')
-                ->where('appraisal_result.employee_id', $user)
-                ->where('appraisal_result.status', 'Submitted')
-                ->select(DB::raw('(SELECT employee_name FROM users WHERE user_id = appraisal_result.evaluated_by) AS evaluated_by'), 'appraisal_result.status', 'appraisal_result.evaluation_date', 'appraisal_result.appraisal_result_id', 'appraisal_result.purpose_type', 'appraisal_result.evaluation_period_from', 'appraisal_result.evaluation_period_to')
-                ->get();
+            ->where('appraisal_result.employee_id', $user)
+            ->where('appraisal_result.status', 'Submitted')
+            ->select(DB::raw('(SELECT employee_name FROM users WHERE user_id = appraisal_result.evaluated_by) AS evaluated_by'), 'appraisal_result.status', 'appraisal_result.evaluation_date', 'appraisal_result.appraisal_result_id', 'appraisal_result.purpose_type', 'appraisal_result.evaluation_period_from', 'appraisal_result.evaluation_period_to')
+            ->get();
 
         return view('client.modules.evaluation.appraisal.tables.employee_appraisal_list', compact('appraisal_list'));
     }

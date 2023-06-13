@@ -207,6 +207,7 @@
 <script src="{{ asset('css/js/bootstrap-select.min.js') }}"></script>
 <script type = "text/javascript" src = "{{ asset('css/js/jquery-ui.min.js') }}"></script>
 <script src="{{ asset('/js/bootstrap-notify.js') }}"></script>
+<script type="text/javascript" src="{{ asset('css/js/jquery.bootstrap-growl.js') }}"></script>
 
 @yield('script')
 
