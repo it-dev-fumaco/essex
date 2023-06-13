@@ -249,17 +249,48 @@
                 @endif
                 <div class="inner-box featured">
                     <div class="widget property-agent">
-                        <h3 class="widget-title">My Attendance</h3>
+                        <div class="d-flex">
+                            <h3 class="widget-title">My Attendance</h3>
+                            <small id="refreshAttendance" class="flex-grow-1 text-muted text-end px-1" style="cursor: pointer">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </small>
+                        </div>
                         <div class="agent-info">
 							<div class="row">
 								<div class="col-md-12">
-									<div class="pull-right">
-										<button type="button" class="btn btn-primary" id="refreshAttendance"
-											style="font-size: 9pt;">
-											<i class="fa fa-refresh"></i> Refresh
-										</button>
-									</div>
-									<div id="datepairExample">
+                                    <div class="container">
+                                        @php
+                                            $current_date = Carbon\Carbon::now()->format('d');
+                                            $start_date = $end_date = null;
+                                            if($current_date <= 13){
+                                                $start_date = Carbon\Carbon::now()->subMonth(1)->format('Y-m-28');
+                                                $end_date = Carbon\Carbon::now()->format('Y-m-13');
+                                            }else if($current_date >= 14 && $current_date <= 27){
+                                                $start_date = Carbon\Carbon::now()->format('Y-m-14');
+                                                $end_date = Carbon\Carbon::now()->format('Y-m-27');
+                                            }else if($current_date > 27){
+                                                $start_date = Carbon\Carbon::now()->format('Y-m-28');
+                                                $end_date = Carbon\Carbon::now()->addMonth(1)->format('Y-m-13');
+                                            }
+                                        @endphp
+                                        <div class="row">
+                                            <div class="col-1 date-ctrl d-flex justify-content-center align-items-center" data-action="prev">
+                                                <i class=" fas fa-chevron-left"></i>
+                                            </div>
+                                            <div class="col-10 text-center">
+                                                <h5 class="d-inline" id="cutoff-start">{{ Carbon\Carbon::parse($start_date)->format('M d, Y') }}</h5> - 
+                                                <h5 class="d-inline" id="cutoff-end">{{ Carbon\Carbon::parse($end_date)->format('M d, Y') }}</h5>
+                                                <div class="d-none">
+                                                    <input type="text" name="start" value="{{ Carbon\Carbon::parse($start_date)->format('Y-m-d') }}">
+                                                    <input type="text" name="end" value="{{ Carbon\Carbon::parse($end_date)->format('Y-m-d') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-1 date-ctrl d-flex justify-content-center align-items-center" data-action="next">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+									{{-- <div id="datepairExample">
 										<label>From</label>
 										<input type="text" class="date attendanceFilter" autocomplete="off"
 											id="attendanceFilter_start"
@@ -268,10 +299,17 @@
 										<input type="text" class="date attendanceFilter" autocomplete="off"
 											id="attendanceFilter_end"
 											value="{{ Carbon\Carbon::parse('now')->format('Y-m-d') }}">
-									</div>
+									</div> --}}
+
 								</div>
 								<div class="col-md-12">
-									<div id="my-attendance"></div>
+									<div id="my-attendance" style="min-height: 50px; font-size: 9pt">
+                                        <div class="container-fluid d-flex justify-content-center align-items-center p-2">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
 								</div>
 							</div>
                             {{-- <p><b>Upcoming {{ Carbon\Carbon::now()->format('Y') }} Holiday/Events</b></p>
@@ -533,6 +571,81 @@
     <script>
         $(document).ready(function() {
 
+            $(document).on('click', '.date-ctrl', function (e){
+                e.preventDefault();
+                var date = new Date($('input[name="current"]').val());
+                $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
+                    '<div class="spinner-border" role="status">' +
+                        '<span class="visually-hidden">Loading...</span>' +
+                    '</div>' +
+                '</div>');
+                get_cutoff_date($(this).data('action'));
+            });
+            
+            function get_cutoff_date(op){
+                var date = new Date($('input[name="end"]').val());
+                console.log(date);
+                var current_date = date.getDate();
+                var current_month = date.getMonth() + 1; // + 1, month array starts at 0
+                var current_year = date.getFullYear();
+
+                var cutoff_start = cutoff_end = null;
+                var start_month = end_month = month = current_month;
+                var start_year = end_year = year = current_year;
+                if(current_date <= 13){
+                    month = op == 'next' ? current_month : current_month - 1;
+                    if(month == 0){
+                        current_year = current_year - 1;
+                        month = 12;
+                    }
+
+                    cutoff_start = current_year + '-' + month + '-14';
+                    cutoff_end = current_year + '-' + month + '-27';
+                }else if(current_date >= 14 && current_date <= 27){
+                    if(op == 'next'){
+                        end_month = current_month + 1;
+                        if(end_month > 12){
+                            end_month =  1;
+                            end_year = end_year + 1;
+                        }
+                    }else{
+                        start_month = current_month - 1;
+                        if(start_month < 1){
+                            start_month = 12;
+                            start_year = start_year - 1;
+                        }
+                    }
+                    cutoff_start = start_year + '-' + start_month + '-28';
+                    cutoff_end = end_year + '-' + end_month + '-13';
+                }else if(current_date > 27){
+                    month = op == 'next' ? current_month + 1 : current_month;
+                    if(month == 0){
+                        current_year = current_year - 1;
+                        month = 12;
+                    }
+
+                    cutoff_start = current_year + '-' + month + '-14';
+                    cutoff_end = current_year + '-' + month + '-27';
+                }
+
+                $('input[name="start"]').val(cutoff_start);
+                $('input[name="end"]').val(cutoff_end);
+
+                loadAttendance(1);
+
+                format_date(new Date(cutoff_start), $('#cutoff-start'));
+                format_date(new Date(cutoff_end), $('#cutoff-end'));
+            }
+
+            function format_date(date, el){
+                var month_arr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                var month = date.getMonth();
+                month = month_arr[month];
+                var day = date.getDate();
+                var year = date.getFullYear();
+
+                el.text(month + ' ' + day + ', ' + year);
+            }
 
 			$("#profile-tabs li a").click(function(e){
 				e.preventDefault();
@@ -716,17 +829,18 @@
             });
 
             function loadAttendance(page) {
-                var start = $('#attendanceFilter_start').val();
-                var end = $('#attendanceFilter_end').val();
+                var start = $('input[name="start"]').val();
+                var end = $('input[name="end"]').val();
                 var user_id = '{{ Auth::user()->user_id }}';
 
                 data = {
                     start: start,
-                    end: end,
+                    end: end
                 }
 
                 $.ajax({
                     url: "/attendance/dashboard/" + user_id + "?page=" + page,
+                    type: 'get',
                     data: data,
                     success: function(data) {
                         $('#my-attendance').html(data);
@@ -819,21 +933,28 @@
                 });
             }
 
-            $('#refreshAttendance').on('click', function() {
-                var employee = '{{ Auth::user()->user_id }}';
-                $.ajax({
-                    type: 'POST',
-                    url: '/attendance/update/' + employee,
-                    beforeSend: function() {
-                        $("#refreshAttendance").text("Updating...");
-                    },
-                    success: function(response) {
-                        loadAttendance();
-                    },
-                    complete: function() {
-                        $("#refreshAttendance").html("<i class=\"fa fa-refresh\"></i> Refresh");
-                    }
-                });
+            $(document).on('click', '#refreshAttendance', function(e) {
+                e.preventDefault();
+                $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
+                    '<div class="spinner-border" role="status">' +
+                        '<span class="visually-hidden">Loading...</span>' +
+                    '</div>' +
+                '</div>');
+                loadAttendance(1);
+                // var employee = '{{ Auth::user()->user_id }}';
+                // $.ajax({
+                //     type: 'POST',
+                //     url: '/attendance/update/' + employee,
+                //     beforeSend: function() {
+                //         $("#refreshAttendance").text("Updating...");
+                //     },
+                //     success: function(response) {
+                //         loadAttendance();
+                //     },
+                //     complete: function() {
+                //         $("#refreshAttendance").html("<i class=\"fa fa-refresh\"></i> Refresh");
+                //     }
+                // });
             });
 
 

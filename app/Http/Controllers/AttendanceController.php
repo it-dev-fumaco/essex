@@ -1120,6 +1120,15 @@ class AttendanceController extends Controller
     public function employeeAttendanceDashboard(Request $request, $employee){
         $employee_logs = $this->attendanceLogs($employee, $request->start, $request->end);
 
+        $start = $request->start;
+        $end = $request->end;
+        $total_late = collect($employee_logs)->sum('late_in_minutes');
+        $total_overtime = collect($employee_logs)->sum('overtime');
+        $total_hours_worked = collect($employee_logs)->sum('hrs_worked');
+        // $no_of_days = count($employee_logs);
+        $no_of_days = collect($employee_logs)->where('day_of_week', '!=', 'Sunday')->count();
+        $required_working_hrs = $no_of_days * 8;
+
         // Get current page form url e.x. &page=1
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         // Create a new Laravel collection from the array data
@@ -1135,7 +1144,7 @@ class AttendanceController extends Controller
 
         $logs = $paginatedItems;
 
-        return view('client.tables.attendance_table', compact('logs'));
+        return view('client.tables.attendance_table', compact('logs', 'start', 'end', 'total_late', 'total_overtime', 'total_hours_worked', 'no_of_days', 'required_working_hrs'));
     }
 
     public function employeeLateDeductions($employee){
