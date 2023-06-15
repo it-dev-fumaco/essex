@@ -11,7 +11,7 @@
       </tr>
    </thead>
    <tbody>
-      @forelse($logs as $row)
+      @forelse($employee_logs as $row)
       <tr class="{{ $row['attendance_status'] == 'Unfiled Absence' ? 'colorbackground' : '' }}">
          <td class="text-center">{{ $row['transaction_date'] }}</td>
          <td class="text-center">{{ $row['day_of_week'] }}</td>
@@ -40,13 +40,6 @@
       @endforelse
    </tbody>
 </table>
-
-<center>
-  <div id="attendance_pagination">
-   {{ $logs->links() }}
-  </div>
-</center>
-<hr>
 <div class="container-fluid">
    <div class="row">
       <div class="col-12 p-0 mb-2">

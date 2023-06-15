@@ -248,16 +248,6 @@
                                             </div>
                                         </div>
                                     </div>
-									{{-- <div id="datepairExample">
-										<label>From</label>
-										<input type="text" class="date attendanceFilter" autocomplete="off"
-											id="attendanceFilter_start"
-											value="{{ Carbon\Carbon::parse('this week -7 days')->format('Y-m-d') }}">
-										<label>To</label>
-										<input type="text" class="date attendanceFilter" autocomplete="off"
-											id="attendanceFilter_end"
-											value="{{ Carbon\Carbon::parse('now')->format('Y-m-d') }}">
-									</div> --}}
 
 								</div>
 								<div class="col-md-12">
