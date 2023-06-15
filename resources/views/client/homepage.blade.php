@@ -1226,7 +1226,7 @@
                                 $("#print-notice").show();
                                 break;
                             case 'cancelled':
-                                $('#edit-notice-form :input').attr('disabled', false);
+                                $('#edit-notice-form input').attr('disabled', false);
                                 $("#edit-notice-form .status").html(
                                     "<h3><span class=\"badge bg-danger\"><i class=\"fa fa-ban\"></i> Cancelled</span></h3>"
                                     );
