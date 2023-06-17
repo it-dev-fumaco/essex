@@ -38,7 +38,7 @@
     @endif
     <div class="container-fluid mt-2">
         <div class="row m-0 p-0">
-            <div class="col-2">
+            <div class="col-4 order-1 order-xl-1 col-xl-2">
                 <div class="card card-primary card-outline mb-3">
                     <div class="card-body box-profile p-2">
                         <div class="text-center">
@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-12 order-3 order-xl-2 col-xl-6">
                 <div class="inner-box featured">
                     <div class="tabs-section">
                         <ul class="nav nav-pills" id="profile-tabs">
@@ -188,8 +188,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-				
+            <div class="col-8 order-2 order-xl-3 col-xl-4">
                 <div class="alert alert-danger blink" id="lateWarning" hidden>
                     <i class="fa fa-info-circle" style="font-size: 15pt; "></i><span> You have reached the maximum late
                         allowed (300 mins.)</span>
@@ -260,7 +259,6 @@
                                     </div>
 								</div>
 							</div>
-
                         </div>
                     </div>
                 </div>
@@ -515,8 +513,8 @@
                         month = 12;
                     }
 
-                    cutoff_start = current_year + '-' + month + '-14';
-                    cutoff_end = current_year + '-' + month + '-27';
+                    cutoff_start = current_year + '-' + (month < 10 ? '0'+month : month) + '-14';
+                    cutoff_end = current_year + '-' + (month < 10 ? '0'+month : month) + '-27';
                 }else if(current_date >= 14 && current_date <= 27){
                     if(op == 'next'){
                         end_month = current_month + 1;
@@ -531,8 +529,8 @@
                             start_year = start_year - 1;
                         }
                     }
-                    cutoff_start = start_year + '-' + start_month + '-28';
-                    cutoff_end = end_year + '-' + end_month + '-13';
+                    cutoff_start = start_year + '-' + (start_month < 10 ? '0'+start_month : start_month) + '-28';
+                    cutoff_end = end_year + '-' + (end_month < 10 ? '0'+end_month : end_month) + '-13';
                 }else if(current_date > 27){
                     month = op == 'next' ? current_month + 1 : current_month;
                     if(month == 0){
@@ -540,8 +538,8 @@
                         month = 12;
                     }
 
-                    cutoff_start = current_year + '-' + month + '-14';
-                    cutoff_end = current_year + '-' + month + '-27';
+                    cutoff_start = current_year + '-' + (month < 10 ? '0'+month : month) + '-14';
+                    cutoff_end = current_year + '-' + (month < 10 ? '0'+month : month) + '-27';
                 }
 
                 $('input[name="start"]').val(cutoff_start);

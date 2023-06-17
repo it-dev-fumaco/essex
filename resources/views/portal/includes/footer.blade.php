@@ -1,11 +1,11 @@
 <footer>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-10 offset-2">
+            <div class="col-12 col-xl-10 offset-xl-2">
                 <div class="footer-widget">
                     <h4> Useful Links </h4>
                     <div class="row footer-nav">
-                        <div class="col-md-3">
+                        <div class="col-4 col-xl-3">
                             <ul>
                                 <li><a class="text-decoration-none" href="http://www.accuweather.com" target="_blank"><i class="icon-arrow-right"></i>Accuweather</a></li>
                                 <li><a class="text-decoration-none" href="http://www.axolight.it/europe/en_GB" target="_blank"><i class="icon-arrow-right"></i>Axo Light</a></li>
@@ -21,7 +21,7 @@
                                 <li><a class="text-decoration-none" href="http://www.grandliteled.com/" target="_blank"><i class="icon-arrow-right"></i>Grandlite</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-4 col-xl-3">
                             <ul>
                                 <li><a class="text-decoration-none" href="https://www.koizumi-lt.co.jp/index.html" target="_blank"><i class="icon-arrow-right"></i>Koizumi</a></li>
                                 <li><a class="text-decoration-none" href="https://www.lbcexpress.com/" target="_blank"><i class="icon-arrow-right"></i>LBC Express</a></li>
@@ -37,7 +37,7 @@
                                 <li><a class="text-decoration-none" href="http://www.philgeps.net/" target="_blank"><i class="icon-arrow-right"></i>Philgeps</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-4 col-xl-3">
                             <ul>
                                 <li><a class="text-decoration-none" href="https://www.philippineairlines.com/en/ph/home" target="_blank"><i class="icon-arrow-right"></i>Philippine Airlines</a></li>
                                 <li><a class="text-decoration-none" href="http://www.riolight.com" target="_blank"><i class="icon-arrow-right"></i>Rio</a></li>

@@ -124,6 +124,11 @@
         color:  #566573;
     }
 
+    #vision-carousel{
+        top: 38%;
+        transform: translateY(-50%);
+    }
+
     @media (max-width: 1199.98px) {
         .header-text{
             font-size: 12pt;
@@ -133,6 +138,20 @@
             padding: 0 !important;
             margin: 0 !important;
             border: 1px solid red;
+        }
+
+        #vision-carousel{
+            top: 35%;
+            transform: translateY(-50%);
+        }
+
+        .header-text{
+            font-size: 8pt;
+            white-space: nowrap;
+        }
+
+        .responsive-font, .nav-item{
+            font-size: 9pt !important;
         }
     }
 </style>

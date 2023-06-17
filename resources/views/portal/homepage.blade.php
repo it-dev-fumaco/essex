@@ -17,21 +17,21 @@
     <div class="container-fluid">
         <div class="col-md-12 col-sm-10">
             <div class="row">
-                <div class="col-9">
+                <div class="col-8 col-xl-9">
                     <div id="imagecontainer" class="container-fluid">
                         <div class="container-fluid">
                             <div class="col-md-12">
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 94px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Welcome to </h3>
                                 <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-12 col-xl-8">
                                 <form action="{{ route('search') }}" id="searh-form" method="get">
                                     <div class="row p-0 m-0">
                                         <div class="col-md-9 p-0 m-0">
                                             <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off">
                                         </div>
                                         <div class="col-md-3 p-0 m-0">
-                                            <button type="button" class="btn h-100 w-100 fw-bold submit-search" style="border-radius: 0 25px 25px 0; background-color: #0dc761">Search</button>
+                                            <button type="button" class="btn h-100 w-100 fw-bold submit-search responsive-font" style="border-radius: 0 25px 25px 0; background-color: #0dc761">Search</button>
                                         </div>
                                     </div>
                                 </form>
@@ -39,8 +39,8 @@
                             </div>
                         </div>
                     </div>
-                    <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section>
-                    <section id="videos-container" style="margin-top: 10px; z-index: 999 !important">
+                    <section id="tbl-manuals" class="mt-2 p-2 responsive-font" style="z-index: 999 !important"></section>
+                    <section id="videos-container" class="mt-2" style="z-index: 999 !important">
                         <div class="container-fluid p-0">
                             @php
                                 $videos_array = [];
@@ -61,7 +61,7 @@
                                 }
                             @endphp
                             <div class="row">
-                                <div class="col-4 p-3">
+                                <div class="col-4 p-3 d-none d-xl-inline">
                                     <div class="card h-100 shadow" style="border-top: 3px solid #0D6EFD">
                                         <div class="card-header">
                                             <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
@@ -74,7 +74,7 @@
                                     </div>
                                 </div>
                                 @foreach ($videos_array as $video)
-                                    <div class="col-4 p-3">
+                                    <div class="col-6 col-xl-4 p-3">
                                         <div class="card thumbnail h-100 shadow" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
                                             <div class="card-body p-0">
                                                 <div class="h-100 position-relative" style="background-color: #000">
@@ -94,7 +94,7 @@
                     </section>
                     {{-- <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section> --}}
                 </div>
-                <div class="col-3">
+                <div class="col-4 col-xl-3">
                     <div id="carouselExampleCaptions" class="carousel slide mt-2 shadow" data-bs-ride="carousel">
                         <div class="carousel-inner" style="border-radius: 5px;">
                             <div class="carousel-item bg-dark active" style="min-height: 350px;">
@@ -107,7 +107,7 @@
                             </div>
                             <div class="carousel-item bg-dark" style="min-height: 350px;">
                                 <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
-                                <div class="carousel-caption d-none d-md-block" style="top: 38%; transform: translateY(-50%);">
+                                <div class="carousel-caption d-none d-md-block" id="vision-carousel">
                                     <h5 style="text-shadow: 2px 2px 4px #000">Vision</h5>
                                     <p style="text-shadow: 2px 2px 8px #000"><b>FUMACO</b> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
                                     <br>
@@ -137,12 +137,12 @@
                                 <div class="col-5" style="display: flex; justify-content: center; align-items: center;">
                                     <div class="text-center">
                                         <i class="fa fa-cloud" style="font-size: 30pt;"></i>
-                                        <span class="fw-bold d-block" style="font-size: 10pt;">Good {{ $greet }}!</span>
+                                        <span class="fw-bold d-block responsive-font" style="font-size: 10pt;">Good {{ $greet }}!</span>
                                     </div>
                                 </div>
                                 <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
                                     <div class="text-center">
-                                        <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem;"></span>
+                                        <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap"></span>
                                         <span id="current-date" class="fw-bold d-block mt-2" style="font-size: 11pt;"></span>
                                     </div>
                                 </div>
@@ -171,10 +171,10 @@
                                         }
                                     @endphp
                                     <div class="row" style="font-size: 9pt !important">
-                                        <div class="col-2 d-flex justify-content-center align-items-center">
-                                            <div class="profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                        <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
+                                            <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
                                         </div>
-                                        <div class="col-8 p-0 d-flex justify-content-center align-items-center">
+                                        <div class="col-7 col-xl-8 p-0 d-flex justify-content-center align-items-center">
                                             <div class="container-fluid p-0">
                                                 <span style="font-size: 10pt;" class="fw-bold">{{ $celebrant->employee_name }}</span><br>
                                                 <small class="text-muted">{{ $celebration }}</small>
@@ -250,11 +250,11 @@
                                                 $image = 'storage/img/user.png';
                                             }
                                         @endphp
-                                        <div class="row container-fluid" style="display: flex; justify-content: center; align-items: center;">
-                                            <div class="col-md-2" style="padding: 5px !important">
+                                        <div class="row container-fluid d-flex justify-content-center align-items-center">
+                                            <div class="col-3 col-xl-2" style="padding: 5px !important">
                                                 <div class="profile-image" style="background-image: url({{ asset($image) }});"></div>
                                             </div>
-                                            <div class="col-md-9">
+                                            <div class="col-9 col-xl-9">
                                                 <span style="font-weight: 600; font-size: 9pt;">{{ $approver->employee_name }}</span><br>
                                                 <cite style="font-size: 8pt;">{{ $approver->designation }}</cite>
                                             </div>
@@ -270,11 +270,71 @@
                             <span class="fw-bold" style="font-size: 12pt;">Need for Support?</span>
                         </div>
                         <div class="card-body">
-                            <p>If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
+                            <p class="responsive-font">If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
+                        </div>
+                    </div>
+
+                    <div class="card mt-2 shadow d-xl-none" style="border-top: 3px solid #0D6EFD">
+                        <div class="card-header">
+                            <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
+                        </div>
+                        <div class="card-body">
+                            <b class="responsive-font">1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
+                            <p class="responsive-font">2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
+                            <p class="responsive-font">3. Log off each terminal after use</p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {{-- <section class="mt-2 d-block d-xl-none" style="z-index: 999 !important">
+                <div class="container-fluid p-0">
+                    @php
+                        $videos_array = [];
+                        if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4')){
+                            $videos_array[0] = [
+                                'title' => 'IT Guidelines and Policies',
+                                'url' => 'storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4',
+                                'thumbnail' => 'storage/thumbnail/it_guidelines.png'
+                            ];
+                        }
+
+                        if (Storage::disk('public')->exists('videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4')){
+                            $videos_array[1] = [
+                                'title' => 'Internet Services Proxy Configuration',
+                                'url' => 'storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4',
+                                'thumbnail' => 'storage/thumbnail/internet_services.png'
+                            ];
+                        }
+                    @endphp
+                    <div class="row">
+                        <div class="col-4 p-3">
+                            <div class="card h-100 shadow responsive-font" style="border-top: 3px solid #0D6EFD">
+                                <div class="card-header">
+                                    <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
+                                </div>
+                                <div class="card-body">
+                                    <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
+                                    <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
+                                    <p>3. Log off each terminal after use</p>
+                                </div>
+                            </div>
+                        </div>
+                        @foreach ($videos_array as $video)
+                            <div class="col-4 p-3">
+                                <div class="card thumbnail h-100 shadow responsive-font" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
+                                    <div class="card-body p-0">
+                                        <div class="h-100 position-relative" style="background-color: #000">
+                                            <img src="{{ $video['thumbnail'] }}" class="w-100 h-100" style="opacity: .9">
+                                            <i class="far fa-play-circle video-play-icon absolute-center"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section> --}}
         </div>
         
     </div>

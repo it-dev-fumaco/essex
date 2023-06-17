@@ -13,7 +13,7 @@
    <tbody>
       @forelse($employee_logs as $row)
       <tr class="{{ $row['attendance_status'] == 'Unfiled Absence' ? 'colorbackground' : '' }}">
-         <td class="text-center">{{ $row['transaction_date'] }}</td>
+         <td class="text-center" style="white-space: nowrap;">{{ $row['transaction_date'] }}</td>
          <td class="text-center">{{ $row['day_of_week'] }}</td>
          @if ($row['attendance_status'] == 'Unfiled Absence')
             <td class="text-center" colspan=2>

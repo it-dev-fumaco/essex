@@ -1,20 +1,34 @@
 <div class="row">
-    <div class="col-3">
+    {{-- <div class="col-3 border border-warning">
         <div class="row" style="display: flex; justify-content: center; align-items: center;">
-            <div class="col-md-4 col-md-offset-1" style="padding: 0;">
+            <div class="col-md-6 border border-danger col-xl-4 col-xl-offset-1" style="padding: 0;">
                 <a href="/">
                     <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
                 </a>
             </div>
-            <div class="col-md-7">
-                <img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span class="header-text"
-                    style="">Employee Portal</span>
+            <div class="col-6 col-xl-7">
+                <img src="{{ asset('storage/img/company_logo.png') }}" width="100">
+                <br><span class="header-text" style="font-size: 9pt;">Employee Portal</span>
             </div>
         </div>
-    </div>
-    <div class="col-xl-{{ Auth::check() && Auth::user()->department_id == 9 ? 8 : 7 }} col-lg-9" style="display: flex; justify-content: center; align-items: center;">
+    </div> --}}
+    <div class="col-lg-12 col-xl-{{ Auth::check() && Auth::user()->department_id == 9 ? 8 : 7 }} d-flex justify-content-start justify-content-xl-center align-items-center">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
+                {{-- <a href="test">test</a> --}}
+                <div class="col-2 col-xl-3">
+                    <div class="row" style="display: flex; justify-content: center; align-items: center;">
+                        <div class="col-md-6 col-xl-4 col-xl-offset-1" style="padding: 0;">
+                            <a href="/">
+                                <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-7">
+                            <img src="{{ asset('storage/img/company_logo.png') }}" width="100">
+                            <br><span class="header-text">Employee Portal</span>
+                        </div>
+                    </div>
+                </div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,21 +36,21 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/"><i class="icon-home"></i> &nbsp;HOME</a>
+                            <a class="nav-link active" aria-current="page" href="/" style="white-space: nowrap"><i class="icon-home"></i> &nbsp;HOME</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
                                 <i class="icon-info"></i> &nbsp;UPDATES
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/gallery"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
+                                <li><a class="dropdown-item" href="/gallery" style="white-space: nowrap"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/manuals"><i class="icon-notebook"></i> &nbsp;MANUALS</a>
+                            <a class="nav-link" href="/manuals" style="white-space: nowrap"><i class="icon-notebook"></i> &nbsp;MANUALS</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
                                 <i class="icon-book-open"></i> &nbsp;SERVICES
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -46,8 +60,8 @@
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="icon-briefcase"></i> &nbsp;MEMORANDUM / POLICY
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
+                                <i class="icon-briefcase"></i> &nbsp;POLICY
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <li><a class="dropdown-item" href="/policies">Operational Policies</a></li>
@@ -55,17 +69,17 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/services/directory"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
+                            <a class="nav-link" href="/services/directory" style="white-space: nowrap"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
                         </li>
                         @if(Auth::check())
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url('/home') }}"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
+                                <a class="nav-link" href="{{ url('/home') }}" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
                             </li>
-                            @if (Auth::user()->department_id == 9)
+                            {{-- @if (Auth::user()->department_id == 9)
                                 <li class="nav-item">
                                     <a class="nav-link" href="/email_logs"><i class="fa fa-envelope"></i> &nbsp;EMAIL LOGS</a>
                                 </li>
-                            @endif
+                            @endif --}}
                         @endif
                     </ul>
                 </div>
