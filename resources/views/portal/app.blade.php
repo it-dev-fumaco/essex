@@ -138,6 +138,10 @@
         margin: 0 !important;
     }
 
+    .dir-caption{
+        font-size: 11px;
+    }
+
     @media (max-width: 1199.98px) {
         .nav li a{
             padding: 5px !important;
@@ -154,9 +158,19 @@
             white-space: nowrap;
         }
 
+        .dir-caption{
+            font-size: 9px;
+        }
+
         .responsive-font, .nav-item, .footer-nav li a{
             font-size: 9pt !important;
         }
+
+        .profile-image{
+            width: 45px;
+            height: 45px;
+        }
+
     }
 </style>
 

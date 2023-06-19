@@ -4,7 +4,7 @@
 <div class="main-container" style="background-color: #EFF3F6;">
 	<div class="section" style="padding-top: 20px !important">
 		<div class="container-fluid">
-			<div class="col-10 mx-auto">
+			<div class="col-12 col-xl-10 mx-auto">
 				<div class="row">
 					<div class="col-6">
 						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 18pt; border: 0;">Employee Directory</h1>
