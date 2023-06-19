@@ -1,6 +1,6 @@
 <div class="row">
   @foreach($albums as $album)
-  <div class="col-md-3 col-sm-6 col-xs-12">
+  <div class="col-xl-3 col-md-4 col-sm-6 col-xs-12">
     <div class="property-main">
       <div class="property-wrap">
         <div class="property-item">

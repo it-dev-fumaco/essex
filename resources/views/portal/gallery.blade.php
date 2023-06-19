@@ -10,7 +10,7 @@
 				<div class="section-title text-center">Our Gallery</div>
 			</div>
 
-			<div class="col-md-12 col-md-6 col-md-offset-3">
+			<div class="col-md-12 col-md-6 col-md-offset-3 border border-danger">
 				<select class="form-control" id="selectActivity">
 					<option value="">All Activities</option>
 					@foreach($activity_types as $type)

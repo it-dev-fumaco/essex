@@ -6,7 +6,7 @@
 @include('portal.modals.delete_policy_modal')
 <div class="main-container">
   <div class="section">
-    <div class="col-10 mx-auto">
+    <div class="col-12 col-xl-10 mx-auto">
       <h1 class="title-2 center" style="margin-top: -40px; border: 0;">Memorandum / Policy</h1>
       @if(Auth::user() && Auth::user()->user_group == 'Editor')
       <div class="row">
@@ -22,18 +22,19 @@
       </div>
       @endif
       <div class="row">
-        <div class="col-md-12">
+        <div class="container-fluid">
           @if(count($policiesAllDept) > 0)
           <h3 class="title-2" style="border-bottom: 1px solid #E8E8E8; padding:0; margin: 10px 0;">All Department(s)
           </h3>
           <div class="row">
             @foreach($policiesAllDept as $policy)
-            <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="col-xl-3 col-md-4 col-sm-6 col-xs-12">
               <div class="support-inner">
                 <div class="support-info" style="margin: 5px; padding: 20px 3px 20px 80px;">
                   <div class="info-title">
-                    <a href="{{ asset('storage/uploads/files/'.$policy->file_attachment) }}" class="text-decoration-none" target="_blank"><i
-                        class="fa fa-file-text-o" style="font-size: 32pt;"></i>{{ str_limit($policy->subject, 27) }}</a>
+                    <a href="{{ asset('storage/uploads/files/'.$policy->file_attachment) }}" class="text-decoration-none one-line ellipsis responsive-font" target="_blank">
+                      <i class="fas fa-file" style="font-size: 32pt;"></i>{{ $policy->subject }}
+                    </a>
                     <span>{!! str_limit($policy->description, 30) ? '' : '<br>' !!}</span>
                   </div>
                   @if(Auth::user() && Auth::user()->user_group == 'Editor')
