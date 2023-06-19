@@ -38,20 +38,20 @@
     @endif
     <div class="container-fluid mt-2">
         <div class="row m-0 p-0">
-            <div class="col-4 order-1 order-xl-1 col-xl-2">
+            <div class="col-3 col-xl-2 profile-container">
                 <div class="card card-primary card-outline mb-3">
                     <div class="card-body box-profile p-2">
                         <div class="text-center">
                             @php
                                 $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png';
                             @endphp
-                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}"
-                                alt="User profile picture" width="200" height="200" style="border-radius: 50%;">
+                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}" alt="User profile picture" style="border-radius: 50%;">
                         </div>
                         <h3 class="profile-username text-center">{{ Auth::user()->employee_name }}</h3>
-                        <h6 class="text-muted text-center"><em>{{ $designation }}</em></h6>
+                        <h6 class="text-muted text-center d-none d-xl-block"><em>{{ $designation }}</em></h6>
+                        <small class="text-muted text-center d-block d-xl-none"><em>{{ $designation }}</em></small>
                         <small class="d-block text-muted text-center text-uppercase">{{ $department }}</small>
-                        <ul class="list-group list-group-unbordered mt-3 mb-3" style="font-size: 12px;">
+                        <ul class="list-group list-group-unbordered mt-3 mb-3 responsive-font">
                             <li class="list-group-item">
                                 <div class="d-flex flex-row">
                                     <div class="fw-bold">Access ID</div>
@@ -108,7 +108,170 @@
                 </div>
             </div>
 
-            <div class="col-12 order-3 order-xl-2 col-xl-6">
+            <div class="col-9 col-xl-10">
+                <div class="row p-0 right-panel">
+                    <div class="col-12 col-xl-7">
+                        <div class="inner-box featured">
+                            <div class="tabs-section">
+                                <ul class="nav nav-pills" id="profile-tabs">
+                                    <li class="nav-item"><a href="#tab-overview" class="nav-link active border rounded border-success"> Overview</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-leaves" class="nav-link">My Leave History</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-gatepasses" class="nav-link">My Gatepasses</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-itinerary" class="nav-link">My Itinerary</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-exam-history" class="nav-link">My Exam History</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-evaluations" class="nav-link">My Evaluation(s)</a></li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane in active" id="tab-overview">
+                                        <div class="row" id="overview-tab">
+                                            @include('client.overview_tab')
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-my-exam-history">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <table class="table" style="font-size: 12px;">
+                                                    <thead class="text-uppercase">
+                                                        <th class="text-center">Exam Date</th>
+                                                        <th class="text-center">Exam Title</th>
+                                                        <th class="text-center">Exam Group</th>
+                                                        <th class="text-center">Date Taken</th>
+                                                        <th class="text-center">Validity Date</th>
+                                                        <th class="text-center">Action</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse($clientexams as $exam)
+                                                            <tr>
+                                                            @if($exam->start_time != null)
+                                                                <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_of_exam)->format('M. d, Y') }}</td>
+                                                                <td class="text-center align-middle">{{$exam->exam_title}}</td>
+                                                                <td class="text-center align-middle">{{$exam->exam_group_description}}</td>
+                                                                <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_taken)->format('M. d, Y') }}</td>
+                                                                <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</td>
+                                                                <td class="text-center align-middle">
+                                                                    <span class="badge bg-success">Completed
+                                                                    </span>
+                                                                </td>
+                                                            @endif
+                                                            </tr>
+                                                        @empty
+                                                            <tr> <td colspan="6" class="text-center text-muted text-uppercase p-2">No records found</td></tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-my-leaves">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div id="my-absent-notice"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-my-gatepasses">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div id="my-gatepasses"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-my-itinerary">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div id="my-itinerary"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane in active" id="tab-memorandum">
+                                        <div class="row">
+                                            <div class="col-sm-12" id="memo-tab"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="col-12 col-xl-5">
+                        <div class="alert alert-danger blink" id="lateWarning" hidden>
+                            <i class="fa fa-info-circle" style="font-size: 15pt; "></i><span> You have reached the maximum late
+                                allowed (300 mins.)</span>
+                        </div>
+                        @if ($kpi_schedules)
+                            <div class="alert alert-info blink">
+                                <i class="fa fa-info-circle"></i>
+                                <span> Schedule for KPI report submission:</span>
+                                <ul>
+                                    @foreach ($kpi_schedules as $sched)
+                                    <li><b>{{ $sched[0] }}:</b> {{ $sched[1] }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        <div class="inner-box featured">
+                            <div class="widget property-agent">
+                                <div class="d-flex">
+                                    <h3 class="widget-title">My Attendance</h3>
+                                    <small id="refreshAttendance" class="flex-grow-1 text-muted text-end px-1" style="cursor: pointer">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </small>
+                                </div>
+                                <div class="agent-info">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="container">
+                                                @php
+                                                    $current_date = Carbon\Carbon::now()->format('d');
+                                                    $start_date = $end_date = null;
+                                                    if($current_date <= 13){
+                                                        $start_date = Carbon\Carbon::now()->subMonth(1)->format('Y-m-28');
+                                                        $end_date = Carbon\Carbon::now()->format('Y-m-13');
+                                                    }else if($current_date >= 14 && $current_date <= 27){
+                                                        $start_date = Carbon\Carbon::now()->format('Y-m-14');
+                                                        $end_date = Carbon\Carbon::now()->format('Y-m-27');
+                                                    }else if($current_date > 27){
+                                                        $start_date = Carbon\Carbon::now()->format('Y-m-28');
+                                                        $end_date = Carbon\Carbon::now()->addMonth(1)->format('Y-m-13');
+                                                    }
+                                                @endphp
+                                                <div class="row">
+                                                    <div class="col-1 date-ctrl d-flex justify-content-center align-items-center" data-action="prev">
+                                                        <i class=" fas fa-chevron-left"></i>
+                                                    </div>
+                                                    <div class="col-10 text-center">
+                                                        <h5 class="d-inline" id="cutoff-start">{{ Carbon\Carbon::parse($start_date)->format('M d, Y') }}</h5> - 
+                                                        <h5 class="d-inline" id="cutoff-end">{{ Carbon\Carbon::parse($end_date)->format('M d, Y') }}</h5>
+                                                        <div class="d-none">
+                                                            <input type="text" name="start" value="{{ Carbon\Carbon::parse($start_date)->format('Y-m-d') }}">
+                                                            <input type="text" name="end" value="{{ Carbon\Carbon::parse($end_date)->format('Y-m-d') }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-1 date-ctrl d-flex justify-content-center align-items-center" data-action="next">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+        
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div id="my-attendance" style="min-height: 50px; font-size: 9pt">
+                                                <div class="container-fluid d-flex justify-content-center align-items-center p-2">
+                                                    <div class="spinner-border" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- <div class="col-9 col-xl-6">
                 <div class="inner-box featured">
                     <div class="tabs-section">
                         <ul class="nav nav-pills" id="profile-tabs">
@@ -130,31 +293,33 @@
                                     <div class="col-sm-12">
                                         <table class="table" style="font-size: 12px;">
                                             <thead class="text-uppercase">
-                                        <th class="text-center">Exam Date</th>
-                                        <th class="text-center">Exam Title</th>
-                                        <th class="text-center">Exam Group</th>
-                                        <th class="text-center">Date Taken</th>
-                                        <th class="text-center">Validity Date</th>
-                                        <th class="text-center">Action</th>
-                                    </thead>
-                                   @forelse($clientexams as $exam)
-                                    <tr>
-                                       @if($exam->start_time != null)
-                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_of_exam)->format('M. d, Y') }}</td>
-                                           <td class="text-center align-middle">{{$exam->exam_title}}</td>
-                                           <td class="text-center align-middle">{{$exam->exam_group_description}}</td>
-                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_taken)->format('M. d, Y') }}</td>
-                                           <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</td>
-                                           <td class="text-center align-middle">
-                                            <span class="badge bg-success">Completed
-                                            </span>
-                                        </td>
-                                       @endif
-                                    </tr>
-                                   @empty
-                                       <tr> <td colspan="6" class="text-center text-muted text-uppercase p-2">No records found</td></tr>
-                                   @endforelse
-                                </table>
+                                                <th class="text-center">Exam Date</th>
+                                                <th class="text-center">Exam Title</th>
+                                                <th class="text-center">Exam Group</th>
+                                                <th class="text-center">Date Taken</th>
+                                                <th class="text-center">Validity Date</th>
+                                                <th class="text-center">Action</th>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($clientexams as $exam)
+                                                    <tr>
+                                                    @if($exam->start_time != null)
+                                                        <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_of_exam)->format('M. d, Y') }}</td>
+                                                        <td class="text-center align-middle">{{$exam->exam_title}}</td>
+                                                        <td class="text-center align-middle">{{$exam->exam_group_description}}</td>
+                                                        <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_taken)->format('M. d, Y') }}</td>
+                                                        <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</td>
+                                                        <td class="text-center align-middle">
+                                                            <span class="badge bg-success">Completed
+                                                            </span>
+                                                        </td>
+                                                    @endif
+                                                    </tr>
+                                                @empty
+                                                    <tr> <td colspan="6" class="text-center text-muted text-uppercase p-2">No records found</td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -188,7 +353,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-8 order-2 order-xl-3 col-xl-4">
+            <div class="col-9 offset-3 col-xl-4 offset-xl-0">
                 <div class="alert alert-danger blink" id="lateWarning" hidden>
                     <i class="fa fa-info-circle" style="font-size: 15pt; "></i><span> You have reached the maximum late
                         allowed (300 mins.)</span>
@@ -263,7 +428,7 @@
                     </div>
                 </div>
              
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -441,6 +606,42 @@
     #profile-tabs li a.active, #evaluation-tabs li a.active, #gatepass-tabs li a.active{
         background-color: #11703c;
     }
+
+    .profile-user-img{
+        width: 200px;
+        height: 200px;
+    }
+    
+    .data-entry-icon{
+        font-size: 28px;
+    }
+
+    .data-entry-btn{
+        font-size: 16px;
+    }
+
+    @media (max-width: 1199.98px) {
+        .data-entry-icon{
+            font-size: 15pt !important;
+        }
+        .profile-user-img{
+            width: 100px;
+            height: 100px;
+        }
+
+        .profile-username{
+            font-size: 12pt;
+        }
+
+        .responsive-font, .data-entry-btn{
+            font-size: 8pt !important;
+        }
+
+        .right-panel{
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+    }
     </style>
 
     @include('client.modals.add_datainput')
@@ -484,10 +685,8 @@
 
     <script>
         $(document).ready(function() {
-
             $(document).on('click', '.date-ctrl', function (e){
                 e.preventDefault();
-                var date = new Date($('input[name="current"]').val());
                 $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
                     '<div class="spinner-border" role="status">' +
                         '<span class="visually-hidden">Loading...</span>' +
@@ -495,10 +694,9 @@
                 '</div>');
                 get_cutoff_date($(this).data('action'));
             });
-            
+
             function get_cutoff_date(op){
                 var date = new Date($('input[name="end"]').val());
-                console.log(date);
                 var current_date = date.getDate();
                 var current_month = date.getMonth() + 1; // + 1, month array starts at 0
                 var current_year = date.getFullYear();

@@ -129,15 +129,19 @@
         transform: translateY(-50%);
     }
 
-    @media (max-width: 1199.98px) {
-        .header-text{
-            font-size: 12pt;
-        }
+    .header-text{
+        font-size: 12pt;
+    }
 
-        .nav li{
-            padding: 0 !important;
+    .nav li a{
+        padding: 10px !important;
+        margin: 0 !important;
+    }
+
+    @media (max-width: 1199.98px) {
+        .nav li a{
+            padding: 5px !important;
             margin: 0 !important;
-            border: 1px solid red;
         }
 
         #vision-carousel{
@@ -150,7 +154,7 @@
             white-space: nowrap;
         }
 
-        .responsive-font, .nav-item{
+        .responsive-font, .nav-item, .footer-nav li a{
             font-size: 9pt !important;
         }
     }

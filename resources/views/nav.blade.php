@@ -1,21 +1,7 @@
 <div class="row">
-    {{-- <div class="col-3 border border-warning">
-        <div class="row" style="display: flex; justify-content: center; align-items: center;">
-            <div class="col-md-6 border border-danger col-xl-4 col-xl-offset-1" style="padding: 0;">
-                <a href="/">
-                    <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
-                </a>
-            </div>
-            <div class="col-6 col-xl-7">
-                <img src="{{ asset('storage/img/company_logo.png') }}" width="100">
-                <br><span class="header-text" style="font-size: 9pt;">Employee Portal</span>
-            </div>
-        </div>
-    </div> --}}
     <div class="col-lg-12 col-xl-{{ Auth::check() && Auth::user()->department_id == 9 ? 8 : 7 }} d-flex justify-content-start justify-content-xl-center align-items-center">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
-                {{-- <a href="test">test</a> --}}
                 <div class="col-2 col-xl-3">
                     <div class="row" style="display: flex; justify-content: center; align-items: center;">
                         <div class="col-md-6 col-xl-4 col-xl-offset-1" style="padding: 0;">
