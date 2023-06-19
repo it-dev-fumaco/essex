@@ -7,19 +7,22 @@
             @php
             $img = $album->featured_image ? $album->featured_image : 'img/notfound.png';
             @endphp
-            <a href="/gallery/album/{{ $album->id }}" class="album-card">
+            <a href="/gallery/album/{{ $album->id }}" class="album-card" style="position: relative !important">
                 <img src="{{ asset('storage/'.$img) }}" />
                 <div class="p-3 w-100 text-light" style="position: absolute; bottom: 0; left: 0; background-color:rgba(0, 0, 0, .65)">
-                    <h6>
+                    <h6 class="responsive-font">
                         {{ $album->name }}
                     </h6>
                 </div>
             </a>
         @endforeach
         <a href="/gallery" class="album-card">
-            <img src="{{ asset('storage/img/featured/1.jpg') }}" />
-            <div class="p-3 w-100 h-100 text-light" style="position: absolute; bottom: 0; left: 0; background-color:rgba(0, 0, 0, .3); display: flex; justify-content: center; align-items: center;">
-                <h6>
+            <div class="p-3 w-100 h-100 text-light d-flex justify-content-center align-items-center" style="
+            background-color:rgba(0, 0, 0, .3);
+            background: url('{{ asset('storage/img/featured/1.jpg') }}') no-repeat;
+            background-size: cover;
+            ">
+                <h6 class="responsive-font">
                     View More
                 </h6>
             </div>
@@ -61,6 +64,7 @@
         justify-content: center;
         overflow: hidden;
         transition: 0.3s all ease;
+        text-decoration: none !important
     }
 
     .album-container .album-card img {
