@@ -15,7 +15,7 @@
                             $title = $searchResult['title'];
                             $category = $searchResult['category'];
                             $description = $searchResult['description'];
-                            $icon = 'fa fa-file';
+                            $icon = 'fas fa-file';
                         }
                     @endphp
                     <a href="{{ $url }}" class="text-decoration-none">
