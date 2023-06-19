@@ -11,15 +11,13 @@
     @if ($holiday_reminder)
         <!-- The modal -->
         <div class="modal fade" id="reminder-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content" style="font-weight: 600;">
-                    <div class="modal-header bg-success">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                    <div class="modal-header bg-success text-white">
                         <h4 class="modal-title" id="modalLabel">
                             <i class="fa fa-info-circle" style="font-size: 15pt;"></i> Reminder
                         </h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center" style="padding: 30px 0 30px 0 !important;">
                         <span style="font-size: 13pt;">
@@ -27,14 +25,14 @@
                         </span>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn bg-secondary" data-dismiss="modal"
-                            style="font-weight: 600;">Close</button>
-                        <a href="/module/attendance/holiday_entry" class="btn bg-primary" style="font-weight: 600;">Go to
-                            Holiday(s) list&nbsp;<i class="fa fa-external-link"></i></a>
+                        <button type="button" class="btn bg-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+                        <a href="/module/attendance/holiday_entry" class="btn bg-primary" style="font-weight: 600;">
+                            Go to Holiday(s) list&nbsp;<i class="fa fa-external-link"></i></a>
                     </div>
                 </div>
             </div>
         </div>
+        <button class="btn open-reminder d-none" data-bs-toggle="modal" data-bs-target="#reminder-modal">open</button>
     @endif
     <div class="container-fluid mt-2">
         <div class="row m-0 p-0">
@@ -685,6 +683,7 @@
 
     <script>
         $(document).ready(function() {
+            $('.open-reminder').click();
             $(document).on('click', '.date-ctrl', function (e){
                 e.preventDefault();
                 $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
@@ -795,8 +794,6 @@
                         stackup_spacing: 20
                     });
             @endif
-
-            $('#reminder-modal').show();
 
             // initialize input widgets first
             $('.time').timepicker({

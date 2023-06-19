@@ -2,21 +2,12 @@
     <div class="d-nonse d-xl-block">
         <div class="d-flex flex-row pt-3">
             <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2">
-                {{-- <button type="button" class="btn btn-secondary px-xl-3 py-xl-2" data-bs-toggle="modal" data-bs-target="#absentNoticeModal" id="notice-modal">
-                    <i class="fas fa-calendar-check fs-3 d-block m-2"></i>
-                    Absent Notice
-                </button> --}}
-
                 <button type="button" class="data-entry-btn btn btn-secondary btn-sm px-xl-3 py-xl-2 w-100 h-100" data-bs-toggle="modal" data-bs-target="#absentNoticeModal" id="notice-modal">
                     <i class="data-entry-icon fas fa-calendar-check d-block m-xl-2"></i>
                     Absent Notice
                 </button>
             </div>
             <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2">
-                {{-- <button type="button" class="data-entry-btn btn btn-success px-3 py-2" data-bs-toggle="modal" data-bs-target="#gatepassModal" id="gatepass-modal">
-                    <i class="data-entry-icon fas fa-clipboard-list fs-3 d-block m-2"></i>
-                    Gatepass
-                </button> --}}
                 <button class="data-entry-btn btn btn-success btn-sm w-100 h-100" data-bs-toggle="modal" data-bs-target="#gatepassModal">
                     <i class="data-entry-icon fas fa-clipboard-list d-block m-xl-2"></i>&nbsp;Gatepass
                 </button>
