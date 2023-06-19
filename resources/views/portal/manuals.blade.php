@@ -7,7 +7,7 @@
 <div class="main-container">
     <div class="section">
         <div class="container-fluid">
-            <div class="col-10 mx-auto">
+            <div class="col-12 col-xl-10 mx-auto">
                 <div class="row">
 					<div class="col-6">
 						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 18pt; border: 0;">User Manuals</h1>

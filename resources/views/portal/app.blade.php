@@ -142,6 +142,22 @@
         font-size: 11px;
     }
 
+    .ellipsis {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+    }
+
+    .one-line{
+        -webkit-line-clamp: 1; /* number of lines to show */
+                line-clamp: 1; 
+    }
+
+    .two-line{
+        -webkit-line-clamp: 2; /* number of lines to show */
+                line-clamp: 2; 
+    }
+
     @media (max-width: 1199.98px) {
         .nav li a{
             padding: 5px !important;
