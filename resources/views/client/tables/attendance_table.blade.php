@@ -1,45 +1,54 @@
-<table class="table">
-   <thead>
-      <tr>  
-         <th class="text-center">Date</th>  
-         <th class="text-center">DOW</th>    
-         <th class="text-center">Time In</th>  
-         <th class="text-center">Time Out</th>   
-         <th class="text-center">Hrs Worked</th>  
-         <th class="text-center">Overtime</th>  
-         <th class="text-center">Status</th> 
-      </tr>
-   </thead>
-   <tbody>
-      @forelse($employee_logs as $row)
-      <tr class="{{ $row['attendance_status'] == 'Unfiled Absence' ? 'colorbackground' : '' }}">
-         <td class="text-center" style="white-space: nowrap;">{{ $row['transaction_date'] }}</td>
-         <td class="text-center">{{ $row['day_of_week'] }}</td>
-         @if ($row['attendance_status'] == 'Unfiled Absence')
-            <td class="text-center" colspan=2>
-               <b>{{ $row['attendance_status'] }}</b>
+<div>
+   <table class="table">
+      <thead>
+         <tr>  
+            <th class="text-center">Date</th>  
+            <th class="text-center">DOW</th>    
+            <th class="text-center">Time In</th>  
+            <th class="text-center">Time Out</th>   
+            <th class="text-center">Hrs Worked</th>  
+            <th class="text-center">Overtime</th>  
+            <th class="text-center">Status</th> 
+         </tr>
+      </thead>
+      <tbody>
+         @forelse($employee_logs as $row)
+         <tr class="{{ $row['attendance_status'] == 'Unfiled Absence' ? 'colorbackground' : '' }}">
+            <td class="text-center" style="white-space: nowrap;">{{ $row['transaction_date'] }}</td>
+            <td class="text-center">{{ $row['day_of_week'] }}</td>
+            @if ($row['attendance_status'] == 'Unfiled Absence')
+               <td class="text-center" colspan=2>
+                  <b>{{ $row['attendance_status'] }}</b>
+               </td>
+            @else
+               <td class="text-center">
+                  @if($row['time_in'])
+                  <span class="badge bg-{{ $row['time_in_status'] === 'late' ? 'danger' : 'success'}}" style="font-size: 9pt;">
+                     {{ $row['time_in'] }}
+                  </span>
+                  @endif
+               </td>
+               <td class="text-center">{{ $row['time_out'] }}</td>   
+            @endif
+            <td class="text-center">{{ $row['hrs_worked'] }}</td>
+            <td class="text-center">{{ $row['overtime'] }}</td>
+            <td class="text-center"><b>{{ $row['attendance_status'] == 'Unfiled Absence' ? 'Absent' : $row['attendance_status'] }}</b></td>
+         </tr>
+         @empty
+         <tr>
+            <td class="text-center" colspan="8">
+               <div class="d-flex justify-content-center align-items-center" style="min-height: 25vh">
+                  <h3 class="text-muted fw-normal">
+                     NO RECORD(S) FOUND
+                  </h3>
+               </div>
             </td>
-         @else
-            <td class="text-center">
-               @if($row['time_in'])
-               <span class="badge bg-{{ $row['time_in_status'] === 'late' ? 'danger' : 'success'}}" style="font-size: 9pt;">
-                  {{ $row['time_in'] }}
-               </span>
-               @endif
-            </td>
-            <td class="text-center">{{ $row['time_out'] }}</td>   
-         @endif
-         <td class="text-center">{{ $row['hrs_worked'] }}</td>
-         <td class="text-center">{{ $row['overtime'] }}</td>
-         <td class="text-center"><b>{{ $row['attendance_status'] == 'Unfiled Absence' ? 'Absent' : $row['attendance_status'] }}</b></td>
-      </tr>
-      @empty
-      <tr>
-         <td class="text-center" colspan="8">No Records Found.</td>
-      </tr>
-      @endforelse
-   </tbody>
-</table>
+         </tr>
+         @endforelse
+      </tbody>
+   </table>
+</div>
+<hr>
 <div class="container-fluid">
    <div class="row">
       <div class="col-12 p-0 mb-2">
