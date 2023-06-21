@@ -43,7 +43,8 @@
                             @php
                                 $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png';
                             @endphp
-                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}" alt="User profile picture" style="border-radius: 50%;">
+                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}"
+                                alt="User profile picture" width="170" height="170" style="border-radius: 50%;">
                         </div>
                         <h3 class="profile-username text-center">{{ Auth::user()->employee_name }}</h3>
                         <h6 class="text-muted text-center d-none d-xl-block"><em>{{ $designation }}</em></h6>

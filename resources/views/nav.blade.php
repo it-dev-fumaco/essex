@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-lg-12 col-xl-{{ Auth::check() && Auth::user()->department_id == 9 ? 8 : 7 }} d-flex justify-content-start justify-content-xl-center align-items-center">
+    <div class="col-12 d-block justify-content-start justify-content-xl-center align-items-center">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <div class="col-2 col-xl-3">
@@ -20,9 +20,9 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 text-dark">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/" style="white-space: nowrap"><i class="icon-home"></i> &nbsp;HOME</a>
+                            <a class="nav-link" aria-current="page" href="/" style="white-space: nowrap"><i class="icon-home"></i> &nbsp;HOME</a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
@@ -61,18 +61,12 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url('/home') }}" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
                             </li>
-                            {{-- @if (Auth::user()->department_id == 9)
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/email_logs"><i class="fa fa-envelope"></i> &nbsp;EMAIL LOGS</a>
-                                </li>
-                            @endif --}}
                         @endif
                     </ul>
                 </div>
             </div>
         </nav>
     </div>
-    
 </div>
 <style>
     .nav-item{

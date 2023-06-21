@@ -72,7 +72,7 @@
         background-color: #e5e8e8;
         color:  #566573;
         border: 0;
-        border-bottom: 1px solid #d5dbdb;
+        text-align: center;
     }
 
     #login-tabs .nav-item:hover{
