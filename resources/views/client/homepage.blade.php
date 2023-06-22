@@ -143,7 +143,7 @@
                                 <div class="widget property-agent">
                                     <h3 class="widget-title">
                                         <div class="d-flex">
-                                                Admin Settings
+                                            HR Settings
                                             <small class="flex-grow-1 text-muted text-end px-1">
                                                 <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
                                                     <i class="fas fa-chart-bar"></i> Analytics
@@ -255,7 +255,7 @@
                                 <div class="widget property-agent">
                                     <h3 class="widget-title">
                                         <div class="d-flex">
-                                                Admin Settings
+                                            HR Settings
                                             <small class="flex-grow-1 text-muted text-end px-1">
                                                 <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
                                                     <i class="fas fa-chart-bar"></i> Analytics

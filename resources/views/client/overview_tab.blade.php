@@ -167,6 +167,10 @@
                     <span class="approver-name d-block">{{ $reports_to->employee_name }}</span>
                     <small class="d-block fst-italic text-muted">{{ $reports_to->designation }}</small>
                 </div>
+                @else
+                <div class="col-12 p-2 text-center text-uppercase text-muted">
+                    Immediate Supervisor not set
+                </div>
                 @endif
             </div>
         </div>
