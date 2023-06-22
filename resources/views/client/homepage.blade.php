@@ -151,7 +151,7 @@
                 <div class="row p-0 right-panel">
                     <div class="col-12 col-xl-7">
                         @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
-                            <div class="inner-box featured d-block d-xl-none">
+                            <div class="inner-box featured d-block d-xl-none mb-3">
                                 <div class="widget property-agent">
                                     <h3 class="widget-title">
                                         <div class="d-flex">
@@ -266,7 +266,7 @@
     
                     <div class="col-12 col-xl-5">
                         @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
-                            <div class="inner-box featured d-none d-xl-block">
+                            <div class="inner-box featured d-none d-xl-block mb-3">
                                 <div class="widget property-agent">
                                     <h3 class="widget-title">
                                         <div class="d-flex">
