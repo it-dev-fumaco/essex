@@ -3,28 +3,40 @@
 @php
     $admin_settings = [
         [
-            'title' =>'Attendance',
-            'url' => '/module/attendance/history'
+            'icon' => 'fas fa-calendar',
+            'title' => 'Attendance',
+            'url' => '/module/attendance/history',
+            'bg-color' => 'bg-gradient bg-secondary'
         ],
         [
-            'title' =>'Evaluation',
-            'url' => '/evaluation/objectives'
+            'icon' => 'fas fa-clipboard-list',
+            'title' => 'Evaluation',
+            'url' => '/evaluation/objectives',
+            'bg-color' => 'bg-gradient bg-primary'
         ],
         [
-            'title' =>'Exam',
-            'url' => '/examPanel'
+            'icon' => 'fas fa-pen-square',
+            'title' => 'Exam',
+            'url' => '/examPanel',
+            'bg-color' => 'bg-gradient bg-warning'
         ],
         [
-            'title' =>'Leaves',
-            'url' => '/module/absent_notice_slip/history'
+            'icon' => 'fas fa-user-check',
+            'title' => 'Leaves',
+            'url' => '/module/absent_notice_slip/history',
+            'bg-color' => 'bg-gradient bg-success'
         ],
         [
-            'title' =>'Gatepass',
-            'url' => '/client/gatepass/history'
+            'icon' => 'fas fa-clipboard-check',
+            'title' => 'Gatepass',
+            'url' => '/client/gatepass/history',
+            'bg-color' => 'bg-gradient bg-info'
         ],
         [
-            'title' =>'HR',
-            'url' => '/module/hr/applicants'
+            'icon' => 'fas fa-users',
+            'title' => 'HR',
+            'url' => '/module/hr/applicants',
+            'bg-color' => 'bg-gradient bg-dark'
         ]
     ];
 @endphp
@@ -157,7 +169,10 @@
                                             @foreach ($admin_settings as $settings)
                                                 <div class="w-100 p-1">
                                                     <a href="{{ $settings['url'] }}">
-                                                        <button class="btn btn-primary w-100" style="padding: 5px; font-size: 9pt">{{ $settings['title'] }}</button>
+                                                        <button class="btn {{ $settings['bg-color'] }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;">
+                                                            <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                            <span class="d-block" style="font-size: 9pt;">1{{ $settings['title'] }}</span>
+                                                        </button>
                                                     </a>
                                                 </div>
                                             @endforeach
@@ -269,7 +284,10 @@
                                             @foreach ($admin_settings as $settings)
                                                 <div class="w-100 p-1">
                                                     <a href="{{ $settings['url'] }}">
-                                                        <button class="btn btn-primary w-100" style="padding: 5px; font-size: 9pt">{{ $settings['title'] }}</button>
+                                                        <button class="btn {{ $settings['bg-color'] }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;">
+                                                            <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                            <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
+                                                        </button>
                                                     </a>
                                                 </div>
                                             @endforeach
