@@ -1,5 +1,33 @@
 @extends('portal.app')
 @section('content')
+@php
+    $admin_settings = [
+        [
+            'title' =>'Attendance',
+            'url' => '/module/attendance/history'
+        ],
+        [
+            'title' =>'Evaluation',
+            'url' => '/evaluation/objectives'
+        ],
+        [
+            'title' =>'Exam',
+            'url' => '/examPanel'
+        ],
+        [
+            'title' =>'Leaves',
+            'url' => '/module/absent_notice_slip/history'
+        ],
+        [
+            'title' =>'Gatepass',
+            'url' => '/client/gatepass/history'
+        ],
+        [
+            'title' =>'HR',
+            'url' => '/module/hr/applicants'
+        ]
+    ];
+@endphp
     @include('client.modals.notice_slip_modal')
     @include('client.modals.gatepass_modal')
     {{-- @include('client.modals.attendance_modal') --}}
@@ -110,6 +138,35 @@
             <div class="col-9 col-xl-10">
                 <div class="row p-0 right-panel">
                     <div class="col-12 col-xl-7">
+                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
+                            <div class="inner-box featured d-block d-xl-none">
+                                <div class="widget property-agent">
+                                    <h3 class="widget-title">
+                                        <div class="d-flex">
+                                                Admin Settings
+                                            <small class="flex-grow-1 text-muted text-end px-1">
+                                                <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
+                                                    <i class="fas fa-chart-bar"></i> Analytics
+                                                </a>
+                                            </small>
+                                        </div>
+                                    </h3>
+
+                                    <div class="agent-info">
+                                        <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
+                                            @foreach ($admin_settings as $settings)
+                                                <div class="w-100 p-1">
+                                                    <a href="{{ $settings['url'] }}">
+                                                        <button class="btn btn-primary w-100" style="padding: 5px; font-size: 9pt">{{ $settings['title'] }}</button>
+                                                    </a>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="inner-box featured">
                             <div class="tabs-section">
                                 <ul class="nav nav-pills" id="profile-tabs">
@@ -193,8 +250,36 @@
                     </div>
     
                     <div class="col-12 col-xl-5">
+                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
+                            <div class="inner-box featured d-none d-xl-block">
+                                <div class="widget property-agent">
+                                    <h3 class="widget-title">
+                                        <div class="d-flex">
+                                                Admin Settings
+                                            <small class="flex-grow-1 text-muted text-end px-1">
+                                                <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
+                                                    <i class="fas fa-chart-bar"></i> Analytics
+                                                </a>
+                                            </small>
+                                        </div>
+                                    </h3>
+
+                                    <div class="agent-info">
+                                        <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
+                                            @foreach ($admin_settings as $settings)
+                                                <div class="w-100 p-1">
+                                                    <a href="{{ $settings['url'] }}">
+                                                        <button class="btn btn-primary w-100" style="padding: 5px; font-size: 9pt">{{ $settings['title'] }}</button>
+                                                    </a>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                         <div class="alert alert-danger blink" id="lateWarning" hidden>
-                            <i class="fa fa-info-circle" style="font-size: 15pt; "></i><span> You have reached the maximum late
+                            <i class="fa fa-info-circle" style="font-size: 15pt;"></i><span> You have reached the maximum late
                                 allowed (300 mins.)</span>
                         </div>
                         @if ($kpi_schedules)
@@ -462,6 +547,16 @@
 
     .date-ctrl{
         cursor: pointer;
+    }
+
+    .settings-btn-group.settings-btn-block {
+        display: flex;
+    }
+
+    .settings-btn-group.settings-btn-block > div {
+        flex: 1;
+        font-size: 9pt;
+        text-decoration: none;
     }
 
     @media (max-width: 1199.98px) {

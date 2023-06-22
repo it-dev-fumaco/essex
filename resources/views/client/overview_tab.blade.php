@@ -19,28 +19,6 @@
         </div>       
     </div>
 
-    {{-- <div class="d-block d-xl-none">
-        <div class="row">
-            <div class="col-4 p-1 p-xl-2 border border-danger">
-                <button class="btn btn-secondary btn-sm w-100 h-100" data-bs-toggle="modal" data-bs-target="#absentNoticeModal" style="font-size: 8pt !important;">
-                    <i class="fas fa-calendar-check d-block"></i>&nbsp;Absent Notice
-                </button>
-            </div>
-
-            <div class="col-4 p-1 border border-danger">
-                <button class="btn btn-success btn-sm w-100 h-100" data-bs-toggle="modal" data-bs-target="#gatepassModal" style="font-size: 8pt !important;">
-                    <i class="fas fa-clipboard-list d-block"></i>&nbsp;Gatepass
-                </button>
-            </div>
-
-            <div class="col-4 p-1 border border-danger">
-                <button class="btn btn-info btn-sm w-100 h-100" data-bs-toggle="modal" data-bs-target="#evaluationModal" style="font-size: 8pt !important;">
-                    <i class="fas fa-chart-bar d-block"></i>&nbsp;KPI Data Entry
-                </button>
-            </div>
-        </div>
-    </div> --}}
-
     <div class="card mb-3">
         <div class="card-body p-2">
             <h3 class="widget-title mb-2" style="font-size: 12px !important;">
@@ -168,7 +146,7 @@
                     <span style="font-size: 11px;"><b>{{ $leave_type->leave_type }}</b></span>
                 </div>
                 @empty
-                <div class="col-md-4 text-center text-uppercase text-muted">
+                <div class="col-12 text-center text-uppercase text-muted">
                     Employee Leave Allowance not set
                 </div>
                 @endforelse

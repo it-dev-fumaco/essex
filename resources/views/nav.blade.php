@@ -4,7 +4,7 @@
             <div class="container-fluid">
                 <div class="col-2 col-xl-3">
                     <div class="row" style="display: flex; justify-content: center; align-items: center;">
-                        <div class="col-md-6 col-xl-4 col-xl-offset-1" style="padding: 0;">
+                        <div class="col-md-6 col-xl-4 offset-xl-1" style="padding: 0;">
                             <a href="/">
                                 <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
                             </a>
