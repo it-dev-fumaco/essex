@@ -171,7 +171,7 @@
                                                     <a href="{{ $settings['url'] }}">
                                                         <button class="btn {{ $settings['bg-color'] }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;">
                                                             <i class="{{ $settings['icon'] }} d-block m-1"></i>
-                                                            <span class="d-block" style="font-size: 9pt;">1{{ $settings['title'] }}</span>
+                                                            <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
                                                         </button>
                                                     </a>
                                                 </div>
