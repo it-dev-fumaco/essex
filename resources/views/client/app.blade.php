@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="author" content="EstateX">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>ESSEX v7.0</title>
+<title>ESSEX</title>
 <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css">
 <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
 <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
@@ -21,55 +21,6 @@
 <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ asset('css/datatables/dataTables.bootstrap.min.css') }}">
 </head>
-@php
-    $colors_array = [
-        [
-            'title' => 'primary',
-            'color' => '#0069D9',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'secondary',
-            'color' => '#6C757D',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'success',
-            'color' => '#28A745',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'danger',
-            'color' => '#DC3545',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'warning',
-            'color' => '#E0A800',
-            'font-color' => 'black'
-        ],
-        [
-            'title' => 'info',
-            'color' => '#138496',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'light',
-            'color' => '#E2E6EA',
-            'font-color' => 'black'
-        ],
-        [
-            'title' => 'dark',
-            'color' => '#343A40',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'white',
-            'color' => '#fff',
-            'font-color' => 'black'
-        ]
-    ];
-@endphp
 <style type="text/css">
   *{
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -295,23 +246,8 @@ button.switch-month:hover {
   border-radius: 4px;
   padding: 5px;
 }
-</style>
-@foreach ($colors_array as $color)
-<style>
-    .bg-{{ $color['title'] }}{
-        background-color: {{ $color["color"] }};
-        color: {{ $color["font-color"] }};
-    }
 
-    .border-{{ $color['title'] }}{
-        border: 1px solid {{ $color["color"] }};
-    }
-
-    .text-{{ $color['title'] }}{
-        color: {{ $color["color"] }};
-    }
 </style>
-@endforeach
 
 <body>
   <div class="header">

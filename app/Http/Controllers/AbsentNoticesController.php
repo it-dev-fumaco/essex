@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use DateInterval;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use Exception;
 
 class AbsentNoticesController extends Controller
 {
@@ -163,6 +164,15 @@ class AbsentNoticesController extends Controller
                 $data['approver'] = $user_id;
                 try {
                     Mail::to($email)->send(new SendMail_notice($data));
+
+                    DB::table('email_notifications')->insert([
+                        'type' => 'Absent Notice Slip',
+                        'recipient' => $email,
+                        'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
+                        'template' => 'kiosk.Mail.template.notice_template',
+                        'template_data' => json_encode($data),
+                        'email_sent' => Mail::failures() ? 0 : 1
+                    ]);
                 } catch (\Throwable $th) {}
             }
     
@@ -176,20 +186,57 @@ class AbsentNoticesController extends Controller
     }
 
     public function updateNoticeDetails(Request $request){
-        $notice_slip = AbsentNotice::find($request->notice_id);
-        $notice_slip->leave_type_id = $request->absence_type;
-        $notice_slip->date_from = $request->date_from;
-        $notice_slip->date_to = $request->date_to;
-        $notice_slip->time_from = $request->time_from;
-        $notice_slip->time_to = $request->time_to;
-        $notice_slip->means = $request->means;
-        $notice_slip->reason = $request->reason;
-        $notice_slip->time_reported = $request->time_reported;
-        $notice_slip->info_by = $request->info_by;
-        $notice_slip->last_modified_by = Auth::user()->employee_name;
-        $notice_slip->save();
+        DB::beginTransaction();
+        try {
+            $notice_slip = AbsentNotice::find($request->notice_id);
+            $notice_slip->leave_type_id = $request->absence_type;
+            $notice_slip->date_from = $request->date_from;
+            $notice_slip->date_to = $request->date_to;
+            $notice_slip->time_from = $request->time_from;
+            $notice_slip->time_to = $request->time_to;
+            $notice_slip->means = $request->means;
+            $notice_slip->reason = $request->reason;
+            $notice_slip->time_reported = $request->time_reported;
+            $notice_slip->info_by = $request->info_by;
+            $notice_slip->status = 'FOR APPROVAL';
+            $notice_slip->last_modified_by = Auth::user()->employee_name;
+            $notice_slip->save();
 
-        return response()->json(['message' => 'Absent Notice no. <b>' . $notice_slip->notice_id . '</b> has been updated.']);
+            $datetime1 = new DateTime($notice_slip->date_from);
+            $datetime2 = new DateTime($notice_slip->date_to);
+            $interval = $datetime1->diff($datetime2);
+            $days = $interval->format('%a');
+            $days = $days + 1;
+
+            // get total & remaining number of leaves
+            $year = date("Y");
+            $leave_type = DB::table('employee_leaves')
+                ->where('leave_type_id', '=', $notice_slip->leave_type_id)
+                ->where('employee_id', '=', Auth::user()->user_id)
+                ->where('employee_leaves.year','=', $year)
+                ->select('employee_leaves.*')
+                ->first();
+                
+            // subtract number of days absent from total
+            if (isset($leave_type->remaining)) {
+                $remaining = $leave_type->remaining - $days;
+
+                // update remaining number of leaves
+                DB::table('employee_leaves')->where('leave_id', $leave_type->leave_id)->where('employee_id', Auth::user()->user_id)->where('employee_leaves.year', $year)
+                    ->update([
+                        'remaining' => $remaining
+                    ]);
+            }
+            
+
+            DB::commit();
+            return response()->json(['message' => 'Absent Notice no. <b>' . $notice_slip->notice_id . '</b> has been updated.']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return response()->json(['message' => 'An error occured. Please try again.']);
+        }
+        
     }
 
     public function cancelNotice(Request $request){
@@ -464,23 +511,21 @@ class AbsentNoticesController extends Controller
     public function fetchNotices(Request $request){
         if ($request->ajax()) {
             $notice_slips = DB::table('notice_slip')
-                        ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
-                        ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-                        ->where('notice_slip.user_id', '=', Auth::user()->user_id)
-                        ->orderBy('notice_slip.notice_id', 'desc')
-                        ->select('users.*', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
-                        ->paginate(8);
+                ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
+                ->join('departments', 'users.department_id', '=', 'departments.department_id')
+                ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+                ->where('notice_slip.user_id', '=', Auth::user()->user_id)
+                ->orderBy('notice_slip.notice_id', 'desc')
+                ->select('users.*', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
+                ->paginate(15);
 
-            $absence_types = DB::table('leave_types')
-                        ->where('applied_to_all', '=', 1)
-                        ->get();
+            $absence_types = DB::table('leave_types')->where('applied_to_all', '=', 1)->get();
 
             $leave_types = DB::table('employee_leaves')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
-                        ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'employee_leaves.*')
-                        ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
-                        ->get();
+                ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
+                ->select('leave_types.leave_type', 'leave_types.leave_type_id', 'employee_leaves.*')
+                ->where('employee_leaves.employee_id', '=', Auth::user()->user_id)
+                ->get();
 
             return view('client.tables.notices_table', compact('notice_slips', 'absence_types', 'leave_types'))->render();
         }

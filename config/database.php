@@ -44,7 +44,7 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_ESSEX', 'essex'),
+            'database' => env('DB_DATABASE', 'essex'),
             'username' => env('DB_USERNAME', 'erp'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),

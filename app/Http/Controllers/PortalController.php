@@ -9,58 +9,103 @@ use Auth;
 use DB;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendMail_notice;
+use App\Mail\SendMail_General;
+use App\Traits\EmailsTrait;
 
 class PortalController extends Controller
 {
+    use EmailsTrait;
 
     public function index(){
         $albums = DB::table('photo_albums')->orderBy('created_at', 'desc')->get();
-        $milestones = DB::table('posts')
-            ->where('category', 'historical_milestones')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $milestones = DB::table('posts')->where('category', 'historical_milestones')->orderBy('created_at')->get();
 
         $it_policy = DB::connection('mysql_kb')->table('articles')->where('title', 'IT Guidelines and Policies')->pluck('slug')->first();
 
-        $approvals = [];
+        $categories = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->whereNull('articles.deleted_at')
+            ->when(!Auth::check(), function ($q){
+                $q->where('articles.is_private', 0);
+            })
+            ->select('articles.allowed_departments', 'categories.id', 'categories.name', 'articles.is_private')
+            ->get();
+
+        $celebrants = DB::table('users')
+            ->where('status', 'Active')->where('user_type', 'Employee')
+            ->where(function($q){
+                return $q->whereMonth('date_joined', Carbon::now()->format('m'))->whereDay('date_joined', Carbon::now()->format('d'))
+                    ->orWhereMonth('birth_date', Carbon::now()->format('m'))->whereDay('birth_date', Carbon::now()->format('d'));
+            })
+            ->get();
+
+        $approvals = $approvers = [];
         if(Auth::check()){
             $approvals = DB::table('notice_slip')
                 ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
-                ->where('notice_slip.user_id', Auth::user()->user_id)
-                ->whereDate('date_from', '>=', Carbon::now())
-                ->whereDate('date_to', '>=', Carbon::now())
-                ->where('notice_slip.status', 'FOR APPROVAL')
+                ->where('notice_slip.user_id', Auth::user()->user_id)->whereDate('date_from', '>=', Carbon::now())->whereDate('date_to', '>=', Carbon::now())->where('notice_slip.status', 'FOR APPROVAL')
                 ->select('leave_types.leave_type', 'notice_slip.*')
                 ->get();
+
+            $approvers = DB::table('department_approvers')
+                ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+                ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+                ->where('department_approvers.department_id', '=', Auth::user()->department_id)
+                ->select('users.employee_name', 'users.image', 'designation.designation', 'department_approvers.employee_id')
+                ->get();
+
+            $categories = collect($categories)->filter(function ($query){
+                $allowed_departments = $query->allowed_departments ? explode(',', $query->allowed_departments) : [];
+                $query->allowed_departments = $allowed_departments;
+                return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+            });
         }
 
-        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals'));
+        $categories = $categories->pluck('name', 'id')->unique();
+
+        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers', 'celebrants'));
     }
 
     public function load_manuals(Request $request){
         // return $request->all();
-        $articles_by_tag = $selected_tags = [];
-        if($request->tags){
-            $tags_query = DB::connection('mysql_kb')->table('article_tag as at')
-                ->join('tags as t', 't.id', 'at.tag_id')
-                ->whereIn('t.id', array_filter(explode(',', $request->tags)))
-                ->select('t.id', 't.name', 'at.article_id')->get();
+        // $articles_by_tag = $selected_tags = [];
+        // if($request->tags){
+        //     $tags_query = DB::connection('mysql_kb')->table('article_tag as at')
+        //         ->join('tags as t', 't.id', 'at.tag_id')
+        //         ->whereIn('t.id', array_filter(explode(',', $request->tags)))
+        //         ->select('t.id', 't.name', 'at.article_id')->get();
 
-            $selected_tags = collect($tags_query)->pluck('name', 'id');
-            $articles_by_tag = collect($tags_query)->pluck('article_id');
-        }
+        //     $selected_tags = collect($tags_query)->pluck('name', 'id');
+        //     $articles_by_tag = collect($tags_query)->pluck('article_id');
+        // }
+
+        $request_category = $request->category ? $request->category : [];
 
         $general_concerns = DB::connection('mysql_kb')->table('articles')
             ->join('categories', 'articles.category_id', 'categories.id')
             ->when(!Auth::check(), function ($q){
                 $q->where('articles.is_private', 0);
             })
-            ->when($request->tags, function ($q) use ($articles_by_tag){
-                return $q->whereIn('articles.id', $articles_by_tag);
+            // ->when($request->tags, function ($q) use ($articles_by_tag){
+            //     return $q->whereIn('articles.id', $articles_by_tag);
+            // })
+            ->when($request_category, function ($q) use ($request_category){
+                return $q->whereIn('articles.category_id', $request_category);
             })
             ->whereNull('articles.deleted_at')
             ->select('articles.*', 'categories.name as category')
-            ->orderBy('articles.views_count', 'desc')//->limit(6)
+            ->orderBy('articles.views_count', 'desc')
+            ->get();
+
+        $categories = DB::connection('mysql_kb')->table('articles')
+            ->join('categories', 'articles.category_id', 'categories.id')
+            ->whereNull('articles.deleted_at')
+            ->when(!Auth::check(), function ($q){
+                $q->where('articles.is_private', 0);
+            })
+            ->select('articles.allowed_departments', 'categories.id', 'categories.name', 'articles.is_private')
             ->get();
 
         $department = null;
@@ -71,8 +116,14 @@ class PortalController extends Controller
                 return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
             });
 
-            $department = DB::table('departments')->where('department_id', Auth::user()->department_id)->pluck('department')->first();
+            $categories = collect($categories)->filter(function ($query){
+                $allowed_departments = $query->allowed_departments ? explode(',', $query->allowed_departments) : [];
+                $query->allowed_departments = $allowed_departments;
+                return in_array(Auth::user()->department_id, $allowed_departments) || !$query->is_private;
+            });
         }
+
+        $categories = $categories->pluck('name', 'id')->unique();
 
         $tags = DB::connection('mysql_kb')->table('tags as t')
             ->join('article_tag as a', 'a.tag_id', 't.id')
@@ -80,12 +131,7 @@ class PortalController extends Controller
             ->select('a.article_id', 't.name', 't.slug', 't.id')
             ->orderBy('t.name')->get()->groupBy('article_id');
 
-        $tags_array = [
-            'selected_tags' => $selected_tags,
-            'tags' => $tags
-        ];
-
-        return view('portal.tbl_homepage_manuals', compact('general_concerns', 'department', 'tags_array'));
+        return view('portal.tbl_homepage_manuals', compact('general_concerns', 'categories', 'request_category'));
     }
 
     public function phoneEmailDirectory(Request $request){
@@ -311,7 +357,7 @@ class PortalController extends Controller
     }
 
     public function fetchAlbums(Request $request){
-        // if ($request->ajax()) {
+        if ($request->ajax()) {
             $albums = DB::table('photo_albums');
             
             if ($request->activity) {
@@ -320,7 +366,7 @@ class PortalController extends Controller
             $albums = $albums->orderBy('created_at', 'desc')->paginate(8);
 
             return view('portal.lists.album_list', compact('albums'))->render();
-        // }
+        }
     }
 
     public function addAlbum(Request $request){
@@ -570,5 +616,58 @@ class PortalController extends Controller
     // E N D P O L I C Y
     public function showitGuidelines (){
         return view ('portal.it_guidelines');
+    }
+
+    public function email_logs(Request $request){
+        if($request->ajax()){
+            $logs = DB::table('email_notifications')
+                ->when($request->search, function ($q) use ($request){
+                    return $q->where('type', 'like', '%'.$request->search.'%')
+                        ->orWhere('subject', 'like', '%'.$request->search.'%')
+                        ->orWhere('recipient', 'like', '%'.$request->search.'%');
+                })
+                ->orderBy('created_at', 'desc')->paginate(10);
+
+            $erp_email = DB::connection('mysql_erp')->table('tabUser')->whereIn('email', collect($logs->items())->pluck('recipient'))->pluck('email')->toArray();
+            return view('portal.tbl_email_logs', compact('logs', 'erp_email'));
+        }
+        return view('portal.email_logs');
+    }
+
+    public function resend_email($id){
+        try {
+            $log = DB::table('email_notifications')->where('id', $id)->first();
+            if(!$log){
+                return response()->json(['success' => 0, 'message' => 'Email log not found.']);
+            }
+
+            $data = json_decode($log->template_data, true);
+
+            $success = 0;
+            if($log->recipient){
+                if($log->type == 'Absent Notice Slip'){
+                    Mail::to($log->recipient)->send(new SendMail_notice($data));
+                    
+                    $success = Mail::failures() ? 0 : 1;
+                }else{
+                    $mail = $this->send_mail($log->subject, $log->template, $log->recipient, $data);
+                    $success = $mail['success'];
+                }
+            }
+
+            DB::table('email_notifications')->where('id', $id)->update([
+                'email_sent' => $success,
+                'last_modified_at' => Carbon::now()->toDateTimeString()
+            ]);
+
+            if($success){
+                return response()->json(['success' => 1, 'message' => 'Email Sent!']);
+            }else{
+                return response()->json(['success' => 0, 'message' => 'Failed to send email.']);
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            return response()->json(['success' => 0, 'message' => 'An error occured. Please try again.']);
+        }
     }
 }

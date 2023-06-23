@@ -1,49 +1,47 @@
 @extends('portal.app')
 @section('content')
-  @include('portal.modals.add_album_modal')
-  @include('portal.modals.edit_album_modal')
-  @include('portal.modals.delete_album_modal')
-  <div class="container">
-    <div class="row">
-    	<div class="similar-properties">
-    		<div class="heading" style="margin-top: 2%;">
-    			<div class="section-title text-center">Our Gallery</div>
-    		</div>
+@include('portal.modals.add_album_modal')
+@include('portal.modals.edit_album_modal')
+@include('portal.modals.delete_album_modal')
+<div class="col-10 mx-auto">
+	<div class="row">
+		<div class="similar-properties">
+			<div class="heading" style="margin-top: 2%;">
+				<div class="section-title text-center">Our Gallery</div>
+			</div>
 
-    		<div class="col-md-12 col-md-6 col-md-offset-3">
-    			<select class="form-control" id="selectActivity">
-    				<option value="">All Activities</option>
-    				@foreach($activity_types as $type)
-    				<option value="{{ $type->id }}">{{ $type->activity_name }}</option>
-    				@endforeach
-    			</select>
-    		</div>
-         @if(Auth::user())
-    		@if(Auth::user()->user_group == 'Editor')
-        <div class="col-md-12">
-          <div class="pull-right">
-          	<div class="form-group">
-          		<button type="button" class="btn btn-primary" id="addAlbum">
-          			<i class="fa fa-plus"></i><span>Album</span>
-          		</button>
-            </div>
-          </div>
-        </div>
-        @endif
-        @endif
-	<div class="col-md-12" style="margin-top: 2%;">
-
-        <div id="album-list"></div>
-
+			<div class="col-md-12 col-md-6 col-md-offset-3 border border-danger">
+				<select class="form-control" id="selectActivity">
+					<option value="">All Activities</option>
+					@foreach($activity_types as $type)
+					<option value="{{ $type->id }}">{{ $type->activity_name }}</option>
+					@endforeach
+				</select>
+			</div>
+			@if(Auth::user())
+			@if(Auth::user()->user_group == 'Editor')
+			<div class="col-md-12">
+				<div class="pull-right">
+					<div class="form-group">
+						<button type="button" class="btn btn-primary" id="addAlbum">
+							<i class="fa fa-plus"></i><span>Album</span>
+						</button>
+					</div>
+				</div>
+			</div>
+			@endif
+			@endif
+			<div class="col-md-12" style="margin-top: 2%;">
+				<div id="album-list"></div>
+			</div>
+		</div>
+	</div>
 </div>
-      </div>
-    </div>
-  </div>
 @endsection
 
 @section('script')
 <script>
-$(document).ready(function(){
+	$(document).ready(function(){
     $("#addAlbum").click(function(){
         $('#addAlbumModal').modal('show');
     });

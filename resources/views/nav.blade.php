@@ -1,77 +1,75 @@
-<nav class="navbar navbar-default">
-   <div class="col-md-12">
-      <div class="row">
-         <div class="row" style="padding: 0; margin: 0">
-            <div class="col-md-3" style="padding-top: 10px;">
-               <div class="row" style="display: flex; justify-content: center; align-items: center;">
-                  <div class="col-md-4 col-md-offset-1" style="padding: 0;">
-                     <a href="/">
-                        <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
-                     </a>
-                  </div>
-                  <div class="col-md-7">
-                     <img src="{{ asset('storage/img/company_logo.png') }}" width="100"><br><span class="header-text" style="">Employee Portal</span>
-                  </div>
-               </div>
+<div class="row">
+    <div class="col-12 d-block justify-content-start justify-content-xl-center align-items-center">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <div class="col-2 col-xl-3">
+                    <div class="row" style="display: flex; justify-content: center; align-items: center;">
+                        <div class="col-md-6 col-xl-4 offset-xl-1" style="padding: 0;">
+                            <a href="/">
+                                <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
+                            </a>
+                        </div>
+                        <div class="col-6 col-xl-7">
+                            <img src="{{ asset('storage/img/company_logo.png') }}" width="100">
+                            <br><span class="header-text">Employee Portal</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 text-dark">
+                        <li class="nav-item">
+                            <a class="nav-link" aria-current="page" href="/" style="white-space: nowrap"><i class="icon-home"></i> &nbsp;HOME</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
+                                <i class="icon-info"></i> &nbsp;UPDATES
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="/gallery" style="white-space: nowrap"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/manuals" style="white-space: nowrap"><i class="icon-notebook"></i> &nbsp;MANUALS</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
+                                <i class="icon-book-open"></i> &nbsp;SERVICES
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="/services/internet">Internet</a></li>
+                                <li><a class="dropdown-item" href="/services/email">Email</a></li>
+                                <li><a class="dropdown-item" href="/services/system">System</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
+                                <i class="icon-briefcase"></i> &nbsp;POLICY
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="/policies">Operational Policies</a></li>
+                                <li><a class="dropdown-item" href="/itguidelines">IT Guidelines and Policy</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/services/directory" style="white-space: nowrap"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
+                        </li>
+                        @if(Auth::check())
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('/home') }}" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
             </div>
-            <div class="col-md-9">
-               <div class="navbar-header">
-                  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                     <i class="fa fa-bars"></i>
-                  </button>
-               </div>
-               <div class="navbar-collapse collapse">
-                  <ul class="nav navbar-nav">
-                     <li><a href="/"><i class="icon-home"></i> &nbsp;Home</a></li>
-                     <li><a href="/updates"><i class="icon-info"></i> &nbsp;Updates</a>
-                     <ul class="dropdown">
-                           <li><a href="/gallery"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
-                     </ul>
-                     </li>
-                     <li><a href="/manuals"><i class="icon-notebook"></i> &nbsp;Manuals</a></li>
-                     <li><a href="#"><i class="icon-book-open"></i> &nbsp;Services</a>
-                        <ul class="dropdown">
-                           <li><a href="/services/internet">Internet</a></li>
-                           <li><a href="/services/email">Email</a></li>
-                           <li><a href="/services/system">System</a></li>
-                        </ul>
-                     </li>
-                     <li><a href="#"><i class="icon-briefcase"></i> &nbsp;Memorandum / Policy</a>
-                        <ul class="dropdown">
-                           <li><a href="/policies">Operational Policies</a></li>
-                           <li><a href="/itguidelines">IT Guidelines and Policy</a></li>
-                        </ul>
-                     </li>
-                     <li>
-                        <a href="/services/directory"><i class="icon-briefcase"></i>&nbsp;Employee Directory</a>
-                     </li>
-                  </ul>
-      
-                  @if(Auth::user())
-                     <div class="pull-right dashboard-btn"><a href="{{ url('/home') }}" class="btn btn-success"><i class="fa fa-users"></i> &nbsp;Essex Dashboard</a></div>
-                  @endif
-      
-               </div>
-            </div>
-         </div>
-         
-      </div>
-   </div>
-   <ul class="wpb-mobile-menu">
-      <li><a href="/"><i class="icon-home"></i> &nbsp;Home</a></li>
-      <li><a href="/updates"><i class="icon-info"></i> &nbsp;Updates</a></li>
-      <li><a href="/gallery"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
-      <li><a href="/manuals"><i class="icon-notebook"></i> &nbsp;Manuals</a></li>
-      <li><a href="#"><i class="icon-book-open"></i> &nbsp;Services</a>
-         <ul class="dropdown">
-            <li><a href="/services/internet">Internet Services</a></li>
-            <li><a href="/services/directory">Phone & Email Directory</a></li>
-         </ul>
-      </li>
-      <li><a href="#"><i class="icon-briefcase"></i> &nbsp;Memorandum / Policy</a>
-         <ul class="dropdown">
-            <li><a href="/policies">Operational Policies</a></li>
-         </ul>
-      </li>
-   </ul>
-</nav>
+        </nav>
+    </div>
+</div>
+<style>
+    .nav-item{
+        margin: 0 6px 0 6px
+    }
+</style>

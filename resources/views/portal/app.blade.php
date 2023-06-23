@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="EstateX">
     <title>ESSEX</title>
-    <link rel="stylesheet" href="{{ asset('css/css/bootstrap.min.css') }}" type="text/css">
-    <link rel="stylesheet" href="{{ asset('css/fonts/font-awesome.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('bootstrap-5.0.2-dist/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/fonts/all.min.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/fonts/line-icons/line-icons.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/main.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/extras/animate.css') }}" type="text/css">
@@ -17,58 +17,8 @@
     <link rel="stylesheet" href="{{ asset('css/extras/settings.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/extras/nivo-lightbox.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/responsive.css') }}" type="text/css">
-    <link rel="stylesheet" href="{{ asset('css/css/slicknav.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
 </head>
-@php
-    $colors_array = [
-        [
-            'title' => 'primary',
-            'color' => '#0069D9',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'secondary',
-            'color' => '#6C757D',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'success',
-            'color' => '#28A745',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'danger',
-            'color' => '#DC3545',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'warning',
-            'color' => '#E0A800',
-            'font-color' => 'black'
-        ],
-        [
-            'title' => 'info',
-            'color' => '#138496',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'light',
-            'color' => '#E2E6EA',
-            'font-color' => 'black'
-        ],
-        [
-            'title' => 'dark',
-            'color' => '#343A40',
-            'font-color' => 'white'
-        ],
-        [
-            'title' => 'white',
-            'color' => '#fff',
-            'font-color' => 'black'
-        ]
-    ];
-@endphp
 <style type="text/css">
     @font-face{
         font-family: 'Poppins-Regular';
@@ -84,9 +34,14 @@
         font-family: 'Poppins-Light';
         src: url('{{ asset("fonts/Poppins/Poppins-Light.ttf") }}') format('truetype');
     }
-    html, body, h3{
+    html, body{
         font-family: 'Poppins-Regular' !important;
     }
+
+    h1, h2, h3, h4, h5, h6, p, span, b, a, small, cite{
+        font-family: inherit !important;
+    }
+
     .login-content{
         background-color: transparent;
         -webkit-box-shadow: 0 5px 15px rgba(0,0,0,0);
@@ -97,36 +52,10 @@
         margin-top: 100px;
     }
 
-    .card{
-        padding: 15px;
-        border-radius: 5px;
-    }
-
-    .card-kb{
-        min-height: 175px;
-        border: 1px solid rgba(175, 175, 175, .4);
-        border-top: 2px solid #4CAF50;
-    }
-
     .card-greeting{
         background-color: #11703C;
         color: #fff;
-    }
-
-    .tag{
-        font-size: 8pt;
-        cursor: pointer;
-        display:inline-block;
-        border: 1px solid #6C757D;
-        border-radius: 5px;
-        color: #6C757D;
-        padding: 0 5px 0 5px !important;
-    }
-
-    .badge{
-        padding: 4px;
-        font-size: 9pt;
-        font-weight: 700;
+        padding: 15px;
         border-radius: 5px;
     }
 
@@ -137,18 +66,7 @@
 
     .dashboard-btn{
         margin-top: 16px;
-    }
-
-    .d-none{
-        display: none;
-    }
-
-    .d-block{
-        display: block;
-    }
-
-    .d-inline{
-        display: inline;
+        background-color: #5CB85C !important;
     }
 
     #autocomplete-container{
@@ -164,6 +82,7 @@
         width: 57px;
         height: 57px;
         border-radius: 50%;
+        border: 1px solid rgba(0,0,0,.3);
         background-repeat: no-repeat;
         background-position: center center;
         background-size: cover;
@@ -183,71 +102,94 @@
         font-size: 17px;
     }
 
-    .thumbnail{
+    .thumbnail, .nav-link{
         transition: .4s;
-        margin-top: 10px;
-        border-radius: 0;
-        box-shadow: 1px 1px 4px 2px rgba(0,0,0,.3);
-    }
-
-    .thumbnail:hover{
         cursor: pointer;
     }
 
-    .policy-thumbnail{
-        background: url("{{ asset('storage/thumbnail/it_guidelines.png') }}") no-repeat;
-        opacity: .8;
-        height: 200px;
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .video-play-icon{
+        font-size: 80pt;
+        color: rgba(0, 0, 0, .3);
     }
 
-    .proxy-thumbnail{
-        background: url("{{ asset('storage/thumbnail/internet_services.png') }}") no-repeat;
-        opacity: .8;
-        height: 200px;
-        background-size: cover;
-        background-color: black !important;
-        background-repeat: no-repeat;
-        background-position: center center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .absolute-center{
+        position: absolute;
+        left:50%;
+        top:50%;
+        transform: translate(-50%, -50%)
+    }
+
+    #login-tabs a:hover{
+        background-color: #f2f4f4;
+        color:  #566573;
+    }
+
+    #vision-carousel{
+        top: 38%;
+        transform: translateY(-50%);
+    }
+
+    .header-text{
+        font-size: 12pt;
+    }
+
+    .nav li a{
+        padding: 10px !important;
+        margin: 0 !important;
+    }
+
+    .dir-caption{
+        font-size: 11px;
+    }
+
+    .ellipsis {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+    }
+
+    .one-line{
+        -webkit-line-clamp: 1; /* number of lines to show */
+                line-clamp: 1; 
+    }
+
+    .two-line{
+        -webkit-line-clamp: 2; /* number of lines to show */
+                line-clamp: 2; 
     }
 
     @media (max-width: 1199.98px) {
-        .header-text{
-            font-size: 12pt;
-        }
-
-        .nav li{
-            padding: 0 !important;
+        .nav li a{
+            padding: 5px !important;
             margin: 0 !important;
-            border: 1px solid red;
         }
+
+        #vision-carousel{
+            top: 35%;
+            transform: translateY(-50%);
+        }
+
+        .header-text{
+            font-size: 8pt;
+            white-space: nowrap;
+        }
+
+        .dir-caption{
+            font-size: 9px;
+        }
+
+        .responsive-font, .nav-item, .footer-nav li a{
+            font-size: 9pt !important;
+        }
+
+        .profile-image{
+            width: 45px;
+            height: 45px;
+        }
+
     }
 </style>
 
-@foreach ($colors_array as $color)
-<style>
-    .bg-{{ $color['title'] }}{
-        background-color: {{ $color["color"] }};
-        color: {{ $color["font-color"] }};
-    }
-
-    .border-{{ $color['title'] }}{
-        border: 1px solid {{ $color["color"] }};
-    }
-
-    .text-{{ $color['title'] }}{
-        color: {{ $color["color"] }};
-    }
-</style>
-@endforeach
 @include('portal.modals.login_modal')
 
 <div class="header">
@@ -258,7 +200,7 @@
                     <div class="col-md-7 col-sm-6">
                         <ul class="contact-details">
                             <li>
-                                <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
+                                <a class="text-decoration-none" href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
                             </li>
                         </ul>
                     </div>
@@ -270,7 +212,7 @@
                                 <i class="icon-logout"></i><span>Logout</span>
                             </a>
                             @else
-                            <a href="#"  data-toggle="modal" data-target="#loginModal">
+                            <a href="#"  data-bs-toggle="modal" data-bs-target="#loginModal">
                                 <i class="icon-login"></i> <span>Login</span>
                             </a>
                             @endif
@@ -286,7 +228,7 @@
 
 @include('portal.includes.footer')
 
-<a href="#" class="back-to-top">
+<a href="#" class="back-to-top text-decoration-none">
     <i class="icon-arrow-up"></i>
 </a>
 
@@ -298,10 +240,10 @@
         <div class="sk-cube3 sk-cube"></div>
     </div>
 </div>
-
 <script src="{{ asset('css/js/ajax.min.js') }}"></script> 
 <script type="text/javascript" src="{{ asset('css/js/jquery-min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script>
+{{-- <script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script> --}}
+<script type="text/javascript" src="{{ asset('bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.parallax.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/owl.carousel.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/wow.js') }}"></script>
@@ -317,6 +259,8 @@
 <script type="text/javascript" src="{{ asset('css/js/jquery.slicknav.js') }}"></script>
 <script src="{{ asset('css/js/bootstrap-select.min.js') }}"></script>
 <script type = "text/javascript" src = "{{ asset('css/js/jquery-ui.min.js') }}"></script>
+<script src="{{ asset('/js/bootstrap-notify.js') }}"></script>
+<script type="text/javascript" src="{{ asset('css/js/jquery.bootstrap-growl.js') }}"></script>
 
 @yield('script')
 
@@ -352,7 +296,10 @@ $(document).ready(function(){
                 if (data) {
                     location.reload(false);
                 }else{
-                    $("#message").html("<div class='alert alert-danger alert-dismissible'><button type='button' class='close' data-dismiss='alert'>&times;</button><center><strong>Invalid login!</strong> Access ID or password is incorrect.</center></div>");
+                    $("#message").html('<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        '<center><strong>Invalid login!</strong> Access ID or password is incorrect.</center>' +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>');
                     $("#message").effect( "shake", {times:4}, 1000 );
                 }
             }
@@ -369,11 +316,23 @@ $(document).ready(function(){
                 if (data) {
                     location.reload(false);
                 }else{
-                    $("#message").html("<div class='alert alert-danger alert-dismissible'><button type='button' class='close' data-dismiss='alert'>&times;</button><center><strong>Invalid login!</strong> Access ID or password is incorrect.</center></div>");
+                    $("#message").html('<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        '<center><strong>Invalid login!</strong> Access ID or password is incorrect.</center>' +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>');
                     $("#message").effect( "shake", {times:4}, 1000 );
                 }
             }
         });
+    });
+
+    $(document).on('click', '#login-tabs .nav-link', function (e){
+        e.preventDefault();
+        $('.nav-link').removeClass('active');
+        $('.tab-pane').removeClass('active');
+
+        $($(this).data('target')).addClass('active');
+        $(this).addClass('active');
     });
 });
 </script>

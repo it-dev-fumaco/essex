@@ -1,4 +1,4 @@
-
+{{-- 
 <div class="row" style="margin-top: -60px; margin-bottom: -25px;">
   <div class="col-md-12">
     <div id="birthday-notif-div"></div>
@@ -34,7 +34,7 @@
         <div class="hover-image" data-toggle="modal" data-target="#evaluationModal" id="evaluation-modal">
         <h4>Evaluation</h4>
       <p><img src="{{ asset('storage/img/evaluation.png') }}" width="120" height="120"/></p></div>
-        {{-- @if(in_array($designation, ['Operations Manager', 'HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President'])) --}}
+        @if(in_array($designation, ['Operations Manager', 'HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
         @if($depart == 'head' || Auth::user()->user_id == 8888)
       <a href="/evaluation/objectives">
       <button>Manage</button></a>
@@ -76,7 +76,7 @@
   <button>Manage</button></a>@endif
       </div>
   </div>
-</div>
+</div> --}}
 
 <style type="text/css">
    .btn-analytics{

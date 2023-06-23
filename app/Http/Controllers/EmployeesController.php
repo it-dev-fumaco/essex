@@ -20,30 +20,10 @@ use DateInterval;
 use DatePeriod;
 use DateTime;
 use Illuminate\Pagination\LengthAwarePaginator;
-
+use App\Traits\EmailsTrait;
 class EmployeesController extends Controller
 {
-    private function send_mail($subject, $template, $recipient, $data_arr){
-        try {
-            $data['mail_config'] = [
-                'subject' => $subject,
-                'template' => $template
-            ];
-    
-            $data['data'] = $data_arr;
-    
-            Mail::to($recipient)->send(new SendMail_General($data));
-            if(Mail::failures()){
-                return ['success' => 0, 'message' => 'An error occured. Please try again.'];
-            }
-
-            return ['success' => 1, 'message' => 'email sent!'];
-        } catch (\Exception $e) {
-            // return $e->getMessage();
-            return ['success' => 0, 'message' => $e->getMessage()];
-        }
-    }
-
+    use EmailsTrait;
     public function index(){
         $employees = DB::table("users")
             ->join("departments", "users.department_id", "=", "departments.department_id")
@@ -107,12 +87,17 @@ class EmployeesController extends Controller
                 'job_title' => $designation->designation,
                 'file_server' => $file_server
             ];
+
+            $log = [
+                'type' => 'Welcome Email',
+                'recipient' => $employee->email,
+                'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
+                'template' => 'admin.email_template.welcome',
+                'template_data' => json_encode($data)
+            ];
     
             if($request->email){
-                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
-                if(!$mail['success']){
-                    return response()->json(['success' => 0, 'message' => $mail['message']]);
-                }
+                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
             }
             
             DB::commit();
@@ -126,70 +111,106 @@ class EmployeesController extends Controller
     }
 
     public function update(Request $request){
-        $image_path = $request->user_image;
-        if($request->hasFile('empImage')){
-            $file = $request->file('empImage');
+        DB::beginTransaction();
+        try {
+            $image_path = $request->user_image;
+            if($request->hasFile('empImage')){
+                $file = $request->file('empImage');
 
-            //get filename with extension
-            $filenamewithextension = $file->getClientOriginalName();
-            //get filename without extension
-            $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-            //get file extension
-            $extension = $file->getClientOriginalExtension();
-            //filename to store
-            $filenametostore = $request->user_id.'.'.$extension;
-            // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            //Resize image here
-            $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-            $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save($thumbnailpath);
+                //get filename with extension
+                $filenamewithextension = $file->getClientOriginalName();
+                //get filename without extension
+                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+                //get file extension
+                $extension = $file->getClientOriginalExtension();
+                //filename to store
+                $filenametostore = $request->user_id.'.'.$extension;
+                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                //Resize image here
+                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
+                $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $img->save($thumbnailpath);
 
-            $image_path = '/storage/employees/'.$filenametostore;
+                $image_path = '/storage/employees/'.$filenametostore;
+            }
+
+            $employee = User::find($request->id);
+            $employee->user_id = $request->user_id;
+            $employee->department_id = $request->department;
+            $employee->shift_group_id = $request->shift;
+            $employee->employee_name = $request->employee_name;
+            $employee->nick_name = $request->nickname;
+            $employee->designation_id = $request->designation;
+            $employee->branch = $request->branch;
+            $employee->telephone = $request->telephone;
+            $employee->email = $request->email;
+            $employee->employment_status = $request->employment_status;
+            $employee->address = $request->address;
+            $employee->contact_no = $request->contact_no;
+            $employee->sss_no = $request->sss_no;
+            $employee->tin_no = $request->tin_no;
+            $employee->gender =$request->gender;
+            $employee->user_group = $request->user_group;
+            $employee->birth_date = $request->birthdate;
+            $employee->civil_status = $request->civil_status;
+            $employee->status = $request->status;
+            $employee->date_joined = $request->date_joined;
+            $employee->contact_person = $request->contact_person;
+            $employee->contact_person_no = $request->contact_person_no;
+            $employee->pagibig_no = $request->pagibig_no;
+            $employee->philhealth_no = $request->philhealth_no;
+            $employee->employee_id = $request->employee_id;
+            $employee->image = $image_path;
+            $employee->id_security_key = $request->id_key;
+            $employee->designation_name = $request->designation_name;
+            $employee->last_modified_by = Auth::user()->employee_name;
+
+            if ($request->status == 'Resigned') {
+                $employee->resignation_date = $request->resignation_date;
+
+                return$department = Department::find($employee->department_id);
+                $designation = Designation::find($employee->designation_id);
+                $reporting_to = User::find($employee->reporting_to);
+
+                $data = [
+                    'employee_id' => $employee->user_id,
+                    'biometric_id' => null,
+                    'name' => $employee->employee_name,
+                    'department' => $department,
+                    'designation' => $designation,
+                    'reporting_to' => null,
+                    'location' => null,
+                    'resignation_date' => $employee->resignation_date
+                ];
+
+                $log = [
+                    'type' => 'Resigned Employee Notice',
+                    'recipient' => env('MAIL_RECIPIENT', 'it@fumaco.local'),
+                    'subject' => '[Action Required] Resigned Employee',
+                    'template' => 'admin.email_template.resigned_employee',
+                    'template_data' => json_encode($data)
+                ];
+
+                try {
+                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.resigned_employee', $employee->email, $data, $log);
+                } catch (\Throwable $th) {}
+            }else{
+                $employee->resignation_date = null;
+            }
+
+            $employee->save();
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully updated!']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollBack();
+            return redirect()->back()->with(['message' => 'An error occured. Please try again later.']);
         }
-
-        $employee = User::find($request->id);
-        $employee->user_id = $request->user_id;
-        $employee->department_id = $request->department;
-        $employee->shift_group_id = $request->shift;
-        $employee->employee_name = $request->employee_name;
-        $employee->nick_name = $request->nickname;
-        $employee->designation_id = $request->designation;
-        $employee->branch = $request->branch;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
-        $employee->employment_status = $request->employment_status;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
-        $employee->gender =$request->gender;
-        $employee->user_group = $request->user_group;
-        $employee->birth_date = $request->birthdate;
-        $employee->civil_status = $request->civil_status;
-        $employee->status = $request->status;
-        $employee->date_joined = $request->date_joined;
-        $employee->contact_person = $request->contact_person;
-        $employee->contact_person_no = $request->contact_person_no;
-        $employee->pagibig_no = $request->pagibig_no;
-        $employee->philhealth_no = $request->philhealth_no;
-        $employee->employee_id = $request->employee_id;
-        $employee->image = $image_path;
-        $employee->id_security_key = $request->id_key;
-        $employee->designation_name = $request->designation_name;
-        $employee->last_modified_by = Auth::user()->employee_name;
-
-        if ($request->status == 'Resigned') {
-            $employee->resignation_date = $request->resignation_date;
-        }else{
-            $employee->resignation_date = null;
-        }
-
-        $employee->save();
-
-        return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully updated!']);
+        
     }
 
     public function delete(Request $request){
@@ -407,8 +428,16 @@ class EmployeesController extends Controller
                     'file_server' => $file_server
                 ];
 
+                $log = [
+                    'type' => 'Welcome Email',
+                    'recipient' => $employee->email,
+                    'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
+                    'template' => 'admin.email_template.welcome',
+                    'template_data' => json_encode($data)
+                ];
+
                 try {
-                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data);
+                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
                 } catch (\Throwable $th) {}
             }
 
@@ -422,9 +451,17 @@ class EmployeesController extends Controller
                 'reporting_to' => $reporting_to->employee_name,
                 'location' => $branch
             ];
+
+            $admin_log = [
+                'type' => 'New Employee',
+                'recipient' => ENV('MAIL_RECIPIENT', 'it@fumaco.local'),
+                'subject' =>'[Action Required] New Employee for Onboarding',
+                'template' => 'admin.email_template.new_employee',
+                'template_data' => json_encode($admin_data)
+            ];
     
             try {
-                $mail = $this->send_mail('New Employee ['.$employee->employee_name.']', 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data);
+                $mail = $this->send_mail($admin_log['subject'], 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
             } catch (\Throwable $th) {}
 
             DB::commit();
@@ -438,72 +475,109 @@ class EmployeesController extends Controller
     }
 
     public function employeeUpdate(Request $request, $id){
-        $image_path = $request->user_image;
-        if($request->hasFile('empImage')){
-            $file = $request->file('empImage');
+        DB::beginTransaction();
+        try {
+            $image_path = $request->user_image;
+            if($request->hasFile('empImage')){
+                $file = $request->file('empImage');
 
-            //get filename with extension
-            $filenamewithextension = $file->getClientOriginalName();
-            //get filename without extension
-            $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-            //get file extension
-            $extension = $file->getClientOriginalExtension();
-            //filename to store
-            $filenametostore = $request->user_id.'.'.$extension;
-            // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            //Resize image here
-            $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-            $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save($thumbnailpath);
+                //get filename with extension
+                $filenamewithextension = $file->getClientOriginalName();
+                //get filename without extension
+                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+                //get file extension
+                $extension = $file->getClientOriginalExtension();
+                //filename to store
+                $filenametostore = $request->user_id.'.'.$extension;
+                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
+                //Resize image here
+                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
+                $img = Image::make($thumbnailpath)->resize(500, 350, function($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $img->save($thumbnailpath);
 
-            $image_path = '/storage/employees/'.$filenametostore;
-        }
+                $image_path = '/storage/employees/'.$filenametostore;
+            }
 
-        $employee = User::find($id);
-        $employee->user_id = $request->user_id;
-        $employee->department_id = $request->department;
-        $employee->shift_group_id = $request->shift;
-        $employee->employee_name = $request->employee_name;
-        $employee->nick_name = $request->nickname;
-        $employee->designation_id = $request->designation;
-        $employee->branch = $request->branch;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
-        $employee->employment_status = $request->employment_status;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
-        $employee->user_group = $request->user_group;
-        $employee->birth_date = $request->birthdate;
-        $employee->civil_status = $request->civil_status;
-        $employee->status = $request->status;
-        $employee->gender = $request->gender;
-        $employee->date_joined = $request->date_joined;
-        $employee->contact_person = $request->contact_person;
-        $employee->contact_person_no = $request->contact_person_no;
-        $employee->pagibig_no = $request->pagibig_no;
-        $employee->philhealth_no = $request->philhealth_no;
-        $employee->employee_id = $request->employee_id;
-        $employee->reporting_to = $request->reporting_to;
-        $employee->image = $image_path;
-        $employee->id_security_key = $request->id_key;
-        $employee->designation_name = $request->designation_name;
-        $employee->last_modified_by = Auth::user()->employee_name;
-        $employee->company = $request->company;
+            $employee = User::find($id);
+            $employee->user_id = $request->user_id;
+            $employee->department_id = $request->department;
+            $employee->shift_group_id = $request->shift;
+            $employee->employee_name = $request->employee_name;
+            $employee->nick_name = $request->nickname;
+            $employee->designation_id = $request->designation;
+            $employee->branch = $request->branch;
+            $employee->telephone = $request->telephone;
+            $employee->email = $request->email;
+            $employee->employment_status = $request->employment_status;
+            $employee->address = $request->address;
+            $employee->contact_no = $request->contact_no;
+            $employee->sss_no = $request->sss_no;
+            $employee->tin_no = $request->tin_no;
+            $employee->user_group = $request->user_group;
+            $employee->birth_date = $request->birthdate;
+            $employee->civil_status = $request->civil_status;
+            $employee->status = $request->status;
+            $employee->gender = $request->gender;
+            $employee->date_joined = $request->date_joined;
+            $employee->contact_person = $request->contact_person;
+            $employee->contact_person_no = $request->contact_person_no;
+            $employee->pagibig_no = $request->pagibig_no;
+            $employee->philhealth_no = $request->philhealth_no;
+            $employee->employee_id = $request->employee_id;
+            $employee->reporting_to = $request->reporting_to;
+            $employee->image = $image_path;
+            $employee->id_security_key = $request->id_key;
+            $employee->designation_name = $request->designation_name;
+            $employee->last_modified_by = Auth::user()->employee_name;
+            $employee->company = $request->company;
 
-        if ($request->status == 'Resigned') {
-            $employee->resignation_date = $request->resignation_date;
-        }else{
-            $employee->resignation_date = null;
+            if ($request->status == 'Resigned') {
+                $employee->resignation_date = $request->resignation_date;
+
+                $department = Department::find($employee->department_id)->pluck('department')->first();
+                $designation = Designation::find($employee->designation_id)->pluck('designation')->first();
+                $branch = DB::table('branch')->where('branch_id', $employee->branch)->pluck('branch_name')->first();
+                $reporting_to = User::find($employee->reporting_to)->pluck('employee_name')->first();
+
+                $data = [
+                    'employee_id' => $employee->employee_id,
+                    'biometric_id' => $employee->user_id,
+                    'name' => $employee->employee_name,
+                    'department' => $department,
+                    'designation' => $designation,
+                    'reporting_to' => $reporting_to,
+                    'location' => $branch,
+                    'resignation_date' => $employee->resignation_date
+                ];
+
+                $log = [
+                    'type' => 'Resigned Employee Notice',
+                    'recipient' => env('MAIL_RECIPIENT', 'it@fumaco.local'),
+                    'subject' => '[Action Required] Resigned Employee',
+                    'template' => 'admin.email_template.resigned_employee',
+                    'template_data' => json_encode($data)
+                ];
+
+                try {
+                    $mail = $this->send_mail($log['subject'], $log['template'], $log['recipient'], $data, $log);
+                } catch (\Throwable $th) {}
+            }else{
+                $employee->resignation_date = null;
+            }
+            
+            $employee->save();
+
+            DB::commit();
+            return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully updated!']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
         }
         
-        $employee->save();
-
-        return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully updated!']);
     }
 
     public function employeeDelete(Request $request, $id){
@@ -590,8 +664,9 @@ class EmployeesController extends Controller
         $neww= date('Y').'00000';
         $newly=$neww + $newcodeID;
         $newwwly='FUM'.'-'.$newly;
-        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
+
         $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
+        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
         $data = [
             'employee_profile' => $employee_profile,
             'regular_shift' => $regular_shift,

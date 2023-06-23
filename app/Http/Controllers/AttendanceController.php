@@ -1120,22 +1120,16 @@ class AttendanceController extends Controller
     public function employeeAttendanceDashboard(Request $request, $employee){
         $employee_logs = $this->attendanceLogs($employee, $request->start, $request->end);
 
-        // Get current page form url e.x. &page=1
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        // Create a new Laravel collection from the array data
-        $itemCollection = collect($employee_logs);
-        // Define how many items we want to be visible in each page
-        $perPage = 8;
-        // Slice the collection to get the items to display in current page
-        $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->all();
-        // Create our paginator and pass it to the view
-        $paginatedItems= new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
-        // set url path for generted links
-        $paginatedItems->setPath($request->url());
+        $start = $request->start;
+        $end = $request->end;
+        $total_late = collect($employee_logs)->sum('late_in_minutes');
+        $total_overtime = collect($employee_logs)->sum('overtime');
+        $total_hours_worked = collect($employee_logs)->sum('hrs_worked');
+        // $no_of_days = count($employee_logs);
+        $no_of_days = collect($employee_logs)->where('day_of_week', '!=', 'Sunday')->count();
+        $required_working_hrs = $no_of_days * 8;
 
-        $logs = $paginatedItems;
-
-        return view('client.tables.attendance_table', compact('logs'));
+        return view('client.tables.attendance_table', compact('employee_logs', 'start', 'end', 'total_late', 'total_overtime', 'total_hours_worked', 'no_of_days', 'required_working_hrs'));
     }
 
     public function employeeLateDeductions($employee){
