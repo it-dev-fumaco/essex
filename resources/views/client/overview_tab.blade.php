@@ -217,7 +217,7 @@
                             <span class="approver-name d-block">{{ $out_of_office->employee_name }}</span>
                             <small class="d-block fst-italic text-muted">{{ $out_of_office->designation }}</small>
                         </td>
-                        <td style="width: 40%;">
+                        <td style="width: 40%; font-size: 10px;">
                             <i class="icon-clock"></i> {{ $out_of_office->time_from }} -
                             {{ $out_of_office->time_to }}
                         </td>

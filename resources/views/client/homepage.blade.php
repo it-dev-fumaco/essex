@@ -140,7 +140,7 @@
                                 </div>
                             </li>
                         </ul>
-                        <a href="#" class="btn btn-primary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
+                        <a href="#" class="btn btn-secondary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
                             <i class="fas fa-cog"></i> Change Password</b></a>
                         @include('client.modals.change_password')
                     </div>
@@ -254,9 +254,9 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane in active" id="tab-memorandum">
+                                    <div class="tab-pane" id="tab-my-evaluations">
                                         <div class="row">
-                                            <div class="col-sm-12" id="memo-tab"></div>
+                                            <div class="col-sm-12" id="appraisal-table"></div>
                                         </div>
                                     </div>
                                 </div>

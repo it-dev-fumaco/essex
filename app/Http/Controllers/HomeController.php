@@ -118,7 +118,7 @@ class HomeController extends Controller
             ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
             ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
             ->where('notice_slip.status', 'Approved')
-            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to');
+            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to', 'users.image');
 
         $out_of_office_today = $out_today->get();
         $on_leave_today = $out_today->count();

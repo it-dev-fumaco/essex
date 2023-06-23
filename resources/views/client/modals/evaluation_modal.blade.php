@@ -13,7 +13,7 @@
                         <li class="nav-item border rounded border-success" onclick="loadEmployeedataInput()">
                            <a class="nav-link active" href="#tab-2" data-bs-toggle="tab">Data Inputs</a>
                         </li>
-                        <li class="nav-item border rounded border-success"><a href="#tab-3" class="nav-link" data-bs-toggle="tab">Performance Appraisal</a></li>
+                        {{-- <li class="nav-item border rounded border-success"><a href="#tab-3" class="nav-link" data-bs-toggle="tab">Performance Appraisal</a></li> --}}
                         <li class="nav-item border rounded border-success"><a href="#tab-4" class="nav-link" data-bs-toggle="tab">Evaluation Files</a></li>
                         <li class="nav-item border rounded border-success"><a href="
                           @if(Auth::user()->department_id == 9)/kpi_stats/it/index
@@ -90,7 +90,7 @@
                            <div class="tab-pane" id="tab-3">
                               <div class="row">
                                  <div class="col-sm-12">
-                                    <div id="appraisal-table"></div>
+                                    {{-- <div id="appraisal-table"></div> --}}
                                  </div>
                               </div>
                            </div>
