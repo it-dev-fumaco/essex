@@ -667,7 +667,6 @@ class EmployeesController extends Controller
 
         $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
         $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
-
         $data = [
             'employee_profile' => $employee_profile,
             'regular_shift' => $regular_shift,
