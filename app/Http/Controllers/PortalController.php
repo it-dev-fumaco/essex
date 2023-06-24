@@ -139,7 +139,12 @@ class PortalController extends Controller
             $employees = DB::table('users')->where('user_type', 'Employee')
                 ->join('designation', 'designation.des_id', 'users.designation_id')
                 ->join('departments', 'departments.department_id', 'users.department_id')
-                ->where('users.status', 'Active')->whereIn('employment_status', ['Regular', 'Probationary'])->where('users.email', '!=', 'essex.admin@fumaco.local')
+                ->where('users.status', 'Active')
+                ->whereIn('employment_status', ['Regular', 'Probationary'])
+                ->where(function($q){
+                    return $q->where('users.email', '!=', 'essex.admin@fumaco.local')->orWhereNull('users.email');
+                })
+                
                 ->when($request->search, function ($q) use ($request){
                     return $q->where('users.employee_name', 'LIKE', '%'.$request->search.'%')
                         ->orWhere('users.nick_name', 'LIKE', '%'.$request->search.'%')
