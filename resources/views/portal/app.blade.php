@@ -342,6 +342,17 @@ $(document).ready(function(){
         $($(this).data('target')).addClass('active');
         $(this).addClass('active');
     });
+
+    load_time();
+    function load_time(){
+        setInterval(function() {
+            var d = new Date();
+            var date_options = { year: 'numeric', month: 'short', day: 'numeric' };
+            var time_options = { hour: 'numeric', minute: 'numeric' };
+            $('.current-date').html('{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : null }}, ' + d.toLocaleDateString('en-US', date_options));
+            $('.current-time').html(d.toLocaleTimeString('en-US', time_options));
+        }, 1000);
+    }
 });
 </script>
 
