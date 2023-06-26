@@ -1,12 +1,12 @@
- <div class="modal fade" id="edit-employee-modal">
+<div class="modal fade" id="edit-employee-modal">
    <div class="modal-dialog modal-lg">
       <div class="modal-content">
          <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Edit Employee</h4>
          </div>
-         <div class="modal-body">
-            <form action="#" method="POST" autocomplete="off" enctype="multipart/form-data" id="edit-employee-form">
+         <form action="#" method="POST" autocomplete="off" enctype="multipart/form-data" id="edit-employee-form">
+            <div class="modal-body">
                @csrf
                <input type="hidden" name="id" class="id">
                <div class="row" style="padding-top: 0;">
@@ -21,7 +21,8 @@
                               </div>
                               <div class="form-group">
                                  <label>Employee Name:</label>
-                                 <input type="text" name="employee_name" class="employee_name" placeholder="Enter Employee Name">
+                                 <input type="text" name="employee_name" class="employee_name"
+                                    placeholder="Enter Employee Name">
                               </div>
                               <div class="form-group">
                                  <label>Birthdate:</label>
@@ -33,7 +34,8 @@
                               </div>
                               <div class="form-group">
                                  <label>Address:</label>
-                                 <textarea name="address" rows="2" class="address" placeholder="Enter Address"></textarea>
+                                 <textarea name="address" rows="2" class="address"
+                                    placeholder="Enter Address"></textarea>
                               </div>
                            </div>
                            <div class="col-sm-4">
@@ -58,14 +60,16 @@
                                     <option value="Widowed">Widowed</option>
                                  </select>
                               </div>
-                              
+
                               <div class="form-group">
                                  <label>Contact Person:</label>
-                                 <input type="text" name="contact_person" placeholder="Contact Person" class="contact_person" required>
+                                 <input type="text" name="contact_person" placeholder="Contact Person"
+                                    class="contact_person" required>
                               </div>
                               <div class="form-group">
                                  <label>Contact Person No.:</label>
-                                 <input type="text" name="contact_person_no" placeholder="Contact No." class="contact_person_no" required>
+                                 <input type="text" name="contact_person_no" placeholder="Contact No."
+                                    class="contact_person_no" required>
                               </div>
                               <div class="form-group">
                                  <label>TIN No.:</label>
@@ -73,12 +77,13 @@
                               </div>
                            </div>
                            <div class="col-sm-4">
-                              
+
                               <div class="form-group">
                                  <div style="text-align: center;">
                                     <div>
                                        <input type="hidden" name="user_image" class="user_image">
-                                       <img src="{{ asset('storage/img/user.png') }}" width="110" height="110" class="imgPreview">
+                                       <img src="{{ asset('storage/img/user.png') }}" width="110" height="110"
+                                          class="imgPreview">
                                     </div>
                                     <div class="fileUpload btn btn-primary upload-btn">
                                        <span>Choose File..</span>
@@ -92,11 +97,13 @@
                               </div>
                               <div class="form-group">
                                  <label>PhilHealth No.:</label>
-                                 <input type="text" name="philhealth_no" placeholder="Enter PhilHealth No." class="philhealth_no">
+                                 <input type="text" name="philhealth_no" placeholder="Enter PhilHealth No."
+                                    class="philhealth_no">
                               </div>
                               <div class="form-group">
                                  <label>PAGIBIG No.:</label>
-                                 <input type="text" name="pagibig_no" placeholder="Enter PAGIBIG No." class="pagibig_no">
+                                 <input type="text" name="pagibig_no" placeholder="Enter PAGIBIG No."
+                                    class="pagibig_no">
                               </div>
                            </div>
                         </div>
@@ -142,7 +149,7 @@
                            <div id="resignation-date-field" class="col-sm-4" style="display: none">
                               <div class="form-group">
                                  <label>Resignation Date:</label>
-                                 <input type="date" name="resignation_date" placeholder="Enter Date Joined" required>
+                                 <input type="date" name="resignation_date" placeholder="Enter Date Joined">
                               </div>
                            </div>
 
@@ -152,7 +159,7 @@
                                  <select name="company" required>
                                     <option value="">Select Company</option>
                                     @foreach ($companies as $company)
-                                       <option value="{{ $company }}">{{ $company }}</option>
+                                    <option value="{{ $company }}">{{ $company }}</option>
                                     @endforeach
                                  </select>
                               </div>
@@ -163,11 +170,11 @@
                                  <label>Branch:</label>
                                  <select name="branch" required>
                                     <option value="">Select Branch</option>
-                                       @forelse($branch as $loc)
-                                       <option value="{{ $loc->branch_id }}">{{ $loc->branch_name }}</option>
-                                       @empty
-                                       <option>No Branch Found.</option>
-                                       @endforelse
+                                    @forelse($branch as $loc)
+                                    <option value="{{ $loc->branch_id }}">{{ $loc->branch_name }}</option>
+                                    @empty
+                                    <option>No Branch Found.</option>
+                                    @endforelse
                                  </select>
                               </div>
                            </div>
@@ -192,7 +199,8 @@
                                  <select name="department" required>
                                     <option value="">Select Department</option>
                                     @forelse($departments as $department)
-                                    <option value="{{ $department->department_id }}">{{ $department->department }}</option>
+                                    <option value="{{ $department->department_id }}">{{ $department->department }}
+                                    </option>
                                     @empty
                                     <option>No Department(s) Found.</option>
                                     @endforelse
@@ -224,12 +232,12 @@
                                  <select name="reporting_to" required>
                                     <option value="">Select an Employee</option>
                                     @foreach ($regular_employees as $emp)
-                                       <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
+                                    <option value="{{ $emp->id }}">{{ $emp->employee_name }}</option>
                                     @endforeach
                                  </select>
                               </div>
                            </div>
-                           
+
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Shift:</label>
@@ -280,13 +288,15 @@
                      </div>
                   </div>
                   <div style="font-size: 8pt;float: right;padding-right: 2%;">
-                     <i>Last modified: <b><label class="modified_date" style="font-size: 8pt;"></label> </b> -<label class="modified_name" style="font-size: 8pt;"></label> </i>
+                     <i>Last modified: <b><label class="modified_date" style="font-size: 8pt;"></label> </b> -<label
+                           class="modified_name" style="font-size: 8pt;"></label> </i>
                   </div>
                </div>
             </div>
             <div class="modal-footer" style="margin-top: -30px;">
-               <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Update</button>
-               <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+               <button type="submit" class="btn btn-primary submit-form"><i class="fa fa-check"></i> Update</button>
+               <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>
+                  Close</button>
             </div>
          </form>
       </div>
