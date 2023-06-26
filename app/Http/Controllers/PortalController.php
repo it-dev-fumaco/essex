@@ -38,8 +38,16 @@ class PortalController extends Controller
             ->where(function($q){
                 return $q->whereMonth('date_joined', Carbon::now()->format('m'))->whereDay('date_joined', Carbon::now()->format('d'))
                     ->orWhereMonth('birth_date', Carbon::now()->format('m'))->whereDay('birth_date', Carbon::now()->format('d'));
-            })
-            ->get();
+            })->get();
+
+        $out_of_office_today = DB::table('notice_slip')
+            ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+            ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
+            ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
+            ->where('notice_slip.status', 'Approved')
+            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to', 'users.image')->get();
 
         $approvals = $approvers = [];
         if(Auth::check()){
@@ -65,7 +73,7 @@ class PortalController extends Controller
 
         $categories = $categories->pluck('name', 'id')->unique();
 
-        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers', 'celebrants'));
+        return view('portal.homepage', compact('albums', 'milestones','it_policy', 'approvals', 'categories', 'approvers', 'celebrants', 'out_of_office_today'));
     }
 
     public function load_manuals(Request $request){

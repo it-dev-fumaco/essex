@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-12 d-block justify-content-start justify-content-xl-center align-items-center">
         <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid">
+            <div class="container-fluid p-0">
                 <div class="col-2 col-xl-3">
                     <div class="row" style="display: flex; justify-content: center; align-items: center;">
                         <div class="col-md-6 col-xl-4 offset-xl-1" style="padding: 0;">
@@ -63,6 +63,31 @@
                             </li>
                         @endif
                     </ul>
+                </div>
+                <div class="col-3 p-2 d-none d-xl-inline">
+                    <div class="row">
+                        @php
+                            $greet = 'Morning';
+                            if(Carbon\Carbon::now()->format('A') == 'PM'){
+                                $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
+                            }
+                        @endphp
+                        <div class="col-5 d-flex justify-content-center align-items-center border border-danger">
+                            <div class="text-center">
+                                <i class="fa fa-cloud text-primary responsive-font" style="font-size: 30pt;"></i>
+                                <span class="fw-bold d-block responsive-font text-primary" style="font-size: 9pt;">Good {{ $greet }}!</span>
+                            </div>
+                        </div>
+                        <div class="col-7 d-flex justify-content-center align-items-center border border-danger">
+                            <div class="text-center">
+                                {{-- <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap; color: #25BE6A"></span>
+                                <span id="current-date" class="fw-bold d-block mt-2" style="font-size: 11pt;"></span> --}}
+
+                                <span class="current-time fw-bold d-block" style="white-space: nowrap; color: #25BE6A"></span>
+                                <span class="current-date fw-bold d-block responsive-font mt-2" style="font-size: 11pt;"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>

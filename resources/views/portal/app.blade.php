@@ -158,6 +158,10 @@
                 line-clamp: 2; 
     }
 
+    .current-time{
+        font-size: 2.5rem;
+    }
+
     @media (max-width: 1199.98px) {
         .nav li a{
             padding: 5px !important;
@@ -185,6 +189,10 @@
         .profile-image{
             width: 45px;
             height: 45px;
+        }
+
+        .current-time{
+            font-size: 1.5rem;
         }
 
     }

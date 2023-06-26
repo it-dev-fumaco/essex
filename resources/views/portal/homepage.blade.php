@@ -125,7 +125,7 @@
                         </button>
                     </div>
 
-                    <div class="card mt-2 shadow" style="border-top: 3px solid #11703C">
+                    <div class="card mt-2 shadow d-xl-none" style="border-top: 3px solid #11703C">
                         <div class="card-body">
                             <div class="row">
                                 @php
@@ -142,8 +142,8 @@
                                 </div>
                                 <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
                                     <div class="text-center">
-                                        <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap"></span>
-                                        <span id="current-date" class="fw-bold d-block mt-2" style="font-size: 11pt;"></span>
+                                        <span class="current-time fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap"></span>
+                                        <span class="current-date fw-bold d-block mt-2" style="font-size: 11pt;"></span>
                                     </div>
                                 </div>
                             </div>
@@ -261,6 +261,38 @@
                                         </div>
                                     @endforeach
                                 </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (count($out_of_office_today) > 0)
+                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
+                            <div class="card-header">
+                                <span class="fw-bold" style="font-size: 12pt;">Out of the Office</span>
+                            </div>
+                            <div class="card-body">
+                                @foreach ($out_of_office_today as $out_of_office)
+                                    <div class="row" style="font-size: 9pt !important">
+                                        @php
+                                            $image = $out_of_office->image ? $out_of_office->image : '/storage/img/user.png';
+                                            if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
+                                                $image = 'storage/img/user.png';
+                                            }
+                                        @endphp
+                                        <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
+                                            <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                        </div>
+                                        <div class="col-7 col-xl-6 p-0 d-flex justify-content-center align-items-center">
+                                            <div class="container-fluid p-0">
+                                                <span style="font-size: 10pt;" class="fw-bold">{{ $out_of_office->employee_name }}</span><br>
+                                                <small class="text-muted">{{ $out_of_office->designation }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 d-flex justify-content-center align-items-center text-muted p-0">
+                                            <i class="icon-clock"></i>&nbsp;{{ $out_of_office->time_from.' - '.$out_of_office->time_to }}
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @endif
@@ -548,8 +580,8 @@
             var d = new Date();
             var date_options = { year: 'numeric', month: 'short', day: 'numeric' };
             var time_options = { hour: 'numeric', minute: 'numeric' };
-            $('#current-date').html('{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : null }}, ' + d.toLocaleDateString('en-US', date_options));
-            $('#current-time').html(d.toLocaleTimeString('en-US', time_options));
+            $('.current-date').html('{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : null }}, ' + d.toLocaleDateString('en-US', date_options));
+            $('.current-time').html(d.toLocaleTimeString('en-US', time_options));
         }, 1000);
     }
     
