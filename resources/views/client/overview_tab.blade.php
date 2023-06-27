@@ -202,7 +202,7 @@
             </table>
         </div>
     </div>
-    <div class="card mb-3">
+    {{-- <div class="card mb-3">
         <div class="card-body p-2">
             <h3 class="widget-title mb-2" style="font-size: 12px !important;">Out of the office today</h3>
             <table class="table m-0 remove-last-row-border">
@@ -229,6 +229,27 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div> --}}
+
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="widget property-agent">
+                <div class="d-flex">
+                    <h3 class="widget-title mb-2" style="font-size: 12px !important;">Calendar</h3>
+                </div>
+                <div class="agent-info">
+                    <div class="calendar calendar-first" id="calendar_first">
+                        <div class="calendar_header">
+                            <button class="switch-month switch-left"> <i class="icon-arrow-left" style="color: #87b633;"></i></button>
+                            <a href="/calendar"><h2></h2></a>
+                            <button class="switch-month switch-right pull-right"> <i class="icon-arrow-right" style="color: #87b633;"></i></button>
+                        </div>
+                        <div class="calendar_weekdays"></div>
+                        <div class="calendar_content"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

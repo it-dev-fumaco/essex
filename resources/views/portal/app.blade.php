@@ -158,6 +158,10 @@
                 line-clamp: 2; 
     }
 
+    .current-time{
+        font-size: 2.5rem;
+    }
+
     @media (max-width: 1199.98px) {
         .nav li a{
             padding: 5px !important;
@@ -187,11 +191,25 @@
             height: 45px;
         }
 
+        .current-time{
+            font-size: 1.5rem;
+        }
+
     }
 </style>
 
 @include('portal.modals.login_modal')
-
+@php
+    $week = [
+        0 => 'Sun',
+        1 => 'Mon',
+        2 => 'Tue',
+        3 => 'Wed',
+        4 => 'Thu',
+        5 => 'Fri',
+        6 => 'Sat',
+    ];
+@endphp
 <div class="header">
     <div class="top-bar">
         <div class="container-fluid">
@@ -334,6 +352,17 @@ $(document).ready(function(){
         $($(this).data('target')).addClass('active');
         $(this).addClass('active');
     });
+
+    load_time();
+    function load_time(){
+        setInterval(function() {
+            var d = new Date();
+            var date_options = { year: 'numeric', month: 'short', day: 'numeric' };
+            var time_options = { hour: 'numeric', minute: 'numeric' };
+            $('.current-date').html('{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : null }}, ' + d.toLocaleDateString('en-US', date_options));
+            $('.current-time').html(d.toLocaleTimeString('en-US', time_options));
+        }, 1000);
+    }
 });
 </script>
 

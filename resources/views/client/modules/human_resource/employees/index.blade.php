@@ -184,10 +184,10 @@ textarea{
    function hideResignationDate(){
       if ($('#edit-employee-modal .status').val() == 'Resigned') {
          $('#edit-employee-modal .resignation-date-div').show();
-         $("#edit-employee-modal .resignation-date").prop('required',true);
+         $("#edit-employee-modal input[name='resignation_date']").prop('required',true);
       }else{
          $('#edit-employee-modal .resignation-date-div').hide();
-         $("#edit-employee-modal .resignation-date").prop('required',false);
+         $("#edit-employee-modal input[name='resignation_date']").prop('required',false);
       }
    }
 

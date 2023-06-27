@@ -219,7 +219,17 @@ class HomeController extends Controller
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        return view('client.leave_calendar', compact('designation', 'department'));
+        $out_of_office_today = DB::table('notice_slip')
+            ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
+            ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
+            ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
+            ->where('notice_slip.status', 'Approved')
+            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to', 'users.image')
+            ->get();
+
+        return view('client.leave_calendar', compact('designation', 'department', 'out_of_office_today'));
     }
 
     public function getLeaves(){
