@@ -4,8 +4,8 @@
       <div class="modal-content">
          <!-- Modal Header -->
          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
             <h4 class="modal-title">Set As</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          </div>
          <!-- Modal body -->
          <div class="modal-body">
@@ -21,8 +21,8 @@
          </div>
          <!-- Modal footer -->
          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Set</button>
-            <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-check"></i> Set</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="fa fa-times"></i> Close</button>
          </div>
          </form>
       </div>
