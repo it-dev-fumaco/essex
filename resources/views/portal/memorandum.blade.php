@@ -8,7 +8,7 @@
   <div class="section">
     <div class="col-12 col-xl-10 mx-auto">
       <h1 class="title-2 center" style="margin-top: -40px; border: 0;">Memorandum / Policy</h1>
-      @if(Auth::user() && Auth::user()->user_group == 'Editor')
+      @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
       <div class="row">
         <div class="col-md-12">
           <div class="pull-right">
@@ -37,7 +37,7 @@
                     </a>
                     <span>{!! str_limit($policy->description, 30) ? '' : '<br>' !!}</span>
                   </div>
-                  @if(Auth::user() && Auth::user()->user_group == 'Editor')
+                  @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                     <div class="container-fluid p-0">
                       <a href="#" class="text-decoration-none" id="editPolicyBtn" data-id="{{ $policy->policy_id }}"
                         data-dept="{{ $policy->department_id }}" data-subject="{{ $policy->subject }}"
@@ -62,7 +62,7 @@
             <div class="support-inner">
               @foreach(collect($row['policies']) as $policy)
               <div class="col-md-4 col-sm-6 col-xs-12">
-                @if(Auth::user() && Auth::user()->user_group == 'Editor')
+                @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                 <div style="text-align: right;">
                   <a href="#" id="editPolicyBtn" data-id="{{ $policy->policy_id }}"
                     data-dept="{{ $policy->department_id }}" data-subject="{{ $policy->subject }}"

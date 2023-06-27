@@ -9,7 +9,7 @@
         <div class="container">
             <h1 class="title-2 center" style="margin: -40px 0 0 0;">Internet Services</h1>
             @if(Auth::user())
-            @if(Auth::user()->user_group == 'Editor')
+            @if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                 <div class="col-md-12">
                     <div class="pull-right">
                         <div class="form-group">
@@ -25,7 +25,7 @@
                 @foreach($internet_services as $intern)
                 <div class="col-md-12">
                     @if(Auth::user())
-                    @if(Auth::user()->user_group == 'Editor')
+                    @if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                     <a href="#" id="editPostBtn" data-image="{{ $intern->featured_file }}" data-title="{{ $intern->title }}" data-content="{{ $intern->content }}" data-id="{{ $intern->id }}"><i class="fa fa-pencil"></i> Edit</a>
                     <a href="#" id="deletePostBtn" data-title="{{ $intern->title }}" data-id="{{ $intern->id }}"><i class="fa fa-pencil"></i> Delete</a>
                      @endif

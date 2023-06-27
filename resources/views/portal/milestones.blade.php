@@ -8,7 +8,7 @@
     <div class="section">
         <div class="container">
             <h1 class="title-2 center" style="margin: -40px 0 0 0; border: 0;">Historical Milestones</h1>
-            @if(Auth::user() && Auth::user()->user_group == 'Editor')
+            @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                 <div class="col-md-12">
                     <div class="pull-right">
                         <div class="form-group">
@@ -23,7 +23,7 @@
                 @foreach($milestones as $milestone)
                 <div class="col-md-12">
                     <span class="section-title">{{ $milestone->title }}</span>
-                    @if(Auth::user() && Auth::user()->user_group == 'Editor')
+                    @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                     <a href="#" id="editPostBtn" data-image="{{ $milestone->featured_file }}" data-title="{{ $milestone->title }}" data-content="{{ $milestone->content }}" data-id="{{ $milestone->id }}"><i class="fa fa-pencil"></i> Edit</a> |
                     <a href="#" id="deletePostBtn" data-image="{{ $milestone->featured_file }}" data-title="{{ $milestone->title }}" data-id="{{ $milestone->id }}"><i class="icon-trash"></i> Delete</a>
                      @endif

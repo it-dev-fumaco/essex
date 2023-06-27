@@ -19,7 +19,7 @@
 				</select>
 			</div>
 			@if(Auth::user())
-			@if(Auth::user()->user_group == 'Editor')
+			@if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
 			<div class="col-md-12 mt-3">
 				<div class="pull-right">
 					<div class="form-group">

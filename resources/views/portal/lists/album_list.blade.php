@@ -13,7 +13,7 @@
               @endif
             </a>
             @if(Auth::user())
-            @if(Auth::user()->user_group == 'Editor')
+            @if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
             <ul class="actions">
               <li>
                 <button type="button" class="add-fav" id="editAlbumBtn" data-id="{{ $album->id }}"
