@@ -207,7 +207,7 @@
         <div class="card-body p-2">
             <div class="widget property-agent">
                 <h3 class="widget-title mb-2" style="font-size: 12px !important;">Calendar</h3>
-                <div class="agent-info">
+                <div class="agent-info p-2">
                     <div class="calendar calendar-first" id="calendar_first">
                         <div class="calendar_header">
                             <button class="switch-month switch-left"> <i class="icon-arrow-left" style="color: #87b633;"></i></button>
