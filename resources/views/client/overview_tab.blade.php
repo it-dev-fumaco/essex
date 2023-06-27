@@ -202,42 +202,11 @@
             </table>
         </div>
     </div>
-    {{-- <div class="card mb-3">
-        <div class="card-body p-2">
-            <h3 class="widget-title mb-2" style="font-size: 12px !important;">Out of the office today</h3>
-            <table class="table m-0 remove-last-row-border">
-                <tbody class="table-body">
-                    @forelse($out_of_office_today as $out_of_office)
-                    <tr>
-                        <td style="width: 60%;">
-                            @php
-                                $img = $out_of_office->image ? $out_of_office->image : '/storage/img/user.png';
-                            @endphp
-                            <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
-                            <span class="approver-name d-block">{{ $out_of_office->employee_name }}</span>
-                            <small class="d-block fst-italic text-muted">{{ $out_of_office->designation }}</small>
-                        </td>
-                        <td style="width: 40%; font-size: 10px;">
-                            <i class="icon-clock"></i> {{ $out_of_office->time_from }} -
-                            {{ $out_of_office->time_to }}
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="2" class="text-center text-muted text-uppercase">Nobody's out</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div> --}}
 
     <div class="card mb-3">
         <div class="card-body p-2">
             <div class="widget property-agent">
-                <div class="d-flex">
-                    <h3 class="widget-title mb-2" style="font-size: 12px !important;">Calendar</h3>
-                </div>
+                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Calendar</h3>
                 <div class="agent-info">
                     <div class="calendar calendar-first" id="calendar_first">
                         <div class="calendar_header">

@@ -72,19 +72,19 @@
                                 $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
                             }
                         @endphp
-                        <div class="col-5 d-flex justify-content-center align-items-center">
+                        <div class="col-3 offset-4 d-flex justify-content-center align-items-center">
                             <div class="text-center">
                                 <i class="fa fa-cloud text-primary responsive-font" style="font-size: 30pt;"></i>
-                                <span class="fw-bold d-block responsive-font text-primary" style="font-size: 9pt;">Good {{ $greet }}!</span>
+                                <span class="fw-bold d-block responsive-font text-primary" style="font-size: 9pt; white-space: nowrap">Good {{ $greet }}!</span>
                             </div>
                         </div>
-                        <div class="col-7 d-flex justify-content-center align-items-center">
+                        <div class="col-5 d-flex justify-content-center align-items-center">
                             <div class="text-center">
                                 {{-- <span id="current-time" class="fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap; color: #25BE6A"></span>
                                 <span id="current-date" class="fw-bold d-block mt-2" style="font-size: 11pt;"></span> --}}
 
-                                <span class="current-time fw-bold d-block" style="white-space: nowrap; color: #25BE6A"></span>
-                                <span class="current-date fw-bold d-block responsive-font mt-2" style="font-size: 11pt;"></span>
+                                <span class="current-time fw-bold d-block" style="white-space: nowrap; color: #25BE6A">{{ Carbon\Carbon::now()->format('h:i A') }}</span>
+                                <span class="current-date fw-bold d-block responsive-font mt-2" style="font-size: 11pt;">{{ isset($week[Carbon\Carbon::now()->dayOfWeek]) ? $week[Carbon\Carbon::now()->dayOfWeek] : Carbon\Carbon::now()->format('l') }}, {{ Carbon\Carbon::now()->format('M d, Y') }}</span>
                             </div>
                         </div>
                     </div>
