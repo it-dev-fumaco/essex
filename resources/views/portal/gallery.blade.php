@@ -20,10 +20,10 @@
 			</div>
 			@if(Auth::user())
 			@if(Auth::user()->user_group == 'Editor')
-			<div class="col-md-12">
+			<div class="col-md-12 mt-3">
 				<div class="pull-right">
 					<div class="form-group">
-						<button type="button" class="btn btn-primary" id="addAlbum">
+						<button type="button" class="btn btn-primary btn-sm" id="addAlbum">
 							<i class="fa fa-plus"></i><span>Album</span>
 						</button>
 					</div>
