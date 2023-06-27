@@ -11,7 +11,7 @@
 					<a href="/gallery"><i class="fa fa-arrow-circle-o-left" style="font-size: 40pt; padding: 5px; margin-top: -70px; float: left;"></i></a>
 				</div>
 				@if(Auth::user())
-				@if(Auth::user()->user_group == 'Editor')
+				@if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
 				<div class="col-md-12">
 					<div class="pull-right">
 						<div class="form-group">
@@ -35,13 +35,13 @@
 			<div class="overlay">
 				<div class="icon">
 					@if(Auth::user())
-					@if(Auth::user()->user_group == 'Editor')
+					@if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
 					<a href="#" id="setAsBtn" data-id="{{ $image->id }}" data-album="{{ $album->id }}" data-album_name="{{ $album->name }}" data-path="{{ $image->filepath }}"><i class="far fa-star"></i></a>
 					@endif
 					@endif
 					<a href="{{ asset('storage/'.$image->filepath) }}" class="lightbox"><i class="icon-eye right"></i></a>
 					@if(Auth::user())
-					@if(Auth::user()->user_group == 'Editor')
+					@if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
 					<a href="#" data-bs-toggle="modal" data-bs-target="#deleteImage{{ $image->id }}"><i class="icon-trash left"></i></a>
 					@endif
 					@endif

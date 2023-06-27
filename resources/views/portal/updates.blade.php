@@ -9,7 +9,8 @@
         <div class="container">
             <h1 class="title-2 center" style="margin: -40px 0 0 0; border: 0;">Updates</h1>
              @if(Auth::user())
-            @if(Auth::user()->user_group == 'Editor')
+             @if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
+
                 <div class="col-md-12">
                     <div class="pull-right">
                         <div class="form-group">
@@ -26,7 +27,7 @@
                 <div class="col-md-12">
                     <span class="section-title">{{ $update->title }}</span>
                      @if(Auth::user())
-                    @if(Auth::user()->user_group == 'Editor')
+                     @if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                     <a href="#" id="editPostBtn" data-image="{{ $update->featured_file }}" data-title="{{ $update->title }}" data-content="{{ $update->content }}" data-id="{{ $update->id }}"><i class="fa fa-pencil"></i> Edit</a>
                     <a href="#" id="deletePostBtn" data-title="{{ $update->title }}" data-id="{{ $update->id }}"><i class="fa fa-pencil"></i> Delete</a>
                      @endif
