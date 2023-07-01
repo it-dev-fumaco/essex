@@ -20,6 +20,34 @@
     </div>
 
     <div class="card mb-3">
+      <div class="card-body p-2">
+         <h3 class="widget-title mb-2" style="font-size: 12px !important;">
+               <div class="d-flex">
+                  <span class="d-inline-block">Leaves</span>
+               </div>
+         </h3>
+         <div class="container-fluid p-0">
+            <div class="row text-center">
+               <div class="col-4 p-3" id="onLeaveToday">
+                  <span style="font-size: 23pt;">{{ $on_leave_today }}</span>
+                  <span class="mt-2 d-block" style="font-size: 11px;"><b>On leave today</b></span>
+              </div>
+              <div class="col-4 p-3">
+                  <a href="/forApproval" class="text-decoration-none text-transform-none">
+                     <span style="font-size: 23pt;">{{ $awaiting_approval }}</span>
+                     <span class="mt-2 d-block" style="font-size: 11px;"><b>Awaiting for Approval</b></span>
+                  </a>
+               </div>
+               <div class="col-4 p-3" id="pendingRequests">
+                  <span style="font-size: 23pt;">{{ $pending_requests }}</span>
+                  <span class="mt-2 d-block" style="font-size: 11px;"><b>Pending Requests</b></span>
+               </div>
+            </div>
+         </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
         <div class="card-body p-2">
             <h3 class="widget-title mb-2" style="font-size: 12px !important;">
                 <div class="d-flex">

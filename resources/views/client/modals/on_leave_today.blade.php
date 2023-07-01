@@ -4,8 +4,8 @@
       <div class="modal-content">
          <!-- Modal Header -->
          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">On Leave Today</h4>
+            <h5 class="modal-title">On Leave Today</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          </div>
          <!-- Modal body -->
          <div class="modal-body">
@@ -44,7 +44,7 @@
       <!-- Modal footer -->
       <div class="modal-footer">
         {{-- <button type="submit" class="btn btn-primary update"><i class="fa fa-check"></i>Update</button> --}}
-        <button type="button" class="btn btn-primary" data-dismiss="modal">&times; Close</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">&times; Close</button>
       </div>
       </form>
 
