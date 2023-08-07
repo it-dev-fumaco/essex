@@ -22,7 +22,7 @@
             <div class="col-sm-7">
                <select id="selectEmpNotice" class="manageNoticeFltr" style="margin-right: 10px; width: 210px;">
                   <option value="">All Employee(s)</option>
-                  @forelse(in_array($designation, ['Human Resources Head']) ? $employees : $employees_per_dept as $employee)
+                  @forelse(in_array($designation, ['Human Resources Head', 'HR Payroll Assistant']) ? $employees : $employees_per_dept as $employee)
                   <option value="{{ $employee->user_id }}">{{ $employee->employee_name }}</option>
                   @empty
                   <option disabled>No Records Found.</option>

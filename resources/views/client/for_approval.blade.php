@@ -9,10 +9,10 @@
       <div class="tabs-section">
          <ul class="nav nav-tabs">
             <li class="active"><a href="#tab-notices-for-approval" data-toggle="tab"> Absent Notice Slip <span class="badge badge-error" style="background-color: #CB4335; font-size: 10pt;" id="badgePendingNotice">0</span></a></li>
-            @if(count($handledDepts) > 0 || in_array($designation, ['Human Resources Head']))
+            @if(count($handledDepts) > 0 || in_array($designation, ['Human Resources Head', 'HR Payroll Assistant']))
             <li><a href="#tab-notice-history" data-toggle="tab">Absent Notice History</a></li>
             @endif
-            @if(in_array($designation, ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head']))
+            @if(in_array($designation, ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head', 'HR Payroll Assistant']))
             <li><a href="#tab-gatepass-for-approval" data-toggle="tab">Gatepass <span class="badge badge-error" style="background-color: #CB4335; font-size: 10pt;" id="badgePendingGatepass">0</span></a></li>
             <li><a href="#tab-gatepass-history" data-toggle="tab">Gatepass History</a></li>
              @endif
@@ -77,7 +77,7 @@
                            <div class="col-sm-7">
                               <select id="selectEmpNotice" class="manageNoticeFltr" style="margin-right: 10px; width: 210px;">
                                  <option value="">All Employee(s)</option>
-                                 @forelse(in_array($designation, ['Human Resources Head']) ? $employees : $employees_per_dept as $employee)
+                                 @forelse(in_array($designation, ['Human Resources Head', 'HR Payroll Assistant']) ? $employees : $employees_per_dept as $employee)
                                  <option value="{{ $employee->user_id }}">{{ $employee->employee_name }}</option>
                                  @empty
                                  <option disabled>No Records Found.</option>

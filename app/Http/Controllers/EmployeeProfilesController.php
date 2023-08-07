@@ -39,7 +39,7 @@ class EmployeeProfilesController extends Controller
 
             $designation = $details->designation;
 
-            if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
+            if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
                 $employee_profiles = User::join('departments','users.department_id','departments.department_id')
                             ->join('designation','users.designation_id','designation.des_id');
             }else{

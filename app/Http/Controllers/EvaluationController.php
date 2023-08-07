@@ -628,7 +628,7 @@ class EvaluationController extends Controller
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
         $employee_list = DB::table('users');
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
+        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
             $employee_list = $employee_list->whereIn('department_id', $handledDepts);
         }
 
@@ -1046,7 +1046,7 @@ class EvaluationController extends Controller
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
         $department_list = DB::table('departments');
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
+        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
             $department_list = $department_list->whereIn('department_id', $handledDepts);
         }
 
