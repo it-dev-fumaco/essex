@@ -643,6 +643,26 @@
     <script>
         $(document).ready(function() {
             $('.open-reminder').click();
+
+            const showNotification = (icon, message, status, title = null) => {
+                titleTxt = ''
+                if(title){
+                    titleTxt = '<span style="display:block; font-size: 16pt; font-weight: bold; padding-top: 5px;">' + title + '</span>'
+                }
+                $.bootstrapGrowl(
+                    '<i class="' + icon + '" style="font-size: 60pt; float: left; padding-right: 10px;"></i>' + titleTxt + '<span style="font-size: 10pt;">' + message + '</span>', {
+                    type: status,
+                    align: 'center',
+                    delay: 8000,
+                    width: 450,
+                    offset: {
+                        from: 'top',
+                        amount: 300
+                    },
+                    stackup_spacing: 20
+                });
+            }
+
             $(document).on('click', '.date-ctrl', function (e){
                 e.preventDefault();
                 $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
@@ -1633,46 +1653,22 @@
                     url: "/notice_slip/create",
                     type: "POST",
                     data: $(this).serialize(),
-                    success: function(data) {
+                    success: (data) => {
                         $('#notice-slip-submit-btn').attr('disabled', false);
                         if (data.success) {
                             loadAbsentNotices();
-                            $.bootstrapGrowl(
-                                "<i class=\"fa fa-check-circle-o\" style=\"font-size: 60pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 16pt; font-weight: bold; padding-top: 5px;\">Request sent to Managers.</span><span style=\"font-size: 10pt;\">Please wait for the approved absent notice form.<br>" +
-                                data.message + "</span>", {
-                                    type: 'success',
-                                    align: 'center',
-                                    delay: 8000,
-                                    width: 450,
-                                    offset: {
-                                        from: 'top',
-                                        amount: 300
-                                    },
-                                    stackup_spacing: 20
-                                });
-                            $('#absentNoticeModal').modal('hide');
+                            if(!data.email_sent){
+                                showNotification("fa fa-check-circle-o", 'Email not sent!', 'warning', 'Notice')
+                            }
+                            showNotification("fa fa-check-circle-o", data.message, 'success', 'Request sent to Managers.')
+                            $('#absentNoticeModal').modal('hide')
                         } else {
-                            $.bootstrapGrowl(
-                                "<i class=\"fa fa-info\" style=\"font-size: 20pt; float: left; padding-right: 10px;\"></i><span style=\"font-size: 10pt;\">" +
-                                data.message + "</span>", {
-                                    type: 'danger',
-                                    align: 'center',
-                                    delay: 8000,
-                                    width: 450,
-                                    stackup_spacing: 20
-                                });
+                            showNotification("fa fa-check-circle-o",  data.message, 'danger')
                         }
                     },
-                    error: function(response) {
-                        $('#notice-slip-submit-btn').attr('disabled', false);
-                        $.bootstrapGrowl(
-                            "<i class=\"fa fa-info\" style=\"font-size: 20pt; float: left; padding-right: 10px;\"></i><span style=\"font-size: 10pt;\">An error occured. Please try again.</span>", {
-                                type: 'danger',
-                                align: 'center',
-                                delay: 8000,
-                                width: 450,
-                                stackup_spacing: 20
-                            });
+                    error: (response) => {
+                        $('#notice-slip-submit-btn').attr('disabled', false)
+                        showNotification("fa fa-check-circle-o",  'An error occured. Please try again.', 'danger')
                     }
                 });
             });

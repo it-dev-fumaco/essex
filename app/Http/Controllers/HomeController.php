@@ -383,7 +383,7 @@ class HomeController extends Controller
             ->orderBy('examinee.examinee_id', 'desc')
             ->get();
 
-        $examDepts = DB::table('exams')->select('department_id')->distinct('department_id')->get();
+        $examDepts = DB::table('exams')->select('department_id')->distinct()->get();
         
         $deptIDs = [null];
         foreach($examDepts as $edept){
