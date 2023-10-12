@@ -165,7 +165,7 @@ class AbsentNoticesController extends Controller
 
                 $email_sent = 0;
                 try {
-                    Mail::to('jave.kulong@fumaco.local')->send(new SendMail_notice($data));
+                    Mail::to($email)->send(new SendMail_notice($data));
 
                     $email_sent = Mail::failures() ? 0 : 1;
                 } catch (\Throwable $th) {}
