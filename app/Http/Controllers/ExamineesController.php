@@ -254,36 +254,34 @@ class ExamineesController extends Controller
     public function tabAddExaminee(Request $request){
         try{
             list($duration, $exam_id) = explode(',', $request->exam_id);
-            $tookExam = Examinee::where('user_id',$request->user_id)->where('exam_id',$exam_id)->whereNotNull('date_taken')->first();
+            $tookExam = Examinee::join('users as u', 'u.id', 'examinee.user_id')
+                ->where('examinee.user_id', $request->user_id)->where('examinee.exam_id', $exam_id)->whereNotIn('u.user_type', ['Employee'])->whereNotNull('examinee.date_taken')->first();
             if($tookExam){
                 return response()->json(["error" => "Examinee has already taken the exam!"]);
             }
-            else{
-                $willExam = Examinee::where('user_id',$request->user_id)->where('exam_id',$exam_id)->whereNull('date_taken')->first();
-                if($willExam){
-                    return response()->json(["error" => "Examinee has pending exam!"]);
-                }
-                else{
-                    $examinee = new Examinee;
-                    $examinee->user_id = $request->user_id;
-                    $examinee->exam_id = $exam_id;
-                    $examinee->exam_code = date('Y',strtotime($request->date_of_exam)) . '-' . rand(10000,99999);
-                    $examinee->date_of_exam = $request->date_of_exam;
-                    $examinee->duration = $duration;
-                    $examinee->validity_date = $request->validity_date;
-                    $examinee->save();
 
-                    $examinees = Examinee::join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
-                            ->join('users', 'examinee.user_id', '=', 'users.id')
-                            ->select('examinee.*', 'exams.exam_title', 'users.employee_name')
-                            ->orderBy('examinee.exam_id')
-                            ->orderBy('date_of_exam','desc')
-                            ->orderBy('employee_name')->get();
-
-                    return response()->json(["message" => "Succesfully Added New Examinee", 'examinees' => $examinees]);
-                }
+            $willExam = Examinee::where('user_id',$request->user_id)->where('exam_id',$exam_id)->whereNull('date_taken')->first();
+            if($willExam){
+                return response()->json(["error" => "Examinee has pending exam!"]);
             }
-            
+
+            $examinee = new Examinee;
+            $examinee->user_id = $request->user_id;
+            $examinee->exam_id = $exam_id;
+            $examinee->exam_code = date('Y',strtotime($request->date_of_exam)) . '-' . rand(10000,99999);
+            $examinee->date_of_exam = $request->date_of_exam;
+            $examinee->duration = $duration;
+            $examinee->validity_date = $request->validity_date;
+            $examinee->save();
+
+            $examinees = Examinee::join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
+                ->join('users', 'examinee.user_id', '=', 'users.id')
+                ->select('examinee.*', 'exams.exam_title', 'users.employee_name')
+                ->orderBy('examinee.exam_id')
+                ->orderBy('date_of_exam','desc')
+                ->orderBy('employee_name')->get();
+
+            return response()->json(["message" => "Succesfully Added New Examinee", 'examinees' => $examinees]);
         }catch(Exception $e){
             return response()->json(["error" => $e->getMessage()]);
         }

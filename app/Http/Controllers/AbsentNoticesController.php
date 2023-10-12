@@ -155,32 +155,35 @@ class AbsentNoticesController extends Controller
                 'department'        => $viewdetails->department
             );
     
-            $leave_approver= DB::table('department_approvers')
+             $leave_approver= DB::table('department_approvers')
                 ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
                 ->where('department_approvers.department_id',  Auth::user()->department_id)
                 ->distinct()->pluck('users.email', 'users.user_id');
     
             foreach ($leave_approver as $user_id => $email) {
                 $data['approver'] = $user_id;
-                try {
-                    Mail::to($email)->send(new SendMail_notice($data));
 
-                    DB::table('email_notifications')->insert([
-                        'type' => 'Absent Notice Slip',
-                        'recipient' => $email,
-                        'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
-                        'template' => 'kiosk.Mail.template.notice_template',
-                        'template_data' => json_encode($data),
-                        'email_sent' => Mail::failures() ? 0 : 1
-                    ]);
+                $email_sent = 0;
+                try {
+                    Mail::to($email)->send(new SendMail_notice($data)); //
+
+                    $email_sent = Mail::failures() ? 0 : 1;
                 } catch (\Throwable $th) {}
+
+                DB::table('email_notifications')->insert([
+                    'type' => 'Absent Notice Slip',
+                    'recipient' => $email,
+                    'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
+                    'template' => 'kiosk.Mail.template.notice_template',
+                    'template_data' => json_encode($data),
+                    'email_sent' => $email_sent
+                ]);
             }
     
             DB::commit();
-            return response()->json(['success' => 1, 'message' => 'Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>']);
-        } catch (Exception $th) {
+            return response()->json(['success' => 1, 'message' => 'Please wait for the approved absent notice form.<br/>Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>', 'email_sent' => $email_sent]);
+        } catch (\Throwable $th) {
             DB::rollback();
-            // return $th->getMessage();
             return response()->json(['success' => 0, 'message' => 'An error occured. Please try again.']);
         }
     }

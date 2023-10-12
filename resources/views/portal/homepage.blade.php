@@ -307,55 +307,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- <section class="mt-2 d-block d-xl-none" style="z-index: 999 !important">
-                <div class="container-fluid p-0">
-                    @php
-                        $videos_array = [];
-                        if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4')){
-                            $videos_array[0] = [
-                                'title' => 'IT Guidelines and Policies',
-                                'url' => 'storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4',
-                                'thumbnail' => 'storage/thumbnail/it_guidelines.png'
-                            ];
-                        }
-
-                        if (Storage::disk('public')->exists('videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4')){
-                            $videos_array[1] = [
-                                'title' => 'Internet Services Proxy Configuration',
-                                'url' => 'storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4',
-                                'thumbnail' => 'storage/thumbnail/internet_services.png'
-                            ];
-                        }
-                    @endphp
-                    <div class="row">
-                        <div class="col-4 p-3">
-                            <div class="card h-100 shadow responsive-font" style="border-top: 3px solid #0D6EFD">
-                                <div class="card-header">
-                                    <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
-                                </div>
-                                <div class="card-body">
-                                    <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                                    <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                                    <p>3. Log off each terminal after use</p>
-                                </div>
-                            </div>
-                        </div>
-                        @foreach ($videos_array as $video)
-                            <div class="col-4 p-3">
-                                <div class="card thumbnail h-100 shadow responsive-font" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
-                                    <div class="card-body p-0">
-                                        <div class="h-100 position-relative" style="background-color: #000">
-                                            <img src="{{ $video['thumbnail'] }}" class="w-100 h-100" style="opacity: .9">
-                                            <i class="far fa-play-circle video-play-icon absolute-center"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section> --}}
         </div>
         
     </div>
@@ -405,7 +356,7 @@
                             <p>Date {{ ($data['status'] == 'APPROVED' ? 'Approved: ' : 'Disapproved: ').$data['approved_date'] }}</p>
                         @endif
                         <br>
-                        <button class="btn btn-warning" style="border-radius: 25px;" data-dismiss="modal" aria-label="Close">OK</button>
+                        <button class="btn btn-warning close-modal" style="border-radius: 25px;" data-modal="#noticeModal">OK</button>
                     </div>
                 </div>
             </div>
@@ -463,24 +414,34 @@
 
 <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
 <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
+<script src="{{ asset('/js/jquery-3.6.0.min.js') }}"></script>
+
     <script>
+        const modal_ctrl = (modal, action) => {
+            $(modal).modal(action)
+        }
         $(document).ready(function () {
             @if (session()->has('notice_data'))
-                $('#noticeModal').modal('show');
+                modal_ctrl('#noticeModal', 'show')
             @endif
-        });
-        $(document).on('click', '#editPostBtn', function(event){
-        event.preventDefault();
-        $('#editPostModal .post_id').val($(this).data('id'));
-        $('#editPostModal .post_title').val($(this).data('title'));
-        // $('#editPostModal .post_content').val($(this).data('content'));
-        $('#editPostModal .original_post_image').val($(this).data('image'));
-        $('#editPostModal .original_post_title').val($(this).data('title'));
-        $('#editPostModal .original_post_content').val($(this).data('content'));
-        CKEDITOR.instances['post_content'].setData($(this).data('content'));
 
-        $('#editPostModal').modal('show');
-    });
+            $(document).on('click', '.close-modal', function ($q) {
+                modal_ctrl($(this).data('modal'), 'hide')
+            })
+        });
+
+        $(document).on('click', '#editPostBtn', function(event){
+            event.preventDefault();
+            $('#editPostModal .post_id').val($(this).data('id'));
+            $('#editPostModal .post_title').val($(this).data('title'));
+            // $('#editPostModal .post_content').val($(this).data('content'));
+            $('#editPostModal .original_post_image').val($(this).data('image'));
+            $('#editPostModal .original_post_title').val($(this).data('title'));
+            $('#editPostModal .original_post_content').val($(this).data('content'));
+            CKEDITOR.instances['post_content'].setData($(this).data('content'));
+
+            $('#editPostModal').modal('show');
+        });
     $(document).on('click', '#deletePostBtn', function(event){
         event.preventDefault();
         $('#deletePostModal .post_id').val($(this).data('id'));

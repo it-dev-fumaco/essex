@@ -127,6 +127,8 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/notice_slip/updateDetails', 'AbsentNoticesController@updateNoticeDetails');
     Route::post('/notice_slip/cancelNotice', 'AbsentNoticesController@cancelNotice');
     Route::get('/notice_slip/absentToday', 'AbsentNoticesController@getAbsentToday');
+    Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
+    Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
     Route::get('/getAbsentNotices', 'AbsentNoticesController@getAbsentNotices');
     Route::get('/printNotice/{id}', 'AbsentNoticesController@printNotice');
     Route::get('/countPendingNotices', 'AbsentNoticesController@countPendingNotices');
@@ -143,9 +145,6 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/updateUnreturnedGatepass', 'GatepassesController@updateUnreturnedGatepass');
     Route::get('/countPendingGatepass', 'GatepassesController@countPendingGatepass');
 
-    Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
-    Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
-    
     Route::get('/gatepass/forApproval/fetch', 'GatepassesController@gatepassesForApproval');
     Route::post('/gatepass/updateStatus', 'GatepassesController@updateStatus');
     Route::get('/forApproval', 'HomeController@showForApproval');

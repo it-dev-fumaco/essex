@@ -325,82 +325,64 @@ class QuestionsController extends Controller
     }
 
     public function tabUpdateQuestion(Request $request){
-        $question = Question::find($request->question_id);
-        $question->exam_id = $request->exam_id;
-        $question->exam_type_id = $request->exam_type_id;
-        $question->questions = $request->questions;
-        $question->option1 = $request->option1;
-        $question->option2 = $request->option2;
-        $question->option3 = $request->option3;
-        $question->option4 = $request->option4;
-        $question->correct_answer = $request->correct_answer;
+        DB::beginTransaction();
+        try {
+            $question = Question::find($request->question_id);
+            $question->exam_id = $request->exam_id;
+            $question->exam_type_id = $request->exam_type_id;
+            $question->questions = $request->questions;
+            $question->option1 = $request->option1;
+            $question->option2 = $request->option2;
+            $question->option3 = $request->option3;
+            $question->option4 = $request->option4;
+            $question->correct_answer = $request->correct_answer;
 
-        if($request->hasFile('qimage')){ 
-            if($question->question_img){
-                $parts = explode(",",$question->question_img);
-                foreach($parts as $part){
-                    $filepath = storage_path() . '\\app\\public\\questions\\' . $part;
-                    unlink($filepath);
-                }   
+            if($request->hasFile('qimage')){ 
+                if($question->question_img){
+                    $parts = explode(",",$question->question_img);
+                    foreach($parts as $part){
+                        if(Storage::disk('public')->exists('/questions/'.$part)){
+                            $filepath = storage_path() . '\\app\\public\\questions\\' . $part;
+                            unlink($filepath);
+                        }
+                    }   
+                }
+                $qimgs = '';
+                foreach($request->qimage as $que){
+                    $filename = 'question' .  str_random(5) . '_' .$que->getClientOriginalName();
+                    $que->storeAs('public/questions',$filename);
+                    $qimgs .= $filename . ',';
+                }
+                $question->question_img = substr($qimgs,0,-1);  
             }
-            $qimgs = '';
-            foreach($request->qimage as $que){
-                $filename = 'question' .  str_random(5) . '_' .$que->getClientOriginalName();
-                $que->storeAs('public/questions',$filename);
-                $qimgs .= $filename . ',';
+
+            $option_images = ['option1_img','option2_img','option3_img','option4_img'];
+
+            foreach ($option_images as $image) {
+                if($request->hasFile($image)){
+                    if($question->$image){
+                        if(Storage::disk('public')->exists('/options/'.$question->$image)){
+                            $filepath = storage_path() . '\\app\\public\\options\\' . $question->$image;
+                            unlink($filepath);
+                        }
+                        $question->$image = null;
+                    }
+                    $filename = explode('_', $image)[0].'-'  . rand(10000,99999) . '_' . $request->$image->getClientOriginalName();
+                    $request->$image->storeAs('public/options/',$filename);
+                    $question->$image = $filename;
+                }
             }
-            $question->question_img = substr($qimgs,0,-1);  
+
+            $question->save();
+
+            $msg = ["message" => "Succesfully updated question ('".$request->exam_type."')'".$question->questions."'"];
+            DB::commit();
+            
+            return redirect()->back()->with($msg);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back()->with('An error occured. Please try again.');
         }
-
-        if($request->hasFile('option1_img')){
-            if($question->option1_img){
-                $filepath = storage_path() . '\\app\\public\\options\\' . $question->option1_img;
-                unlink($filepath);
-                $question->option1_img = null;
-            }
-            $filename = 'option1-'  . rand(10000,99999) . '_' . $request->option1_img->getClientOriginalName();
-            $request->option1_img->storeAs('public/options',$filename);
-            $question->option1_img = $filename;
-        }
-
-        if($request->hasFile('option2_img')){
-            if($question->option2_img){
-                $filepath = storage_path() . '\\app\\public\\options\\' . $question->option2_img;
-                unlink($filepath);
-                $question->option2_img = null;
-            }
-            $filename = 'option2-'  . rand(10000,99999) . '_' . $request->option2_img->getClientOriginalName();
-            $request->option2_img->storeAs('public/options',$filename);
-            $question->option2_img = $filename;
-        }
-
-        if($request->hasFile('option3_img')){
-            if($question->option3_img){
-                $filepath = storage_path() . '\\app\\public\\options\\' . $question->option3_img;
-                unlink($filepath);
-                $question->option3_img = null;
-            }
-            $filename = 'option3-'  . rand(10000,99999) . '_' . $request->option3_img->getClientOriginalName();
-            $request->option3_img->storeAs('public/options',$filename);
-            $question->option3_img = $filename;
-        }
-
-        if($request->hasFile('option4_img')){
-            if($question->option4_img){
-                $filepath = storage_path() . '\\app\\public\\options\\' . $question->option4_img;
-                unlink($filepath);
-                $question->option4_img = null;
-            }
-            $filename = 'option4-'  . rand(10000,99999) . '_' . $request->option4_img->getClientOriginalName();
-            $request->option4_img->storeAs('public/options',$filename);
-            $question->option4_img = $filename;
-        }
-
-        $question->save();
-
-        $msg = ["message" => "Succesfully updated question ('".$request->exam_type."')'".$question->questions."'"];
-        
-        return redirect()->back()->with($msg);
     }
 
     public function tabDeleteQuestion(Request $request){
