@@ -4,7 +4,7 @@
     <div class="section">
         <div class="container">
             @php
-                $kb_storage = 'http://'.env('LINK_KB').'/storage/files/';
+                $kb_storage = env('LINK_KB').'/storage/files/';
             @endphp
             <h2 style="margin-top: -40px; border: 0;">{{ $article->title }}</h2><br>
             <i class="fa fa-calendar-o"></i>&nbsp;{{ Carbon\Carbon::parse($article->created_at)->format('M. d, Y h:i A') }} | <i class="fa fa-folder"></i>&nbsp;{{ $article->category }}
