@@ -1,42 +1,49 @@
 @extends('portal.app')
 @section('content')
 @php
+    $admin_users = ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President'];
     $admin_settings = [
         [
             'icon' => 'fas fa-calendar',
             'title' => 'Attendance',
             'url' => '/module/attendance/history',
-            'bg-color' => 'bg-gradient bg-secondary'
+            'bg-color' => 'bg-gradient bg-secondary',
+            'allowed-users' => $admin_users,
         ],
         [
             'icon' => 'fas fa-clipboard-list',
             'title' => 'Evaluation',
             'url' => '/evaluation/objectives',
-            'bg-color' => 'bg-gradient bg-primary'
+            'bg-color' => 'bg-gradient bg-primary',
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-pen-square',
             'title' => 'Exam',
             'url' => '/examPanel',
-            'bg-color' => 'bg-gradient bg-warning'
+            'bg-color' => 'bg-gradient bg-warning',
+            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President', 'Operations Manager']
         ],
         [
             'icon' => 'fas fa-user-check',
             'title' => 'Leaves',
             'url' => '/module/absent_notice_slip/history',
-            'bg-color' => 'bg-gradient bg-success'
+            'bg-color' => 'bg-gradient bg-success',
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-clipboard-check',
             'title' => 'Gatepass',
             'url' => '/client/gatepass/history',
-            'bg-color' => 'bg-gradient bg-info'
+            'bg-color' => 'bg-gradient bg-info',
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-users',
             'title' => 'HR',
             'url' => '/module/hr/applicants',
-            'bg-color' => 'bg-gradient bg-dark'
+            'bg-color' => 'bg-gradient bg-dark',
+            'allowed-users' => $admin_users
         ]
     ];
 @endphp
@@ -146,16 +153,15 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-9 col-xl-10">
                 <div class="row p-0 right-panel">
                     <div class="col-12 col-xl-7">
-                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
+                        @if(in_array($designation, ['HR Payroll Assistant', 'HR Head', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']))
                             <div class="inner-box featured d-block d-xl-none mb-3">
                                 <div class="widget property-agent">
                                     <h3 class="widget-title">
                                         <div class="d-flex">
-                                            HR Settings
+                                            Settings
                                             <small class="flex-grow-1 text-muted text-end px-1">
                                                 <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
                                                     <i class="fas fa-chart-bar"></i> Analytics
@@ -163,18 +169,26 @@
                                             </small>
                                         </div>
                                     </h3>
-
                                     <div class="agent-info">
                                         <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
                                             @foreach ($admin_settings as $settings)
-                                                <div class="w-100 p-1">
-                                                    <a href="{{ $settings['url'] }}">
-                                                        <button class="btn {{ $settings['bg-color'] }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;">
-                                                            <i class="{{ $settings['icon'] }} d-block m-1"></i>
-                                                            <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
-                                                        </button>
-                                                    </a>
-                                                </div>
+                                            @php
+                                                $settings_btn_status = '';
+                                                if (!in_array($designation, $settings['allowed-users'])) {
+                                                    $settings_btn_status = 'settings-btn-opacity disabled';
+                                                }
+
+                                                if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                                                    $settings_btn_status = '';
+                                                }
+                                            @endphp
+                                        
+                                            <div class="w-100 p-1">
+                                                <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} w-100 text-capitalize p-2 {{ $settings['title'] == 'Exam' ? 'text-dark' : null }}" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
+                                                    <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                    <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
+                                                </button>
+                                            </div>
                                             @endforeach
                                         </div>
                                     </div>
@@ -265,36 +279,47 @@
                     </div>
     
                     <div class="col-12 col-xl-5">
-                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
-                            <div class="inner-box featured d-none d-xl-block mb-3">
-                                <div class="widget property-agent">
-                                    <h3 class="widget-title">
-                                        <div class="d-flex">
-                                            HR Settings
-                                            <small class="flex-grow-1 text-muted text-end px-1">
-                                                <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
-                                                    <i class="fas fa-chart-bar"></i> Analytics
-                                                </a>
-                                            </small>
-                                        </div>
-                                    </h3>
+                        @if(in_array($designation, $admin_users))
+                        <div class="inner-box featured d-none d-xl-block mb-3">
+                            <div class="widget property-agent">
+                                <h3 class="widget-title">
+                                    <div class="d-flex">
+                                        Settings
+                                        <small class="flex-grow-1 text-muted text-end px-1">
+                                            <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
+                                                <i class="fas fa-chart-bar"></i> Analytics
+                                            </a>
+                                        </small>
+                                    </div>
+                                </h3>
+                                <style>
+                                    
+                                </style>
 
-                                    <div class="agent-info">
-                                        <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
-                                            @foreach ($admin_settings as $settings)
-                                                <div class="w-100 p-1">
-                                                    <a href="{{ $settings['url'] }}">
-                                                        <button class="btn {{ $settings['bg-color'] }} {{ $settings['title'] == 'Exam' ? 'text-dark' : null }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;">
-                                                            <i class="{{ $settings['icon'] }} d-block m-1"></i>
-                                                            <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
-                                                        </button>
-                                                    </a>
-                                                </div>
-                                            @endforeach
+                                <div class="agent-info">
+                                    <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
+                                        @foreach ($admin_settings as $settings)
+                                        @php
+                                            $settings_btn_status = '';
+                                            if (!in_array($designation, $settings['allowed-users'])) {
+                                                $settings_btn_status = 'settings-btn-opacity disabled';
+                                            }
+
+                                            if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                                                $settings_btn_status = '';
+                                            }
+                                        @endphp
+                                        <div class="w-100 p-1">
+                                            <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} {{ $settings['title'] == 'Exam' ? 'text-dark' : null }} w-100 text-capitalize p-2" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
+                                                <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
+                                            </button>
                                         </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         @endif
                         <div class="alert alert-danger blink" id="lateWarning" hidden>
                             <i class="fa fa-info-circle" style="font-size: 15pt;"></i><span> You have reached the maximum late
@@ -311,13 +336,17 @@
                                 </ul>
                             </div>
                         @endif
-                        <div class="inner-box featured">
-                            <div class="widget property-agent">
-                                <div class="d-flex">
-                                    <h3 class="widget-title">My Attendance</h3>
-                                    <small id="refreshAttendance" class="flex-grow-1 text-muted text-end px-1" style="cursor: pointer">
-                                        <i class="fas fa-sync-alt"></i> Refresh
-                                    </small>
+                        <div class="inner-box featured p-2">
+                            <div class="widget property-agent p-0">
+                                <div class="d-flex w-100 p-0">
+                                    <h3 class="widget-title mb-2 pb-2 w-100">
+                                        <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
+                                            <span class="col-8">My Attendance</span>
+                                            <span id="refreshAttendance" class="col-4 text-muted text-end" style="cursor: pointer;">
+                                                <i class="fas fa-sync-alt text-muted m-0 p-0" style="font-size: 12px !important;"></i> Refresh
+                                            </span>
+                                        </div>
+                                    </h3>
                                 </div>
                                 <div class="agent-info">
                                     <div class="row">
@@ -379,6 +408,9 @@
     <iframe id="iframe-print" hidden></iframe>
 
     <style type="text/css">
+    .settings-btn-opacity {
+        opacity: 30% !important;
+    }
     @-webkit-keyframes blinker {
         from {
             opacity: 1.0;
@@ -642,6 +674,12 @@
 
     <script>
         $(document).ready(function() {
+            $(document).on('click', '.settings-btn', function(e) {
+                e.preventDefault();
+
+                window.location.href = $(this).data('href');
+            });
+
             $('.open-reminder').click();
 
             const showNotification = (icon, message, status, title = null) => {
@@ -1029,20 +1067,23 @@
                     '</div>' +
                 '</div>');
                 loadAttendance(1);
-                // var employee = '{{ Auth::user()->user_id }}';
-                // $.ajax({
-                //     type: 'POST',
-                //     url: '/attendance/update/' + employee,
-                //     beforeSend: function() {
-                //         $("#refreshAttendance").text("Updating...");
-                //     },
-                //     success: function(response) {
-                //         loadAttendance();
-                //     },
-                //     complete: function() {
-                //         $("#refreshAttendance").html("<i class=\"fa fa-refresh\"></i> Refresh");
-                //     }
-                // });
+                var employee = '{{ Auth::user()->user_id }}';
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/update/' + employee,
+                    data: {
+                        '_token': '{{ csrf_token() }}'
+                    },
+                    beforeSend: function() {
+                        $("#refreshAttendance").text("Updating...");
+                    },
+                    success: function(response) {
+                        loadAttendance();
+                    },
+                    complete: function() {
+                        $("#refreshAttendance").html("<i class=\"fas fa-sync-alt text-muted m-0 p-0\" style=\"font-size: 12px !important;\"></i> Refresh");
+                    }
+                });
             });
 
 

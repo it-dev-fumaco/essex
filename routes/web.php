@@ -10,6 +10,7 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/local', 'TestingEnvironmentController@local_login');
 Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus');
 
 // E M P L O Y E E  P O R T A L

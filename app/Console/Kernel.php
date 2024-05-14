@@ -28,6 +28,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('emails:worksary')->everyMinute();
         // $schedule->command('emails:birthday')->dailyAt('00:00');
         // $schedule->command('emails:worksary')->dailyAt('00:00');
+        if(env('DB_HOST') == '10.0.0.73'){
+            echo "NOTE: Currently connected to Live DB\n";
+        }
     }
 
     /**
