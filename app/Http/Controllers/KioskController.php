@@ -729,7 +729,7 @@ class KioskController extends Controller
                     'customer' => $customer,
                     'itinerary_date' => $itinerary_date,
                     'purpose' => $request->purpose[$i],
-                    'date' => $itinerary_date,
+                    // 'date' => $itinerary_date,
                     'time' => $request->itinerary_time[$i],
                     'from' => $request->from[$i],
                     'lead' => $lead,
