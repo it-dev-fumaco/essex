@@ -29,6 +29,6 @@ class SendMail_notice extends Mailable
      */
     public function build()
     {
-        return $this->from('essex@fumaco.local')->subject('Absent Notice Slip - FOR YOUR APPROVAL')->view('kiosk.Mail.template.notice_template')->with('data', $this->data);   
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject('Absent Notice Slip - FOR YOUR APPROVAL')->view('kiosk.Mail.template.notice_template')->with('data', $this->data);   
      }
 }

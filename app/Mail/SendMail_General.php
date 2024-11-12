@@ -30,6 +30,6 @@ class SendMail_General extends Mailable
     {
         $mail_config = $this->data['mail_config'];
         $template_data = $this->data['data'];
-        return $this->from('essex@fumaco.local')->subject($mail_config['subject'])->view($mail_config['template'])->with('data', $template_data);
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject($mail_config['subject'])->view($mail_config['template'])->with('data', $template_data);
     }
 }

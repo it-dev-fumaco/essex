@@ -30,5 +30,5 @@ class SendMail_itinerary extends Mailable
     public function build()
     {
         $username = Auth::user()->employee_name;
-        return $this->from('essex@fumaco.local')->subject(''.$username.' filed absent notice slip')->view('kiosk.Mail.template.itinerary_template')->with('data', $this->data);    }
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject(''.$username.' filed absent notice slip')->view('kiosk.Mail.template.itinerary_template')->with('data', $this->data);    }
 }

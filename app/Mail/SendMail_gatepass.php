@@ -30,5 +30,5 @@ class SendMail_gatepass extends Mailable
     public function build()
     {
         $username = Auth::user()->employee_name;
-        return $this->from('essex@fumaco.local')->subject(''.$username.' filed gatepass request')->view('kiosk.Mail.template.gatepass_template')->with('data', $this->data);    }
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject(''.$username.' filed gatepass request')->view('kiosk.Mail.template.gatepass_template')->with('data', $this->data);    }
 }
