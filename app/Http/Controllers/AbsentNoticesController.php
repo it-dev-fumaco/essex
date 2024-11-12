@@ -176,10 +176,11 @@ class AbsentNoticesController extends Controller
                     'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
                     'template' => 'kiosk.Mail.template.notice_template',
                     'template_data' => json_encode($data),
+                    'user_id' => Auth::user()->id,
                     'email_sent' => $email_sent
                 ]);
             }
-    
+
             DB::commit();
             return response()->json(['success' => 1, 'message' => 'Please wait for the approved absent notice form.<br/>Absent Notice Slip no. <b>' . $notice_slip->notice_id . '</b>', 'email_sent' => $email_sent]);
         } catch (\Throwable $th) {

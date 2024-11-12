@@ -142,7 +142,7 @@ class EmployeeLeavesController extends Controller
         DB::beginTransaction();
         try {
              // get employee leaves
-            $query = DB::table('employee_leaves as el')->join('users as u', 'el.employee_id', 'u.user_id')
+            return $query = DB::table('employee_leaves as el')->join('users as u', 'el.employee_id', 'u.user_id')
                 ->join('leave_types as lt', 'el.leave_type_id', 'lt.leave_type_id')
                 ->where('u.status', 'Active')->where('u.user_type', 'Employee')->where('u.employment_status', 'Regular')
                 ->select('el.employee_id', 'el.leave_type_id', DB::raw('MAX(el.total) as total_leave'), 'u.employee_name', 'lt.leave_type')
@@ -169,11 +169,12 @@ class EmployeeLeavesController extends Controller
 
             DB::table('employee_leaves')->insert($values);
             
-            DB::commit();
+            // DB::commit();
 
             return redirect()->back()->with('message', 'Employee Leave successfully updated.');
         } catch (Exception $e) {
             DB::rollback();
+            return 0;
 
             return redirect()->back()->with('message', 'Something went wrong. Please try again.');
         }

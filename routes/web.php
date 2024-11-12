@@ -10,6 +10,7 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/local', 'TestingEnvironmentController@local_login');
 Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus');
 
 // E M P L O Y E E  P O R T A L
@@ -38,8 +39,6 @@ Route::get('/itguidelines', 'PortalController@showitGuidelines');
 
 Route::get('/search', 'SearchController@search')->name('search');
 
-
-
 Route::get('/exam', 'HomeController@takeExam');
 
 Route::get('/userLogout', 'Auth\LoginController@userLogout')->name('user.logout');
@@ -59,6 +58,7 @@ Route::group(['prefix' => 'admin'], function(){
     Route::get('/', 'AdminController@index')->name('admin.dashboard');
     Route::get('/logout', 'Auth\AdminLoginController@adminLogout')->name('admin.logout');
 });
+Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
 
 // C L I E N T
 Route::group(['middleware' => 'auth'], function(){
@@ -128,7 +128,6 @@ Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
     Route::post('/notice_slip/cancelNotice', 'AbsentNoticesController@cancelNotice');
     Route::get('/notice_slip/absentToday', 'AbsentNoticesController@getAbsentToday');
     Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
-    Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
     Route::get('/getAbsentNotices', 'AbsentNoticesController@getAbsentNotices');
     Route::get('/printNotice/{id}', 'AbsentNoticesController@printNotice');
     Route::get('/countPendingNotices', 'AbsentNoticesController@countPendingNotices');

@@ -1,48 +1,49 @@
 @extends('portal.app')
 @section('content')
 @php
+    $admin_users = ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President'];
     $admin_settings = [
         [
             'icon' => 'fas fa-calendar',
             'title' => 'Attendance',
             'url' => '/module/attendance/history',
             'bg-color' => 'bg-gradient bg-secondary',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President'],
+            'allowed-users' => $admin_users,
         ],
         [
             'icon' => 'fas fa-clipboard-list',
             'title' => 'Evaluation',
             'url' => '/evaluation/objectives',
             'bg-color' => 'bg-gradient bg-primary',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-pen-square',
             'title' => 'Exam',
             'url' => '/examPanel',
             'bg-color' => 'bg-gradient bg-warning',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']
+            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President', 'Operations Manager']
         ],
         [
             'icon' => 'fas fa-user-check',
             'title' => 'Leaves',
             'url' => '/module/absent_notice_slip/history',
             'bg-color' => 'bg-gradient bg-success',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-clipboard-check',
             'title' => 'Gatepass',
             'url' => '/client/gatepass/history',
             'bg-color' => 'bg-gradient bg-info',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-users',
             'title' => 'HR',
             'url' => '/module/hr/applicants',
             'bg-color' => 'bg-gradient bg-dark',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']
+            'allowed-users' => $admin_users
         ]
     ];
 @endphp
@@ -155,38 +156,40 @@
             <div class="col-9 col-xl-10">
                 <div class="row p-0 right-panel">
                     <div class="col-12 col-xl-7">
-                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']))
-                        <div class="inner-box featured d-block d-xl-none mb-3">
-                            <div class="widget property-agent">
-                                <h3 class="widget-title">
-                                    <div class="d-flex">
-                                        Settings
-                                        <small class="flex-grow-1 text-muted text-end px-1">
-                                            <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
-                                                <i class="fas fa-chart-bar"></i> Analytics
-                                            </a>
-                                        </small>
-                                    </div>
-                                </h3>
-                                <div class="agent-info">
-                                    <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
-                                        @foreach ($admin_settings as $settings)
-                                        @php
-                                            $settings_btn_status = '';
-                                            if (!in_array($designation, $settings['allowed-users'])) {
-                                                $settings_btn_status = 'settings-btn-opacity disabled';
-                                            }
-
-                                            if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                        @if(in_array($designation, ['HR Payroll Assistant', 'HR Head', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']))
+                            <div class="inner-box featured d-block d-xl-none mb-3">
+                                <div class="widget property-agent">
+                                    <h3 class="widget-title">
+                                        <div class="d-flex">
+                                            Settings
+                                            <small class="flex-grow-1 text-muted text-end px-1">
+                                                <a href="/client/analytics/attendance" class="text-decoration-none text-muted" style="cursor: pointer">
+                                                    <i class="fas fa-chart-bar"></i> Analytics
+                                                </a>
+                                            </small>
+                                        </div>
+                                    </h3>
+                                    <div class="agent-info">
+                                        <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
+                                            @foreach ($admin_settings as $settings)
+                                            @php
                                                 $settings_btn_status = '';
-                                            }
-                                        @endphp
-                                     
-                                        <div class="w-100 p-1">
-                                            <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} w-100 text-capitalize p-2 {{ $settings['title'] == 'Exam' ? 'text-dark' : null }}" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
-                                                <i class="{{ $settings['icon'] }} d-block m-1"></i>
-                                                <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
-                                            </button>
+                                                if (!in_array($designation, $settings['allowed-users'])) {
+                                                    $settings_btn_status = 'settings-btn-opacity disabled';
+                                                }
+
+                                                if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                                                    $settings_btn_status = '';
+                                                }
+                                            @endphp
+                                        
+                                            <div class="w-100 p-1">
+                                                <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} w-100 text-capitalize p-2 {{ $settings['title'] == 'Exam' ? 'text-dark' : null }}" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
+                                                    <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                    <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
+                                                </button>
+                                            </div>
+                                            @endforeach
                                         </div>
                                         @endforeach
                                     </div>
@@ -278,7 +281,7 @@
                     </div>
     
                     <div class="col-12 col-xl-5">
-                        @if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']))
+                        @if(in_array($designation, $admin_users))
                         <div class="inner-box featured d-none d-xl-block mb-3">
                             <div class="widget property-agent">
                                 <h3 class="widget-title">

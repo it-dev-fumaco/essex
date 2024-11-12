@@ -23,7 +23,7 @@
         <a href="{{ env('APP_URL', 'https://essex.fumaco.local') }}/notice_slip/updateStatus{{ $params }}" class="btn btn-danger">Disapprove</a>
         <br>
         <hr>
-        <p>Or log in to https://essex.fumaco.local to Approved or Cancel Request</p><br><b>Fumaco Inc / Absent Notice Slip {{ $data['year'] }} </b>
+        <p>Or log in to https://essex.fumaco.local to Approve or Cancel Request</p><br><b>Fumaco Inc / Absent Notice Slip {{ $data['year'] }} </b>
         <br></br>
         <small>Auto Generated E-mail from Essex - NO REPLY </small>
         </div>
