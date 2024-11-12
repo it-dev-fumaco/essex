@@ -98,7 +98,7 @@ class HomeController extends Controller
             ->count();
 
         $awaiting_gatepass = 0;
-        $gatepass_approvers = ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head'];
+        $gatepass_approvers = ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head', 'HR Payroll Assistant'];
         if (in_array($designation, $gatepass_approvers)) {
             $awaiting_gatepass = DB::table('gatepass')
                 ->join('users', 'users.user_id', '=', 'gatepass.user_id')
@@ -237,7 +237,7 @@ class HomeController extends Controller
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
 
-        if (in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President'])) {
+        if (in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
             $leaves = DB::table('notice_slip')
                         ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
                         ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
@@ -450,7 +450,7 @@ class HomeController extends Controller
         $files = DB::table('evaluation_files')
             ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id');
                     
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President'])) {
+        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
             $files = $files->where('evaluation_files.employee_id', Auth::user()->user_id);
         }
         

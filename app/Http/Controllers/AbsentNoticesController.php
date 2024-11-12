@@ -681,7 +681,7 @@ class AbsentNoticesController extends Controller
 
             $designation = $details->designation;
 
-            if (in_array($designation, ['Human Resources Head', 'Director of Operations'])) {
+            if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'HR Payroll Assistant'])) {
                 $departments = DB::table('departments')->get();
             }else{
                 $departments = DB::table('department_approvers')->where('employee_id', Auth::user()->user_id)->get();

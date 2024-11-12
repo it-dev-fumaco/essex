@@ -8,7 +8,7 @@
          <div class="modal-body">
             <div class="row" style="margin: 7px;">
                <div class="tabs-section">
-                  @if(in_array($designation, ['Operations Manager', 'Human Resources Head', 'Director of Operations', 'President', 'Product Manager']))
+                  @if(in_array($designation, ['Operations Manager', 'Human Resources Head', 'Director of Operations', 'President', 'Product Manager', 'HR Payroll Assistant']))
                   <ul class="nav nav-pills" id="gatepass-tabs">
                      <li class="nav-item border rounded border-success"><a href="#tab-gatepass-form" class="nav-link active" data-bs-toggle="tab">Gatepass Form</a></li>
                      <li class="nav-item border rounded border-success"><a href="#tab-item-accountability" class="nav-link" data-bs-toggle="tab">Item Accountability</a></li>

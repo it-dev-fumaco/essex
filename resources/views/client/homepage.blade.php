@@ -191,9 +191,11 @@
                                             </div>
                                             @endforeach
                                         </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         @endif
 
                         <div class="inner-box featured">
