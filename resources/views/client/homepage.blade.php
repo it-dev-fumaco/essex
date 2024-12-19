@@ -195,7 +195,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         @endif
 
                         <div class="inner-box featured">
