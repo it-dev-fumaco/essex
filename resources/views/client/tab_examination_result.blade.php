@@ -167,7 +167,7 @@
                   Average Score = <b>{{ $average }} %</b>
                </div>
                <div style="padding-left: 100px;">
-                  Remarks = <b style="font-size: 14pt;">{!! $average >= $examres->passing_mark ? '<span class="label label-primary">Pass</span>' : '<span class="label label-danger">Failed</span>' !!}</b>
+                  Remarks = <b style="font-size: 14pt;">{!! (float) $average >= (float) $examres->passing_mark ? '<span class="label label-success">Passed</span>' : '<span class="label label-danger">Failed</span>' !!}</b>
                </div>
             </div>
          </div>
