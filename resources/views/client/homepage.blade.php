@@ -2419,7 +2419,8 @@
                 type: 'post',
                 url: '/oem/employee/validateExamCode',
                 data: {
-                    excode: excode
+                    excode: excode,
+                    _token: '{{ csrf_token() }}'
                 },
                 success: function(data) {
                     console.log(data);
