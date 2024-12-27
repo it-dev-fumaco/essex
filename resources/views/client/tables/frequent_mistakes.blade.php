@@ -14,7 +14,7 @@
                 <td style="text-align: center">{{ $item->question_id }}</td>
                 <td>{!! $item->questions !!}</td>
                 <td>{{ $item->correct_answer }}</td>
-                <td>{{ $examinee_answers[$item->question_id][0]->examinee_answer }}</td>
+                <td>{{ isset($examinee_answers[$item->question_id]) ? $examinee_answers[$item->question_id][0]->examinee_answer : null }}</td>
                 <td style="text-align: center">{{ $item->wrong_answers_count }}</td>
             </tr>
         @empty
