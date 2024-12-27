@@ -11,12 +11,6 @@
    }
 </style>
 <div class="row">
-   <div class="col-6 border border-danger">
-      test
-   </div>
-   <div class="col-6 border border-danger">
-      
-   </div>
    <div class="col-md-12" style="margin-top: -30px;">
       <h2 class="section-title center">Online Examination System</h2>
       <a href="/tabExams">
@@ -265,24 +259,6 @@
                      <div class="row">
                         <div class="col-md-12">
                            @include('client.tables.frequent_mistakes')
-                           {{-- <table class="table table-bordered">
-                              <tr>
-                                  <th>Question ID</th>
-                                  <th>Question</th>
-                                  <th>Correct Anwswer</th>
-                                  <th>Common Anwswer</th>
-                                  <th>Wrong Answers Count</th>
-                              </tr>
-                              @foreach ($data as $item)
-                                  <tr>
-                                      <td style="text-align: center">{{ $item->question_id }}</td>
-                                      <td>{{ $item->questions }}</td>
-                                      <td>{{ $item->correct_answer }}</td>
-                                      <td>{{ $examinee_answers[$item->question_id][0]->examinee_answer }}</td>
-                                      <td style="text-align: center">{{ $item->wrong_answers_count }}</td>
-                                  </tr>
-                              @endforeach
-                          </table> --}}
                         </div>
                      </div>
                   </div>
