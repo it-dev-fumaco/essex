@@ -53,7 +53,7 @@
                   <li><a href="#dexterity1" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 1</a></li>
                   <li><a href="#dexterity2" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 2</a></li>
                   <li><a href="#dexterity3" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 3</a></li>
-                  <li><a href="#frequent-mistakes" data-toggle="tab" style="padding: 10px 8px;">View Frequent Mistakes</a></li>
+                  <li><a href="#frequent-mistakes" data-toggle="tab" style="padding: 10px 8px;">Frequent Mistakes</a></li>
                </ul>
                <div class="tab-content">
                   <div class="tab-pane active" id="multiplechoice">
