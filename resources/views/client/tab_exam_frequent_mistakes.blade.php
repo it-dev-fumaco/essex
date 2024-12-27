@@ -15,7 +15,7 @@
          <div class="row">
             <div class="col-md-12">
                <div class="inner-box featured">
-                  <h2 class="title-2">Examination Report</h2>
+                  <h2 class="title-2">Examination Frequent Mistakes Report</h2>
                   <div style="float: left; z-index: 1;" id="datepairExample">
                      <span>Date of Exam: <input type="text" class="exam-date date filters"{{--  value="{{ date('Y-m-d') }}" --}}></span>
                      <span>User Type: 

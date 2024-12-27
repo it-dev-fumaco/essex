@@ -308,90 +308,59 @@ class ExamsController extends Controller
     }
 
     public function tabviewExamDetails($exam_id){
-        // try{
-            $examtypes = ExamType::get();
+        $examtypes = ExamType::get();
 
-            $details = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
+        $details = DB::table('users')
+                ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+                ->join('departments', 'users.department_id', '=', 'departments.department_id')
+                ->where('user_id', Auth::user()->user_id)
+                ->first();
+
+        $department = $details->department;
+        $designation = $details->designation;
+
+        $exam = Exam::where('exam_id',$exam_id)
+                    ->join('exam_group','exams.exam_group_id','=','exam_group.exam_group_id')
+                    ->join('departments','exams.department_id','=', 'departments.department_id', 'left outer')
+                    ->select('exams.*','departments.department','exam_group.exam_group_description')
                     ->first();
 
-            $department = $details->department;
-            $designation = $details->designation;
+        $questions = Question::where('questions.exam_id', $exam_id)->get();
 
-            $exam = Exam::where('exam_id',$exam_id)
-                        ->join('exam_group','exams.exam_group_id','=','exam_group.exam_group_id')
-                        ->join('departments','exams.department_id','=', 'departments.department_id', 'left outer')
-                        ->select('exams.*','departments.department','exam_group.exam_group_description')
-                        ->first();
-            $examquestions = Question::where('questions.exam_id','=',$exam_id)
-                        ->join('exam_type', 'questions.exam_type_id', '=', 'exam_type.exam_type_id')
-                        ->join('exams', 'questions.exam_id', '=', 'exams.exam_id')
-                        ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-                                    
-            $multipleChoice = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 4)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $essay = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 5)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $numericalExam = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 6)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $trueOrFalse = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 7)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $identification = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 12)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $abstract = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 13)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $dexterity1 = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 14)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
-            $dexterity2 = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 15)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
+        $questions_count = collect($questions)->count();
+        $questions = collect($questions)->groupBy('exam_type_id');
 
-            $dexterity3 = Question::where('questions.exam_id','=',$exam_id)
-                        ->where('questions.exam_type_id', 16)
-                        // ->select('questions.*', 'exam_type.exam_type', 'exams.exam_title')
-                        ->get();
+        $multipleChoice     = isset($questions[4]) ? $questions[4] : [];
+        $essay              = isset($questions[5]) ? $questions[5] : [];
+        $numericalExam      = isset($questions[6]) ? $questions[6] : [];
+        $trueOrFalse        = isset($questions[7]) ? $questions[7] : [];
+        $identification     = isset($questions[12]) ? $questions[12] : [];
+        $abstract           = isset($questions[13]) ? $questions[13] : [];
+        $dexterity1         = isset($questions[14]) ? $questions[14] : [];
+        $dexterity2         = isset($questions[15]) ? $questions[15] : [];
+        $dexterity3         = isset($questions[16]) ? $questions[16] : [];
 
-            $data = [
-                'examtypes' => $examtypes,
-                'exam' => $exam,
-                'examquestions' => $examquestions,
-                'department' => $department,
-                'designation' => $designation,
+        $frequent_mistakes_data = DB::table('examinee_answers as answer')
+            ->join('questions as question', 'question.question_id', 'answer.question_id')
+            ->where('answer.exam_id', $exam_id)->where('answer.isCorrect', 'False')->whereNotNull('answer.examinee_answer')
+            ->select('question.question_id', 'question.questions', 'question.correct_answer', DB::raw('COUNT(answer.q_no) as wrong_answers_count'))
+            ->groupBy('question.question_id', 'question.questions', 'question.correct_answer')
+            ->orderByDesc('wrong_answers_count')
+            ->get();
 
-                'multipleChoice' => $multipleChoice,
-                'essay' => $essay,
-                'numericalExam' => $numericalExam,
-                'trueOrFalse' => $trueOrFalse,
-                'identification' => $identification,
-                'abstract' => $abstract,
-                'dexterity1' => $dexterity1,
-                'dexterity2' => $dexterity2,
-                'dexterity3' => $dexterity3,
-            ];
+        $question_ids = collect($frequent_mistakes_data)->pluck('question_id');
 
-            return view('client.tab_exam_view_details')->with($data);
-        // }catch(Exception $e){
-        //     return redirect()->route('client.tab_view_exam_details')->with(["message" => $e->getMessage()]);
-        // }
+        $examinee_answers = DB::table('examinee_answers as answer')
+            ->join('questions as question', 'question.question_id', 'answer.question_id')
+            ->where('answer.exam_id', $exam_id)->where('answer.isCorrect', 'False')->whereIn('question.question_id', $question_ids)->whereNotNull('answer.examinee_answer')
+            ->select('question.question_id', 'question.questions', 'question.correct_answer', 'answer.examinee_answer', DB::raw('COUNT(answer.examinee_answer) as wrong_answers_count'))
+            ->groupBy('question.question_id', 'question.questions', 'question.correct_answer', 'answer.examinee_answer')
+            ->orderByDesc('wrong_answers_count')
+            ->get();
 
+        $examinee_answers = collect($examinee_answers)->groupBy('question_id');
+
+        return view('client.tab_exam_view_details', compact('examtypes', 'exam', 'questions_count', 'department', 'designation', 'multipleChoice', 'essay', 'numericalExam', 'trueOrFalse', 'identification', 'abstract', 'dexterity1', 'dexterity2', 'dexterity3', 'frequent_mistakes_data', 'examinee_answers'));
     }
 
     public function sessionDetails($column){

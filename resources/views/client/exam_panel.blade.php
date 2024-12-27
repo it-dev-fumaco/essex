@@ -9,14 +9,7 @@
 </div>
 
 <div id="online-exam-tab">
-   <ul class="nav nav-tabs" style="text-align: center;">
-      <li class="active"><a href="/examPanel">Create Exam</a></li>
-      <li><a href="/tabExams">Exam List</a></li>
-      <li><a href="/tabApplicants">Applicant(s)</a></li>
-      <li><a href="/tabExaminees">Examinee(s)</a></li>
-      <li><a href="/tabExamReport">Examination Report</a></li>
-      {{-- <li><a href="tabExamSettings">Settings</a></li> --}}
-   </ul>
+   @include('client.tab_header_admin', ['current_page' => '/examPanel'])
    <div class="tab-content">
       <div class="tab-pane in active" id="tab-create-exam">
          <div class="row">

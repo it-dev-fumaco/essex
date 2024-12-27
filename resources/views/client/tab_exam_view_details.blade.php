@@ -11,6 +11,12 @@
    }
 </style>
 <div class="row">
+   <div class="col-6 border border-danger">
+      test
+   </div>
+   <div class="col-6 border border-danger">
+      
+   </div>
    <div class="col-md-12" style="margin-top: -30px;">
       <h2 class="section-title center">Online Examination System</h2>
       <a href="/tabExams">
@@ -34,7 +40,7 @@
             <div class="col-sm-2" style="padding-left: 7%; text-align: left;">Exam Group:</div>
             <div class="col-sm-4" style="text-align: left; font-weight: bold;">{{ $exam->exam_group_description }}</div>
             <div class="col-sm-2" style="padding-left: 7%; text-align: left;">Total Item(s):</div>
-            <div class="col-sm-4" style="text-align: left; font-weight: bold;">{{ count($examquestions) }}</div>
+            <div class="col-sm-4" style="text-align: left; font-weight: bold;">{{ $questions_count }}</div>
 
             <div class="col-md-12" style="margin-top: 2%;" id="exam-question-tabs">
                @if(session("message"))
@@ -53,6 +59,7 @@
                   <li><a href="#dexterity1" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 1</a></li>
                   <li><a href="#dexterity2" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 2</a></li>
                   <li><a href="#dexterity3" data-toggle="tab" style="padding: 10px 8px;">Dexterity & Accuracy 3</a></li>
+                  <li><a href="#frequent-mistakes" data-toggle="tab" style="padding: 10px 8px;">View Frequent Mistakes</a></li>
                </ul>
                <div class="tab-content">
                   <div class="tab-pane active" id="multiplechoice">
@@ -250,6 +257,32 @@
                            @endforeach
                            <br>
                            @include('client.tables.tab_exam_details_dexterity3')
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="tab-pane" id="frequent-mistakes">
+                     <div class="row">
+                        <div class="col-md-12">
+                           @include('client.tables.frequent_mistakes')
+                           {{-- <table class="table table-bordered">
+                              <tr>
+                                  <th>Question ID</th>
+                                  <th>Question</th>
+                                  <th>Correct Anwswer</th>
+                                  <th>Common Anwswer</th>
+                                  <th>Wrong Answers Count</th>
+                              </tr>
+                              @foreach ($data as $item)
+                                  <tr>
+                                      <td style="text-align: center">{{ $item->question_id }}</td>
+                                      <td>{{ $item->questions }}</td>
+                                      <td>{{ $item->correct_answer }}</td>
+                                      <td>{{ $examinee_answers[$item->question_id][0]->examinee_answer }}</td>
+                                      <td style="text-align: center">{{ $item->wrong_answers_count }}</td>
+                                  </tr>
+                              @endforeach
+                          </table> --}}
                         </div>
                      </div>
                   </div>
