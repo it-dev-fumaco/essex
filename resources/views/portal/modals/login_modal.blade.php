@@ -11,15 +11,15 @@
                 </div>
 
                 <ul class="nav nav-tabs" id="login-tabs">
-                    <li class="nav-item m-0 col-6">
+                    {{-- <li class="nav-item m-0 col-6">
                         <a class="nav-link active" aria-current="page" data-toggle="tab" data-target="#ldap-login">Login with LDAP</a>
-                    </li>
+                    </li> --}}
                     <li class="nav-item m-0 col-6">
-                        <a class="nav-link" aria-current="page" data-toggle="tab" data-target="#biometric-login">Login with Biometric</a>
+                        <a class="nav-link active" aria-current="page" data-toggle="tab" data-target="#biometric-login">Login with Biometric</a>
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <div id="ldap-login" class="container tab-pane active" style="padding: 8px 0 0 0;">
+                    <div id="ldap-login" class="container tab-pane" style="padding: 8px 0 0 0;">
                         <form action="/userLogin" method="POST" autocomplete="off" id="ldap-login-form">
                             @csrf
                             <input type="hidden" name="login_as" value="ldap-login">
@@ -40,7 +40,7 @@
                             <button class="btn btn-common log-btn w-100" type="submit">LOG IN</button>
                         </form>
                     </div>
-                    <div id="biometric-login" class="container tab-pane" style="padding: 8px 0 0 0;">
+                    <div id="biometric-login" class="container tab-pane active" style="padding: 8px 0 0 0;">
                         <form action="/userLogin" method="POST" autocomplete="off" id="biometric-login-form">
                             @csrf
                             <input type="hidden" name="login_as" value="login">
