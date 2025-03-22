@@ -116,11 +116,16 @@ return [
             'prefix_indexes' => true,
         ],
         'access' => [
-            'driver' => 'pdo_access',
-            'connection_string' => 'dsn=essex',
-            'username' => '',
-            'password' => '',
+            'driver' => env('ODBC_DRIVER', ''),
+            'connection_string' => env("ODBC_CONNECTION_STRING"),
+            'database' => '',
+            'username' => env('ODBC_USERNAME', ''),
+            'password' => env('ODBC_PASSWORD', ''),
             'table_prefix' => '',
+            'options' => [
+                PDO::ATTR_CASE => PDO::CASE_LOWER,
+                PDO::ATTR_PERSISTENT => false,
+            ],
         ]
 
     ],

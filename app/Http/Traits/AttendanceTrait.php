@@ -1,6 +1,7 @@
 <?php namespace App\Http\Traits;
 
 use DB;
+use Auth;
 use DateTime;
 use DatePeriod;
 use DateInterval;
@@ -101,11 +102,15 @@ trait AttendanceTrait
         return $data;
     }
 
-    public function getNotices($transaction_date, $user_id){
+    public function getNotices($transaction_date, $user_id, $all = 0){
         $datte = Carbon::parse($transaction_date);
 
         $notices = DB::table('notice_slip')->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
-                ->where('user_id', (int)$user_id)->where('status', 'APPROVED')->get()->chunk(10);
+            ->where('user_id', (int)$user_id)
+            ->when(!$all, function ($q){
+                return $q->where('status', 'APPROVED');
+            })
+            ->get()->chunk(10);
 
         $absence_dates = [];
         $data = [];
@@ -323,11 +328,8 @@ trait AttendanceTrait
     }
 
     // new 
-    public function overallStatus($logs, $transaction_date, $employee){
-        $time_in = $logs ? $logs->time_in : null;
-        $time_out = $logs ? $logs->time_out : null;
-
-        $hasNotice = $this->getNotices($transaction_date, $employee);
+    public function overallStatus($time_in, $time_out, $transaction_date, $employee){
+        $hasNotice = $this->getNotices($transaction_date, $employee, 1);
    
         $isHoliday = DB::table('holidays')->where('holiday_date', $transaction_date)
             ->orWhere('category', 'Regular Holiday')->whereMonth('holiday_date', Carbon::parse($transaction_date)->format('m'))->whereDay('holiday_date', Carbon::parse($transaction_date)->format('d'))->first();
@@ -347,28 +349,26 @@ trait AttendanceTrait
         return $status;
     }
 
-    public function getShiftDetails($transaction_date, $user_id){
-        $dayOfWeek = Carbon::parse($transaction_date)->format('l');
+    public function getShiftDetails($user_id){
         $user_details = DB::table('users')->where('user_id', $user_id)->first();
 
         $special_shift = DB::table('shift_schedule')
                 ->where('branch_id', $user_details->branch)
                 ->where('department_id', $user_details->department_id)
-                ->where('sched_date', $transaction_date)
                 ->select('time_in', 'time_out', 'breaktime_by_hr as breaktime', 'grace_period_in_mins')
                 ->first();
 
         if (empty($special_shift)) {
             $regular_shift = DB::table('shifts')
                 ->where('shift_group_id', $user_details->shift_group_id)
-                ->where('day_of_week', $dayOfWeek)
-                ->select('time_in', 'time_out', 'breaktime_by_hour as breaktime', 'grace_period_in_mins')
-                ->first();
+                ->select('time_in', 'time_out', 'breaktime_by_hour as breaktime', 'grace_period_in_mins', 'day_of_week')
+                ->get()->groupBy('day_of_week');
         }
 
-        $shift_detail = empty($special_shift) ? $regular_shift : [];
-            
-        return $shift_detail;
+        return [
+            'regular_shift' => $regular_shift,
+            'special_shift' => $special_shift
+        ];
     }
 
     public function timeInStatus($attendance_status, $time_in, $shift_in, $grace_period){
@@ -405,10 +405,7 @@ trait AttendanceTrait
         return $overtime;
     }
 
-    public function totalHrsWorked($logs, $shift_details){
-        $time_in = $logs ? $logs->time_in : null;
-        $time_out = $logs ? $logs->time_out : null;
-
+    public function totalHrsWorked($time_in, $time_out, $shift_details){
         $parsed_shift_in = Carbon::parse($shift_details ? $shift_details->time_in : '00:00:00');
         $parsed_shift_out = Carbon::parse($shift_details ? $shift_details->time_out : '00:00:00');
         $grace_period = $shift_details ? $shift_details->grace_period_in_mins : 0;
@@ -435,62 +432,156 @@ trait AttendanceTrait
         return $hrs_worked;
     }
 
-    public function attendanceLogs($employee, $date_from, $date_to){
-        $begin = new Carbon($date_from);
-        $end = new Carbon($date_to);
-        $end->modify('+1 day');
+    public function attendanceLogs($user_id, $start_date, $end_date){
+        // $user_id = Auth::user()->user_id;
+        $existing_bio = DB::table('biometrics')->where('employee_id', $user_id)->where('type', '!=', 'adjustment')->pluck('biometric_id');
 
-        $dateRange = new DatePeriod($begin, new DateInterval('P1D'), $end);
-        $emp_last_transaction_date = DB::table('biometric_logs')->where('user_id', (int)$employee)->max('transaction_date');
+        $startDate = Carbon::parse($start_date)->startOfDay();
+        $endDate = Carbon::parse($end_date)->endOfDay();
+        $attendance = DB::connection('access')->table('Transactions')
+            ->where('pin', $user_id)->whereIn('TransType', [7, 8])
+            ->whereRaw("date >= #$startDate# AND date <= #$endDate#")
+            ->when($existing_bio, function ($q) use ($existing_bio){
+                return $q->whereNotIn('ID', $existing_bio);
+            })
+            ->orderByDesc('date')->get();
+
+        $addresses = collect($attendance)->pluck('Address');
+        $locations = DB::connection('access')->table('UnitSiteQuery')->whereIn('Address', $addresses)->get(['Address', 'UnitName'])->groupBy('Address');
+
+        $attendance = collect($attendance)->map(function ($q) use ($locations){
+            $q->date = Carbon::parse($q->date)->format('Y-m-d');
+            $q->transaction_date = Carbon::parse($q->date)->format('F d, Y'). ' ' .Carbon::parse($q->time)->format('h:i:s A');
+            $q->transaction_date = Carbon::parse($q->transaction_date)->toDayDateTimeString();
+            $q->location = isset($locations[$q->Address]) ? collect($locations[$q->Address])->pluck('UnitName')->first() : null;
+            $q->log_type = $q->TransType == 7 ? 'In' : 'Out';
+            return $q;
+        });
+
+        $shift_details = $this->getShiftDetails($user_id);
+
+        $last_transaction_date = $attendance->pluck('transaction_date')->first();
+        $daily_log = collect($attendance)->groupBy('date');
+
+        $dateRange = new DatePeriod($startDate, new DateInterval('P1D'), $endDate);
 
         $employee_logs = [];
-        foreach ($dateRange as $date) {
-            if ($date->format('Y-m-d') <= $emp_last_transaction_date) {
-                $dayOfWeek = $date->format('l');
-                $logs = DB::table('biometric_logs')->where('user_id',(int) $employee)
-                    ->where('transaction_date', $date->format('Y-m-d'))->first();
+        foreach($dateRange as $date){
+            if ($date->greaterThan(Carbon::parse($last_transaction_date))) {
+                break;
+            }
+            $transaction_date = $date->format('Y-m-d');
+            $day_of_week = $date->format('l');
 
-                $attendance_status = $this->overallStatus($logs, $date->format('Y-m-d'), $employee);
+            $breaktime = $grace_period = $hrs_worked = 0;
+            $shift_time_in = $shift_time_out = '00:00:00';
+            $time_in = $time_out = $location_in = $location_out = null;
+            $log = isset($daily_log[$transaction_date]) ? collect($daily_log[$transaction_date])->groupBy('log_type') : [];
+            if(isset($log['In'])){
+                $work_start = $log['In']->first();
+                $time_in = Carbon::parse($work_start->transaction_date)->format('H:i:s');
+                $location_in = $work_start->location;
+            }
 
-                $shift_details = $this->getShiftDetails($date->format('Y-m-d'), $employee);
-                $shift_time_in = $shift_details ? $shift_details->time_in : '00:00:00';
-                $shift_time_out = $shift_details ? $shift_details->time_out : '00:00:00';
-                $breaktime = $shift_details ? $shift_details->breaktime : 0;
-                $grace_period = $shift_details ? $shift_details->grace_period_in_mins : 0;
+            if(isset($log['Out'])){
+                $work_end = $log['Out']->first();
+                $time_out = Carbon::parse($work_end->transaction_date)->format('H:i:s');
+                $location_out = $work_end->location;
+            }
 
-                $time_in = $logs ? $logs->time_in : null;
-                $time_out = $logs ? $logs->time_out : null;
-                $location_in = $logs ? $logs->location_in : null;
-                $location_out = $logs ? $logs->location_out : null;
+            if(isset($shift_details['regular_shift'][$day_of_week])){
+                $shift = collect($shift_details['regular_shift'][$day_of_week])->first();
+                $shift_time_in = $shift->time_in;
+                $shift_time_out = $shift->time_out;
+                $breaktime = $shift->breaktime;
+                $grace_period = $shift->grace_period_in_mins;
+                $hrs_worked = $this->totalHrsWorked($time_in, $time_out, $shift);
+            }
 
-                $time_in_status = $this->timeInStatus($attendance_status, $time_in, $shift_time_in, $grace_period);
+            $attendance_status = $this->overallStatus($time_in, $time_out, $date->format('Y-m-d'), $user_id);
+            $time_in_status = $this->timeInStatus($attendance_status, $time_in, $shift_time_in, $grace_period);
 
-                $overtime_hrs = $this->overtimeHrs($attendance_status, $time_out, $shift_time_out);
+            $overtime = $this->overtimeHrs($attendance_status, $time_out, $shift_time_out);
 
-                $hrs_worked = $this->totalHrsWorked($logs, $shift_details);
+            $late_in_minutes = $time_in_status['late_in_minutes'];
+            $time_in_status = $time_in_status['status'];
 
-                $employee_logs[] = [
-                    'transaction_date' => $date->format('Y-m-d'),
-                    'day_of_week' => $dayOfWeek,
-                    'time_in' => $time_in,
-                    'time_out' => $time_out,
-                    'location_in' => $location_in,
-                    'location_out' => $location_out,
-                    'attendance_status' => $attendance_status,
-                    'shift_time_in' => $shift_time_in,
-                    'shift_time_out' => $shift_time_out,
-                    'breaktime' => $breaktime,
-                    'grace_period' => $grace_period,
-                    'time_in_status' => $time_in_status['status'],
-                    'late_in_minutes' => $time_in_status['late_in_minutes'],
-                    'overtime' => $overtime_hrs,
-                    'hrs_worked' => $hrs_worked
-                ];
-            }   
+            $employee_logs[] = compact('transaction_date',
+                'day_of_week',
+                'time_in',
+                'time_out',
+                'location_in',
+                'location_out',
+                'attendance_status',
+                'shift_time_in',
+                'shift_time_out',
+                'breaktime',
+                'grace_period',
+                'time_in_status',
+                'late_in_minutes',
+                'overtime',
+                'hrs_worked');
         }
 
-        $employee_logs = array_reverse(array_sort($employee_logs));
-
-        return $employee_logs;
+        return $employee_logs = array_reverse(array_sort($employee_logs));
     }
+
+    // public function attendanceLogs_old($employee, $date_from, $date_to){
+    //     $begin = new Carbon($date_from);
+    //     $end = new Carbon($date_to);
+    //     $end->modify('+1 day');
+
+    //     $dateRange = new DatePeriod($begin, new DateInterval('P1D'), $end);
+    //     $emp_last_transaction_date = DB::table('biometric_logs')->where('user_id', (int)$employee)->max('transaction_date');
+
+    //     $employee_logs = [];
+    //     foreach ($dateRange as $date) {
+    //         if ($date->format('Y-m-d') <= $emp_last_transaction_date) {
+    //             $dayOfWeek = $date->format('l');
+    //             $logs = DB::table('biometric_logs')->where('user_id',(int) $employee)
+    //                 ->where('transaction_date', $date->format('Y-m-d'))->first();
+
+    //             $attendance_status = $this->overallStatus($logs, $date->format('Y-m-d'), $employee);
+
+    //             $shift_details = $this->getShiftDetails($date->format('Y-m-d'), $employee);
+    //             $shift_time_in = $shift_details ? $shift_details->time_in : '00:00:00';
+    //             $shift_time_out = $shift_details ? $shift_details->time_out : '00:00:00';
+    //             $breaktime = $shift_details ? $shift_details->breaktime : 0;
+    //             $grace_period = $shift_details ? $shift_details->grace_period_in_mins : 0;
+
+    //             $time_in = $logs ? $logs->time_in : null;
+    //             $time_out = $logs ? $logs->time_out : null;
+    //             $location_in = $logs ? $logs->location_in : null;
+    //             $location_out = $logs ? $logs->location_out : null;
+
+    //             $time_in_status = $this->timeInStatus($attendance_status, $time_in, $shift_time_in, $grace_period);
+
+    //             $overtime_hrs = $this->overtimeHrs($attendance_status, $time_out, $shift_time_out);
+
+    //             $hrs_worked = $this->totalHrsWorked($logs, $shift_details);
+
+    //             $employee_logs[] = [
+    //                 'transaction_date' => $date->format('Y-m-d'),
+    //                 'day_of_week' => $dayOfWeek,
+    //                 'time_in' => $time_in,
+    //                 'time_out' => $time_out,
+    //                 'location_in' => $location_in,
+    //                 'location_out' => $location_out,
+    //                 'attendance_status' => $attendance_status,
+    //                 'shift_time_in' => $shift_time_in,
+    //                 'shift_time_out' => $shift_time_out,
+    //                 'breaktime' => $breaktime,
+    //                 'grace_period' => $grace_period,
+    //                 'time_in_status' => $time_in_status['status'],
+    //                 'late_in_minutes' => $time_in_status['late_in_minutes'],
+    //                 'overtime' => $overtime_hrs,
+    //                 'hrs_worked' => $hrs_worked
+    //             ];
+    //         }   
+    //     }
+
+    //     $employee_logs = array_reverse(array_sort($employee_logs));
+
+    //     return $employee_logs;
+    // }
 }

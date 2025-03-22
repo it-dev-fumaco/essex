@@ -211,6 +211,11 @@
     ];
 @endphp
 <div class="header">
+    <div class="position-absolute top-0 left-0 bg-danger p-2 text-white">
+        <b style="font-size: 12pt">
+            ERP DB: {{ env('DB_HOST_SRC') == '10.0.0.76' ? 'LIVE' : 'DEV' }}
+        </b>
+    </div>
     <div class="top-bar">
         <div class="container-fluid">
             <div class="col-md-12">

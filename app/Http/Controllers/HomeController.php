@@ -123,7 +123,6 @@ class HomeController extends Controller
         $out_of_office_today = $out_today->get();
         $on_leave_today = $out_today->count();
 
-
         $clientexams = Examinee::join('exams', 'examinee.exam_id', '=', 'exams.exam_id')
             ->join('users', 'examinee.user_id', '=', 'users.id')
             ->join('exam_group', 'exams.exam_group_id', '=', 'exam_group.exam_group_id')
@@ -442,6 +441,32 @@ class HomeController extends Controller
         $exam_results = $exam_results->orderBy('examinee.date_taken', 'desc')->get();
 
         return view('client.tab_examination_report', compact('designation', 'department', 'exam_results'));
+    }
+
+    public function showExamFrequentMistakes(Request $request){
+        $designation = $this->sessionDetails('designation');
+        $department = $this->sessionDetails('department');
+        // $data = DB::connection('live_essex')->table('examinee_answers as answer')
+        //     ->join('questions as question', 'question.question_id', 'answer.question_id')
+        //     ->where('answer.exam_id', $exam_id)->where('answer.isCorrect', 'False')->whereNotNull('answer.examinee_answer')
+        //     ->select('question.question_id', 'question.questions', 'question.correct_answer', DB::raw('COUNT(answer.q_no) as wrong_answers_count'))
+        //     ->groupBy('question.question_id', 'question.questions', 'question.correct_answer')
+        //     ->orderByDesc('wrong_answers_count')
+        //     ->get();
+
+        // $question_ids = collect($data)->pluck('question_id');
+
+        // $examinee_answers = DB::connection('live_essex')->table('examinee_answers as answer')
+        //     ->join('questions as question', 'question.question_id', 'answer.question_id')
+        //     ->where('answer.exam_id', $exam_id)->where('answer.isCorrect', 'False')->whereIn('question.question_id', $question_ids)->whereNotNull('answer.examinee_answer')
+        //     ->select('question.question_id', 'question.questions', 'question.correct_answer', 'answer.examinee_answer', DB::raw('COUNT(answer.examinee_answer) as wrong_answers_count'))
+        //     ->groupBy('question.question_id', 'question.questions', 'question.correct_answer', 'answer.examinee_answer')
+        //     ->orderByDesc('wrong_answers_count')
+        //     ->get();
+
+        // $examinee_answers = collect($examinee_answers)->groupBy('question_id');
+
+        return view('client.tab_exam_frequent_mistakes');
     }
 
     public function getEvaluations(Request $request){

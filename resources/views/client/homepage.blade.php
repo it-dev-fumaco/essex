@@ -22,7 +22,7 @@
             'title' => 'Exam',
             'url' => '/examPanel',
             'bg-color' => 'bg-gradient bg-warning',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President', 'Operations Manager']
+            'allowed-users' => $admin_users
         ],
         [
             'icon' => 'fas fa-user-check',
@@ -172,26 +172,25 @@
                                     <div class="agent-info">
                                         <div class="settings-btn-group settings-btn-block w-100 text-center fw-bold" role="group">
                                             @foreach ($admin_settings as $settings)
-                                            @php
-                                                $settings_btn_status = '';
-                                                if (!in_array($designation, $settings['allowed-users'])) {
-                                                    $settings_btn_status = 'settings-btn-opacity disabled';
-                                                }
-
-                                                if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                                                @php
                                                     $settings_btn_status = '';
-                                                }
-                                            @endphp
-                                        
-                                            <div class="w-100 p-1">
-                                                <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} w-100 text-capitalize p-2 {{ $settings['title'] == 'Exam' ? 'text-dark' : null }}" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
-                                                    <i class="{{ $settings['icon'] }} d-block m-1"></i>
-                                                    <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
-                                                </button>
-                                            </div>
+                                                    if (!in_array($designation, $settings['allowed-users'])) {
+                                                        $settings_btn_status = 'settings-btn-opacity disabled';
+                                                    }
+
+                                                    if ($depart == 'head' && $settings['title'] == 'Evaluation') {
+                                                        $settings_btn_status = '';
+                                                    }
+                                                @endphp
+                                            
+                                                <div class="w-100 p-1">
+                                                    <button class="btn settings-btn {{ $settings_btn_status }} {{ $settings['bg-color'] }} w-100 text-capitalize p-2 {{ $settings['title'] == 'Exam' ? 'text-dark' : null }}" style="padding: 5px; border-radius: 0.7rem;" {{ $settings_btn_status }} data-href="{{ $settings['url'] }}">
+                                                        <i class="{{ $settings['icon'] }} d-block m-1"></i>
+                                                        <span class="d-block" style="font-size: 9pt;">{{ $settings['title'] }}</span>
+                                                    </button>
+                                                </div>
                                             @endforeach
                                         </div>
-                                        @endforeach
                                     </div>
                                 </div>
                             </div>

@@ -14,8 +14,8 @@
                         </div>
                     @endif
 
-                    @component('components.who')
-                    @endcomponent
+                    {{-- @component('components.who')
+                    @endcomponent --}}
                 </div>
             </div>
         </div>
