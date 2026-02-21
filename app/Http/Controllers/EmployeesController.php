@@ -63,6 +63,7 @@ class EmployeesController extends Controller
             $employee->user_group = $request->user_group;
             $employee->birth_date = $request->birthdate;
             $employee->civil_status = $request->civil_status;
+            $employee->payroll_type = $request->payroll_type;
             $employee->status = 'Active';
             $employee->save();
 
@@ -167,13 +168,15 @@ class EmployeesController extends Controller
             $employee->id_security_key = $request->id_key;
             $employee->designation_name = $request->designation_name;
             $employee->last_modified_by = Auth::user()->employee_name;
+            $employee->payroll_type = $request->payroll_type;
 
             if ($request->status == 'Resigned') {
                 $employee->resignation_date = $request->resignation_date;
 
-                return$department = Department::find($employee->department_id);
-                $designation = Designation::find($employee->designation_id);
-                $reporting_to = User::find($employee->reporting_to);
+                $department = DB::table('departments')->where('department_id', $employee->department_id)->pluck('department')->first();
+                $designation = DB::table('designation')->where('des_id', $employee->designation_id)->pluck('designation')->first();
+                $branch = DB::table('branch')->where('branch_id', $employee->branch)->pluck('branch_name')->first();
+                $reporting_to = DB::table('users')->where('id', $employee->reporting_to)->pluck('employee_name')->first();
 
                 $data = [
                     'employee_id' => $employee->user_id,
@@ -181,8 +184,8 @@ class EmployeesController extends Controller
                     'name' => $employee->employee_name,
                     'department' => $department,
                     'designation' => $designation,
-                    'reporting_to' => null,
-                    'location' => null,
+                    'reporting_to' => $reporting_to,
+                    'location' => $branch,
                     'resignation_date' => $employee->resignation_date
                 ];
 
@@ -537,10 +540,10 @@ class EmployeesController extends Controller
             if ($request->status == 'Resigned') {
                 $employee->resignation_date = $request->resignation_date;
 
-                $department = Department::find($employee->department_id)->pluck('department')->first();
-                $designation = Designation::find($employee->designation_id)->pluck('designation')->first();
+                $department = DB::table('departments')->where('department_id', $employee->department_id)->pluck('department')->first();
+                $designation = DB::table('designation')->where('des_id', $employee->designation_id)->pluck('designation')->first();
                 $branch = DB::table('branch')->where('branch_id', $employee->branch)->pluck('branch_name')->first();
-                $reporting_to = User::find($employee->reporting_to)->pluck('employee_name')->first();
+                $reporting_to = DB::table('users')->where('id', $employee->reporting_to)->pluck('employee_name')->first();
 
                 $data = [
                     'employee_id' => $employee->employee_id,
@@ -573,7 +576,6 @@ class EmployeesController extends Controller
             DB::commit();
             return redirect()->back()->with(['message' => 'Employee <b>' . $employee->employee_name . '</b>  has been successfully updated!']);
         } catch (\Throwable $th) {
-            //throw $th;
             DB::rollback();
             return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
         }

@@ -9,7 +9,7 @@ use DB;
 
 class Poste extends Model implements Searchable
 {
-	protected $table= 'fumaco_knowledge_base.articles';
+	protected $table= 'knowledgebase.articles';
     protected $fillable = ['title','short_text','full_text'];
     public $searchableType = 'Knowledgebase';
 

@@ -27,7 +27,7 @@
                   <div class="col-md-4">
                      <label>Employee:</label>
                      <select class="employee attendanceHistoryFilter" id="attendanceHistoryFilter_employee" style="width: 70%;">
-                        @forelse(in_array($designation, ['Human Resources Head', 'HR Payroll Assistant']) ? $employees : $employees_per_dept as $employee)
+                        @forelse(in_array($designation, ['Human Resources Head', 'HR Payroll Assistant', 'HR Assistant']) ? $employees : $employees_per_dept as $employee)
                         <option value="{{ $employee->user_id }}" {{ Auth::user()->user_id == $employee->user_id ? 'selected' : '' }}>{{ $employee->employee_name }}</option>
                         @empty
                         <option disabled>No Records Found.</option>

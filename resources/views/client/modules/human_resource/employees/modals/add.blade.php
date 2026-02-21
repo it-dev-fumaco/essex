@@ -237,10 +237,23 @@
 
                            <div class="col-sm-4">
                               <div class="form-group">
+                                 <label>Payroll Type:</label>
+                                 <select name="payroll_type" required>
+                                    <option value="">Select Payroll Type</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Monthly">Monthly</option>
+                                 </select>
+                              </div>
+                           </div>
+
+                           <div class="col-sm-4">
+                              <div class="form-group">
                                  <label>Telephone (Local No.):</label>
                                  <input type="number" name="telephone" placeholder="Enter Local No.">
                               </div>
                            </div>
+
+                          
 
                            <div class="col-sm-4">
                               <div class="form-group">

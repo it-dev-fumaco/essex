@@ -42,9 +42,7 @@
             <div class="row">
                 <div class="col-md-7 col-sm-6">
                     <ul class="contact-details">
-                        <li>
-                            <a href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
-                        </li>
+                       
                     </ul>
                 </div>
                 <div class="col-md-5 col-sm-6">
@@ -63,7 +61,9 @@
                 @else
 
                     <a href="#"  data-toggle="modal" data-target="#loginModal">
-                        <i class="icon-login"></i> <span>Login</span>
+                        <span style="font-size: 15px;">
+                            <i class="icon-login"></i> Login
+                        </span>
                     </a>
 
                 @endif

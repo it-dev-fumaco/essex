@@ -78,7 +78,7 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_KB', 'fumaco_knowledge_base'),
+            'database' => env('DB_KB', 'knowledgebase'),
             'username' => env('DB_USERNAME', 'erp'),
             'password' => env('DB_PASSWORD', 'fumaco'),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -124,6 +124,11 @@ return [
         ]
 
     ],
+
+    'mysql' => [
+    // ...
+    'timezone' => '+08:00',
+],
 
     /*
     |--------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 @extends('portal.app')
 @section('content')
 @php
-    $admin_users = ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President'];
+    $admin_users = ['HR Payroll Assistant', 'HR Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President'];
     $admin_settings = [
         [
             'icon' => 'fas fa-calendar',
@@ -22,7 +22,7 @@
             'title' => 'Exam',
             'url' => '/examPanel',
             'bg-color' => 'bg-gradient bg-warning',
-            'allowed-users' => ['HR Payroll Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President', 'Operations Manager']
+            'allowed-users' => ['HR Payroll Assistant', 'HR Assistant', 'Human Resources Head', 'HR Head', 'Director of Operations', 'President', 'Operations Manager']
         ],
         [
             'icon' => 'fas fa-user-check',
@@ -191,7 +191,6 @@
                                             </div>
                                             @endforeach
                                         </div>
-                                        @endforeach
                                     </div>
                                 </div>
                             </div>

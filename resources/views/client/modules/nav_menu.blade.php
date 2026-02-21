@@ -1,4 +1,4 @@
-@if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President']))
+@if(in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'HR Assistant']))
 <div class="row" style="padding: 0; margin: -50px 0 0 0;">
   <div class="col-md-5">
     <table style="width: 80%; margin: 0; padding: 0" border="0" id="nav-menu">

@@ -362,7 +362,7 @@ header {
   -o-transition: all 0.4s ease-in-out;
 }
 .top-bar {
-  background: #101215;
+  background: #0070B4;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .top-bar .contact-details li {
@@ -469,6 +469,7 @@ ul.social-list li a i {
 .navbar {
   margin-bottom: 0;
   background: #fff;
+  font-size: 17px;
   border: none;
   border-bottom: 1px solid #eee;
   border-radius: 0;
@@ -486,7 +487,7 @@ ul.social-list li a i {
   -o-transition: all 0.3s ease-in-out;
 }
 .navbar-default .navbar-nav {
-  margin-right: 10px!important;
+  margin-right: 12px!important;
   position: relative;
   transition: all 0.4s ease-in-out;
   -moz-transition: all 0.4s ease-in-out;
@@ -553,7 +554,7 @@ ul.social-list li a i {
 .dropdown li a {
   display: block;
   color: #666;
-  font-size: 13px;
+  font-size: 15px;
   background: #fff;
   border-bottom: 1px solid #f1f1f1;
   font-family: 'Roboto', sans-serif;

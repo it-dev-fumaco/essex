@@ -243,7 +243,7 @@
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Telephone (Local No.):</label>
-                                 <input type="number" name="telephone" placeholder="Enter Local No.">
+                                 <input type="number" name="telephone" placeholder="Enter Local No.1">
                               </div>
                            </div>
 

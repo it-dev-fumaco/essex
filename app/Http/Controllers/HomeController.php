@@ -98,7 +98,7 @@ class HomeController extends Controller
             ->count();
 
         $awaiting_gatepass = 0;
-        $gatepass_approvers = ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head', 'HR Payroll Assistant'];
+        $gatepass_approvers = ['Operations Manager', 'President', 'Director of Operations', 'Product Manager', 'Human Resources Head', 'HR Payroll Assistant', 'HR Assistant'];
         if (in_array($designation, $gatepass_approvers)) {
             $awaiting_gatepass = DB::table('gatepass')
                 ->join('users', 'users.user_id', '=', 'gatepass.user_id')
@@ -237,7 +237,7 @@ class HomeController extends Controller
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
 
-        if (in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
+        if (in_array($designation, ['HR Payroll Assistant', 'Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
             $leaves = DB::table('notice_slip')
                         ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
                         ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
@@ -392,7 +392,8 @@ class HomeController extends Controller
                 array_push($deptIDs, $edept->department_id);
             }
         }
-        $users = User::whereIn('department_id',$deptIDs)->orWhereNull('department_id')->orderBy('department_id')->get();
+        // whereIn('department_id',$deptIDs)->->orWhereNull('department_id')
+        $users = User::where('status', 'Active')->orderBy('employee_name')->get();
         $departments = DB::table('departments')->whereIn('department_id',$deptIDs)->orderBy('department_id')->get();
 
         $data = [
@@ -450,7 +451,7 @@ class HomeController extends Controller
         $files = DB::table('evaluation_files')
             ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id');
                     
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
+        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
             $files = $files->where('evaluation_files.employee_id', Auth::user()->user_id);
         }
         

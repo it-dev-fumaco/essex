@@ -63,8 +63,11 @@ class LoginController extends Controller
 
             $success = $id = null;
             if ($request->login_as == 'ldap-login') {
-                $email = $request->user_id . '@fumaco.local';
-                $is_user = DB::table('users')->where('email', $email)->first();
+                $email = $request->user_id;
+                $username = explode('@', $email)[0];
+                $internalEmail = $username . '@fumaco.local';
+                $externalEmail = $username . '@fumaco.com';
+                $is_user = DB::table('users')->where('email', $internalEmail)->orWhere('email', $externalEmail)->first();
 
                 if ($is_user) {
                     $id = $is_user->id;

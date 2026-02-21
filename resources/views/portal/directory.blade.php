@@ -7,10 +7,10 @@
 			<div class="col-12 col-xl-10 mx-auto">
 				<div class="row">
 					<div class="col-6">
-						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 18pt; border: 0;">Employee Directory</h1>
+						<h1 class="title-2" style="margin: 0; letter-spacing: .5pt; font-size: 20pt; border: 0;">Employee Directory</h1>
 					</div>
 					<div class="col-2 text-right">
-						<p class="d-block text-muted" style="margin-top: 12px; font-style: italic;">Total&nbsp;<span class="badge bg-info" id="total-employee">0</span></p>
+						<p class="d-block text-muted" style="margin-top: 17px; font-style: italic;">Total Employee&nbsp;<span class="badge bg-info" id="total-employee">0</span></p>
 					</div>
 					<div class="col-4" style="padding: 0 !important;">
 						<input type="text" id="search-bar" placeholder="Search Employee..." style="box-shadow: 1px 1px 4px rgba(0,0,0,.4); border-radius: 25px; padding: 8px 20px !important; border: 1px solid #EFF3F6; width: 100%;">

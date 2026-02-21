@@ -84,7 +84,7 @@ return [
     |
     */
 
-    'username' => env('MAIL_USERNAME', 'essex@fumaco.local'),
+    'username' => env('MAIL_USERNAME', 'notification@fumaco.com'),
 
     'password' => env('MAIL_PASSWORD', 'fumaco99#'),
 

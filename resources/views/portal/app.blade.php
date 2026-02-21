@@ -217,17 +217,14 @@
                 <div class="row">
                     <div class="col-md-7 col-sm-6">
                         <ul class="contact-details">
-                            <li>
-                                <a class="text-decoration-none" href="#"><i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City</a>
-                            </li>
                         </ul>
                     </div>
                     <div class="col-md-5 col-sm-6">
                         <div class="account-setting">
                             @if(Auth::user())
-                            <strong>Welcome {{ Auth::user()->employee_name }}</strong>
+                            <strong>Welcome, {{ Auth::user()->employee_name }}!</strong>
                             <a href="{{ url('/userLogout') }}">
-                                <i class="icon-logout"></i><span>Logout</span>
+                                <i class="icon-logout" style="font-size: 15px;"></i><span>Logout</span>
                             </a>
                             @else
                             <a href="#"  data-bs-toggle="modal" data-bs-target="#loginModal">

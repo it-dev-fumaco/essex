@@ -257,9 +257,7 @@ button.switch-month:hover {
           <div class="col-md-7 col-sm-6">
             <ul class="contact-details">
               <li>
-                <a href="#">
-                  <i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City
-                </a>
+                
               </li>
             </ul>
           </div>

@@ -38,7 +38,7 @@
             <ul class="contact-details">
               <li>
                 <a href="#">
-                  <i class="icon-location-pin"></i>35 Pleasant View Drive, Bagbaguin, Caloocan City
+                  <i></i>
                 </a>
               </li>
             </ul>
@@ -64,7 +64,7 @@
                 <img src="{{ asset('storage/img/logo5.png') }}" alt="">
               </a>
             </div>
-            <div class="name-title">FUMACO Inc. <br> The Art of Science & Lighting</div>
+            <div class="name-title" style="font-size: 17px;"><b>FUMACO Inc. </b><br> The Art of Science & Lighting</div>
           </div>
           <div class="col-md-7 col-sm-6">
             <div class="pull-right">
@@ -112,17 +112,6 @@
 </div>
 </div>
 
-<div id="copyright">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="site-info text-center">
-          <p>&copy; All rights reserved 2019</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <a href="#" class="back-to-top">
   <i class="icon-arrow-up"></i>
