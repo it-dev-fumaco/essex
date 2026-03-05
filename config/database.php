@@ -54,6 +54,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone' => env('DB_TIMEZONE', '+08:00'),
         ],
 
         // ERP Connection
@@ -61,7 +62,7 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_ERP', '_3f2ec5a818bccb73'),
+            'database' => env('DB_ERP', 'erp_test_db'),
             'username' => env('DB_USERNAME', 'erp'),
             'password' => env('DB_PASSWORD', 'fumaco'),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -124,11 +125,6 @@ return [
         ]
 
     ],
-
-    'mysql' => [
-    // ...
-    'timezone' => '+08:00',
-],
 
     /*
     |--------------------------------------------------------------------------

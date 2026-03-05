@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
-use App\Shift;
-use App\ShiftGroup;
+use App\Models\Shift;
+use App\Models\ShiftGroup;
 use Validator;
 use Auth;
 use DB;

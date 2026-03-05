@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Poste;
-use App\Operational;
-use App\Directory;
-use App\Gallery;
-use App\Internet;
+use App\Models\Poste;
+use App\Models\Operational;
+use App\Models\Directory;
+use App\Models\Gallery;
+use App\Models\Internet;
 use Illuminate\Http\Request;
 use Spatie\Searchable\Search;
 use Auth;

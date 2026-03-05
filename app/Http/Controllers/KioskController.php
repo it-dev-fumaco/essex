@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\KioskLoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Mail;
-use Validator;
 use Carbon\Carbon;
 use Auth;
 use DB;
 use DateTime;
 use DatePeriod;
 use DateInterval;
-use App\DataInputKPI;
-use App\KPIResult;
-use App\DataInputModel;
-use App\Gatepass;
-use App\AbsentNotice;
-use App\Http\Traits\AttendanceTrait;
+use App\Models\KPIResult;
+use App\Models\DataInputModel;
+use App\Models\Gatepass;
+use App\Models\AbsentNotice;
+use App\Traits\AttendanceTrait;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -47,34 +45,15 @@ class KioskController extends Controller
     	return view('kiosk.login');
     }
 
-    public function kioskLogin(Request $request){
-       	// validate the info, create rules for the inputs
-    	$id_rules = array(
-		    'id_key' => 'required'
-		);
-
-        $access_id_rules = array(
-            'access_id' => 'required',
-            'password' => 'required',
-        );
-
-        $rules = $request->using_access_id == 1 ? $access_id_rules : $id_rules;
-
-		$validator = Validator::make(Input::all(), $rules);
-
-		// if the validator fails, redirect back to the form
-		if ($validator->fails()) {
-			return redirect()->back()->withErrors($validator)
-		        ->withInput(Input::except('id_key', 'password'));
-		}else{
+    public function kioskLogin(KioskLoginRequest $request){
 			// create our user data for the authentication
 		    $id_user_data = array(
-		        'id_security_key'  => Input::get('id_key')
+		        'id_security_key'  => $request->input('id_key')
 		    );
 
             $access_id_user_data = array(
-                'user_id'  => Input::get('access_id'),
-                'password'  => Input::get('password'),
+                'user_id'  => $request->input('access_id'),
+                'password'  => $request->input('password'),
             );
 
             $userdata = $request->using_access_id == 1 ? $access_id_user_data : $id_user_data;
@@ -98,7 +77,6 @@ class KioskController extends Controller
                     return redirect()->back()->with('message', 'Invalid credentials.');
                 }
             }
-		}
     }
 
     public function kioskLogout(){

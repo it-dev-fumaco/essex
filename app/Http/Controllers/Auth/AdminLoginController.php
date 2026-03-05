@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\AdminLoginRequest;
 use App\Http\Controllers\Controller;
 use Auth;
+use Illuminate\Http\Request;
 
 class AdminLoginController extends Controller
 {
@@ -16,12 +17,7 @@ class AdminLoginController extends Controller
     	return view('auth.admin-login');
     }
 
-    public function login(Request $request){
-
-    	$this->validate($request, [
-    		'access_id' => 'required',
-    		'password' => 'required|min:6'
-    	]);
+    public function login(AdminLoginRequest $request){
 
     	if (Auth::guard('admin')->attempt(['access_id' => $request->access_id,'password' => $request->password], $request->remember)) {
     		return redirect()->intended(route('admin.dashboard'));

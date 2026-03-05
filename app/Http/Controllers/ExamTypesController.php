@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use DB;
-use App\ExamType;
+use App\Models\ExamType;
 
 use Exception;
 class ExamTypesController extends Controller

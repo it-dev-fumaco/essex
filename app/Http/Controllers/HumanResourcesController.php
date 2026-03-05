@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Auth;
 use DB;
-use App\Training;
+use App\Models\Training;
 
 class HumanResourcesController extends Controller
 {
@@ -23,45 +23,58 @@ class HumanResourcesController extends Controller
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $users = DB::table('users')->get();
+        $employeeCounts = DB::table('users')
+            ->where('user_type', 'Employee')
+            ->where('status', 'Active')
+            ->selectRaw("
+                count(*) as total,
+                sum(case when employment_status = 'Regular' then 1 else 0 end) as regular,
+                sum(case when employment_status = 'Contractual' then 1 else 0 end) as contractual,
+                sum(case when employment_status = 'Probationary' then 1 else 0 end) as probationary
+            ")
+            ->first();
 
-        $total_employees = collect($users)->where('user_type', 'Employee')->where('status', 'Active')->count();
-        $total_regular = collect($users)->where('user_type', 'Employee')->where('status', 'Active')->where('employment_status', 'Regular')->count();
-        $total_contractual = collect($users)->where('user_type', 'Employee')->where('status', 'Active')->where('employment_status', 'Contractual')->count();
-        $total_probationary = collect($users)->where('user_type', 'Employee')->where('status', 'Active')->where('employment_status', 'Probationary')->count();
-
-        $total_contractual_probationary = $total_contractual + $total_probationary;
-
-        $total_applicants = collect($users)->where('user_type', 'Applicant')->count();
-        $total_hired = collect($users)->where('applicant_status', 'Hired')->count();
-        $total_declined = collect($users)->where('applicant_status', 'Declined')->count();
-        $total_not_qualified = collect($users)->where('applicant_status', 'Not Qualified')->count();
+        $applicantCounts = DB::table('users')
+            ->where('user_type', 'Applicant')
+            ->selectRaw("
+                count(*) as applicants,
+                sum(case when applicant_status = 'Hired' then 1 else 0 end) as hired,
+                sum(case when applicant_status = 'Declined' then 1 else 0 end) as declined,
+                sum(case when applicant_status = 'Not Qualified' then 1 else 0 end) as not_qualified
+            ")
+            ->first();
 
         $totals = [
-            'applicants' => $total_applicants,
-            'hired' => $total_hired,
-            'declined' => $total_declined,
-            'not_qualified' => $total_not_qualified,
-            'employees' => $total_employees,
-            'regular' => $total_regular,
-            'contractual_probationary' => $total_contractual_probationary,
+            'applicants' => (int) ($applicantCounts->applicants ?? 0),
+            'hired' => (int) ($applicantCounts->hired ?? 0),
+            'declined' => (int) ($applicantCounts->declined ?? 0),
+            'not_qualified' => (int) ($applicantCounts->not_qualified ?? 0),
+            'employees' => (int) ($employeeCounts->total ?? 0),
+            'regular' => (int) ($employeeCounts->regular ?? 0),
+            'contractual_probationary' => (int) (($employeeCounts->contractual ?? 0) + ($employeeCounts->probationary ?? 0)),
         ];
 
         return view('client.modules.human_resource.analytics', compact('designation', 'department', 'totals'));
     }
 
     public function hiringRate(){
-        $users = DB::table('users')->get();
+        $row = DB::table('users')
+            ->where('user_type', 'Applicant')
+            ->selectRaw("
+                count(*) as total,
+                sum(case when applicant_status = 'Hired' then 1 else 0 end) as hired,
+                sum(case when applicant_status = 'Declined' then 1 else 0 end) as declined,
+                sum(case when applicant_status = 'Not Qualified' then 1 else 0 end) as not_qualified
+            ")
+            ->first();
 
-        $total_applicants = collect($users)->where('user_type', 'Applicant')->count();
-        $total_hired = collect($users)->where('applicant_status', 'Hired')->count();
-        $total_declined = collect($users)->where('applicant_status', 'Declined')->count();
-        $total_not_qualified = collect($users)->where('applicant_status', 'Not Qualified')->count();
+        $total = (int) ($row->total ?? 0);
+        $divisor = $total ?: 1;
 
         $data = [
-            'hired' => round(($total_hired / $total_applicants) * 100, 2),
-            'declined' => round(($total_declined / $total_applicants) * 100, 2),
-            'not_qualified' => round(($total_not_qualified / $total_applicants) * 100, 2),
+            'hired' => round((($row->hired ?? 0) / $divisor) * 100, 2),
+            'declined' => round((($row->declined ?? 0) / $divisor) * 100, 2),
+            'not_qualified' => round((($row->not_qualified ?? 0) / $divisor) * 100, 2),
         ];
 
         return response()->json($data);
@@ -70,19 +83,20 @@ class HumanResourcesController extends Controller
     public function applicantsChart(Request $request){
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+        $countsByMonth = DB::table('users')
+            ->where('source', 'Applicant')
+            ->whereYear('created_at', $request->year)
+            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->pluck('total', 'month')
+            ->all();
+
         $data = [];
         foreach ($months as $i => $month) {
-            $i = $i + 1;
-            $applicants = DB::table('users')
-                    ->select(DB::raw('MONTH(created_at) AS month, YEAR(created_at) AS year'))->where('source', 'Applicant');
-
-            $applicants = $applicants->having('month', $i)->having('year', $request->year)->get();
-
-            $total = collect($applicants)->count();
-
+            $monthNum = $i + 1;
             $data[] = [
                 'month' => $month,
-                'total' => $total,
+                'total' => (int) ($countsByMonth[$monthNum] ?? 0),
             ];
         }
 
@@ -94,15 +108,20 @@ class HumanResourcesController extends Controller
     }
 
     public function jobSourceChart(){
-        $job_source = DB::table('users')->select('job_source')->get();
+        $counts = DB::table('users')
+            ->whereNotNull('job_source')
+            ->selectRaw('job_source, count(*) as total')
+            ->groupBy('job_source')
+            ->pluck('total', 'job_source')
+            ->all();
 
         $data = [
-            'jobstreet' => $job_source->where('job_source', 'Jobstreet')->count(),
-            'indeed' => $job_source->where('job_source', 'Indeed')->count(),
-            'walkin' => $job_source->where('job_source', 'Walk-in')->count(),
-            'referrals' => $job_source->where('job_source', 'Referrals')->count(),
-            'linkedIn' => $job_source->where('job_source', 'LinkedIn')->count(),
-            'others' => $job_source->where('job_source', 'Others')->count(),
+            'jobstreet' => (int) ($counts['Jobstreet'] ?? 0),
+            'indeed' => (int) ($counts['Indeed'] ?? 0),
+            'walkin' => (int) ($counts['Walk-in'] ?? 0),
+            'referrals' => (int) ($counts['Referrals'] ?? 0),
+            'linkedIn' => (int) ($counts['LinkedIn'] ?? 0),
+            'others' => (int) ($counts['Others'] ?? 0),
         ];
 
         return $data;

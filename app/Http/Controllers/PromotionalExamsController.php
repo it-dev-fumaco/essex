@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use DB;
-use App\Exam;
-use App\Department;
-use App\ExamGroup;
-use App\Question;
-use App\ExamType;
+use App\Models\Exam;
+use App\Models\Department;
+use App\Models\ExamGroup;
+use App\Models\Question;
+use App\Models\ExamType;
 use Input;
 use Route;
 class PromotionalExamsController extends Controller

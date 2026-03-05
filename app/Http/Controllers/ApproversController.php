@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
-use App\Approver;
+use App\Models\Approver;
 use Auth;
 use DB;
 

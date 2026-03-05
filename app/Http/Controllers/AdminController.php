@@ -10,7 +10,7 @@ use DB;
 use DateTime;
 use DatePeriod;
 use DateInterval;
-use App\Http\Traits\AttendanceTrait;
+use App\Traits\AttendanceTrait;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminController extends Controller

@@ -4,7 +4,7 @@ use Auth;
 use DB;
 use Carbon\Carbon;
 use Exception;
-use App\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_General;
 trait EmailsTrait{

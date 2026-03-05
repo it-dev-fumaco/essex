@@ -51,7 +51,17 @@ Route::post('/userLogin', 'Auth\LoginController@userLogin');
     // Route::post('/applicant/saveExam','ApplicantExaminationsController@saveExam')->name('applicant.save_exam');
     Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
 
-Auth::routes();
+// Auth routes (Laravel 12: no laravel/ui; define explicitly to preserve route names)
+Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
+Route::post('login', 'Auth\LoginController@userLogin');
+Route::post('logout', 'Auth\LoginController@userLogout')->name('logout');
+Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
+Route::post('register', 'Auth\RegisterController@register');
+Route::get('password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
+Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
+Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
+Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
+
 Route::group(['prefix' => 'admin'], function(){
     Route::get('/login', 'Auth\AdminLoginController@showLoginForm')->name('admin.login');
     Route::post('/login', 'Auth\AdminLoginController@login')->name('admin.login.submit');

@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
-use App\Examinee;
-use App\User;
-use App\ExamGroup;
-use App\ExaminationResult;
-use App\ExamineeAnswer;
-use App\Question;
-use App\Exam;
+use App\Models\Examinee;
+use App\Models\User;
+use App\Models\ExamGroup;
+use App\Models\ExaminationResult;
+use App\Models\ExamineeAnswer;
+use App\Models\Question;
+use App\Models\Exam;
 
 
 
@@ -37,27 +37,31 @@ class ExaminationReportsController extends Controller
 
         $examinee_ans = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->get();
 
-        // dd($examinee_ans);
-
         $questions = Question::where('exam_id',$exam_id)
                                 ->join('exam_type','questions.exam_type_id','exam_type.exam_type_id')
                                 ->select('questions.*','exam_type.exam_type')->get();
 
-        $count_mc = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',4)->where('isCorrect','True')->count();
-        $count_es = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',5)->where('isCorrect','True')->count();
-        $count_ne = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',6)->where('isCorrect','True')->count();
-        $count_tf = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',7)->where('isCorrect','True')->count();
-        $count_dex = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',8)->where('isCorrect','True')->count();
-        $count_abs = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',11)->where('isCorrect','True')->count();
-        $count_id = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',12)->where('isCorrect','True')->count();
+        $countsByTypeAndCorrect = ExamineeAnswer::where('examinee_id', $examinee_id)
+            ->where('exam_id', $exam_id)
+            ->selectRaw('exam_type_id, isCorrect, count(*) as cnt')
+            ->groupBy('exam_type_id', 'isCorrect')
+            ->get();
 
-        $items_mc = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',4)->count();
-        $items_es = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',5)->count();
-        $items_ne = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',6)->count();
-        $items_tf = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',7)->count();
-        $items_dex = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',8)->count();
-        $items_abs = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',11)->count();
-        $items_id = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('exam_type_id',12)->count();
+        $correctCount = fn ($typeId) => (int) (optional($countsByTypeAndCorrect->where('exam_type_id', $typeId)->where('isCorrect', 'True')->first())->cnt ?? 0);
+        $count_mc = $correctCount(4);
+        $count_es = $correctCount(5);
+        $count_ne = $correctCount(6);
+        $count_tf = $correctCount(7);
+        $count_dex = $correctCount(8);
+        $count_abs = $correctCount(11);
+        $count_id = $correctCount(12);
+        $items_mc = (int) $countsByTypeAndCorrect->where('exam_type_id', 4)->sum('cnt');
+        $items_es = (int) $countsByTypeAndCorrect->where('exam_type_id', 5)->sum('cnt');
+        $items_ne = (int) $countsByTypeAndCorrect->where('exam_type_id', 6)->sum('cnt');
+        $items_tf = (int) $countsByTypeAndCorrect->where('exam_type_id', 7)->sum('cnt');
+        $items_dex = (int) $countsByTypeAndCorrect->where('exam_type_id', 8)->sum('cnt');
+        $items_abs = (int) $countsByTypeAndCorrect->where('exam_type_id', 11)->sum('cnt');
+        $items_id = (int) $countsByTypeAndCorrect->where('exam_type_id', 12)->sum('cnt');
 
         $data = [
             'examres' => $exam_res,

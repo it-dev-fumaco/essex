@@ -659,9 +659,8 @@ class PortalController extends Controller
             $success = 0;
             if($log->recipient){
                 if($log->type == 'Absent Notice Slip'){
-                    Mail::to($log->recipient)->send(new SendMail_notice($data));
-                    
-                    $success = Mail::failures() ? 0 : 1;
+                    Mail::to($log->recipient)->queue(new SendMail_notice($data));
+                    $success = 1;
                 }else{
                     $mail = $this->send_mail($log->subject, $log->template, $log->recipient, $data);
                     $success = $mail['success'];

@@ -1,109 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
+use App\Contracts\Services\AuthServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Services\PostLoginCommandRunner;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Auth;
-use DB;
-use App\LdapClasses\adLDAP;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
+    protected string $redirectTo = '/home';
 
-    // use AuthenticatesUsers;
-
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        // $this->middleware('guest')->except('logout');
+    public function __construct(
+        private readonly AuthServiceInterface $authService,
+        private readonly PostLoginCommandRunner $postLoginCommandRunner
+    ) {
         $this->middleware('guest', ['except' => ['logout', 'userLogout']]);
     }
 
-    public function userLogout()
+    public function userLogout(): \Illuminate\Http\RedirectResponse
     {
         Auth::guard('web')->logout();
+
         return redirect('/');
     }
 
-    public function showLoginForm(){
+    public function showLoginForm(): \Illuminate\View\View
+    {
         return view('home');
     }
 
-    public function userLogin(Request $request){
+    /**
+     * Authenticate user (LDAP or credentials). Returns 1 on success, null on failure.
+     * Same route and response contract as before.
+     */
+    public function userLogin(LoginRequest $request): int|null
+    {
         DB::beginTransaction();
         try {
-            $this->validate($request, [
-                'user_id' => 'required',
-                'password' => 'required'
-            ]);
-
-            $success = $id = null;
-            if ($request->login_as == 'ldap-login') {
-                $email = $request->user_id;
-                $username = explode('@', $email)[0];
-                $internalEmail = $username . '@fumaco.local';
-                $externalEmail = $username . '@fumaco.com';
-                $is_user = DB::table('users')->where('email', $internalEmail)->orWhere('email', $externalEmail)->first();
-
-                if ($is_user) {
-                    $id = $is_user->id;
-                    if ($is_user->email) {
-                        $adldap = new adLDAP();
-                        $authUser = $adldap->user()->authenticate(explode('@', $is_user->email)[0], $request->password);
-                        if($authUser == true){
-                             if(Auth::loginUsingId($is_user->id)){
-                                $success = 1;
-                                DB::table('users')->where('user_id', $is_user->user_id)->update(['last_login_date' => Carbon::now()->toDateTimeString()]);
-                            } 
-                        }
-                    }
-                }
-            } else {
-                if (Auth::attempt(['user_id' => $request->user_id,'password' => $request->password], $request->remember)) {
-                    $success = 1;
-                    $is_user = DB::table('users')->where('user_id', $request->user_id)->first();
-                    $id = $is_user ? $is_user->id : $id;
-
-                    DB::table('users')->where('user_id', $request->user_id)->update(['last_login_date' => Carbon::now()->toDateTimeString()]);
-                }
-            }
-
-            if($success){
-                try {
-                    exec('cd '.ENV('BASE_PATH').' && php artisan emails:birthday --id='.$id);
-                    exec('cd '.ENV('BASE_PATH').' && php artisan emails:worksary --id='.$id);
-                } catch (\Throwable $th) {}
+            $id = $this->authService->attempt($request);
+            if ($id !== null) {
+                $this->postLoginCommandRunner->runForUser($id);
             }
 
             DB::commit();
-            return $success;
-        } catch (\Throwable $th) {
-            DB::rollback();
-            throw $th;
+
+            return $id !== null ? 1 : null;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 }

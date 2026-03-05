@@ -6,14 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Carbon\Carbon;
 use Validator;
-use App\User;
+use App\Models\User;
 use DB;
-use App\Examinee;
-use App\Question;
-use App\Exam;
-use App\ExamType;
-use App\ExaminationResult;
-use App\ExamineeAnswer;
+use App\Models\Examinee;
+use App\Models\Question;
+use App\Models\Exam;
+use App\Models\ExamType;
+use App\Models\ExaminationResult;
+use App\Models\ExamineeAnswer;
 
 class ApplicantExaminationsController extends Controller
 {

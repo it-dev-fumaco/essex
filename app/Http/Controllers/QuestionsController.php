@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreQuestionRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use DB;
-use App\Question;
-use App\ExamType;
-use App\Exam;
+use App\Models\Question;
+use App\Models\ExamType;
+use App\Models\Exam;
 use Route;
 
 use Exception;
@@ -27,16 +29,8 @@ class QuestionsController extends Controller
 
         return view('exam.question_index')->with(['questions' => $questions, 'examtypes' => $examtypes, 'exams' => $exams]);
     }
-    public function save(Request $request){
+    public function save(StoreQuestionRequest $request){
         try{
-            $request->validate([
-                'option1_img' => 'nullable|image|mimes:jpeg,jpg,png,PNG,JPEG,JPG|max:2048',
-                'option2_img' => 'nullable|image|mimes:jpeg,jpg,png,PNG,JPEG,JPG|max:2048',
-                'option3_img' => 'nullable|image|mimes:jpeg,jpg,png,PNG,JPEG,JPG|max:2048',
-                'option4_img' => 'nullable|image|mimes:jpeg,jpg,png,PNG,JPEG,JPG|max:2048',
-                'qimage.*' => 'nullable|image|mimes:jpeg,jpg,png,PNG,JPEG,JPG|max:2048',
-            ]);
-
             $question = new Question;
             $question->exam_id = $request->exam_id;
             $question->exam_type_id = $request->exam_type_id;
@@ -50,7 +44,7 @@ class QuestionsController extends Controller
             if($request->hasFile('qimage')){
                 $qimgs = '';
                 foreach($request->qimage as $que){
-                    $filename = 'question' . str_random(5) . '_' .$que->getClientOriginalName();
+                    $filename = 'question' . Str::random(5) . '_' .$que->getClientOriginalName();
                     $que->storeAs('public/questions',$filename);
                     $qimgs .= $filename . ',';
                 }
@@ -110,7 +104,7 @@ class QuestionsController extends Controller
 
                 $qimgs = '';
                 foreach($request->qimage as $que){
-                    $filename = 'question' .  str_random(5) . '_' .$que->getClientOriginalName();
+                    $filename = 'question' .  Str::random(5) . '_' .$que->getClientOriginalName();
                     $que->storeAs('public/questions',$filename);
                     $qimgs .= $filename . ',';
                 }
@@ -286,7 +280,7 @@ class QuestionsController extends Controller
         if($request->hasFile('qimage')){
             $qimgs = '';
             foreach($request->qimage as $que){
-                $filename = 'question' . str_random(5) . '_' .$que->getClientOriginalName();
+                $filename = 'question' . Str::random(5) . '_' .$que->getClientOriginalName();
                 $que->storeAs('public/questions',$filename);
                 $qimgs .= $filename . ',';
             }
@@ -349,7 +343,7 @@ class QuestionsController extends Controller
                 }
                 $qimgs = '';
                 foreach($request->qimage as $que){
-                    $filename = 'question' .  str_random(5) . '_' .$que->getClientOriginalName();
+                    $filename = 'question' .  Str::random(5) . '_' .$que->getClientOriginalName();
                     $que->storeAs('public/questions',$filename);
                     $qimgs .= $filename . ',';
                 }

@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use DB;
 use DateTime;
 use Auth;
-use App\CalendarEvent;
-use App\User;
+use App\Models\CalendarEvent;
+use App\Models\User;
 use DatePeriod;
 use DateInterval;
 

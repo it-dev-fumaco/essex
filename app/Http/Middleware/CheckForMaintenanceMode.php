@@ -4,6 +4,9 @@ namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode as Middleware;
 
+/**
+ * On Laravel 6+, change to extend Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.
+ */
 class CheckForMaintenanceMode extends Middleware
 {
     /**

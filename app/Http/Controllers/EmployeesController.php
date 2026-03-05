@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Image;
 use Validator;
-use App\User;
-use App\ItemAccountability;
-use App\Department;
-use App\Designation;
+use App\Models\User;
+use App\Models\ItemAccountability;
+use App\Models\Department;
+use App\Models\Designation;
 use Auth;
 use DB;
 use Illuminate\Support\Facades\Mail;
@@ -339,7 +339,7 @@ class EmployeesController extends Controller
                 return redirect()->back()->with('error', 'User ID already exists.')->withInput();
             }
             
-            if(str_contains($request->email, '@fumaco.local') && User::where('email', $request->email)->exists()){
+            if (Str::contains($request->email, '@fumaco.local') && User::where('email', $request->email)->exists()) {
                 return redirect()->back()->with('error', 'Email already exists.')->withInput();
             }
 
@@ -423,7 +423,7 @@ class EmployeesController extends Controller
                     break;
             }
 
-            if($request->email && str_contains($request->email, '@fumaco.local')){
+            if ($request->email && Str::contains($request->email, '@fumaco.local')) {
                 $data = [
                     'name' => $employee->employee_name,
                     'department' => $department->department,
@@ -457,14 +457,14 @@ class EmployeesController extends Controller
 
             $admin_log = [
                 'type' => 'New Employee',
-                'recipient' => ENV('MAIL_RECIPIENT', 'it@fumaco.local'),
+                'recipient' => env('MAIL_RECIPIENT', 'it@fumaco.local'),
                 'subject' =>'[Action Required] New Employee for Onboarding',
                 'template' => 'admin.email_template.new_employee',
                 'template_data' => json_encode($admin_data)
             ];
     
             try {
-                $mail = $this->send_mail($admin_log['subject'], 'admin.email_template.new_employee', ENV('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
+                $mail = $this->send_mail($admin_log['subject'], 'admin.email_template.new_employee', env('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
             } catch (\Throwable $th) {}
 
             DB::commit();
@@ -812,7 +812,9 @@ class EmployeesController extends Controller
              break;   
             }
 
-            $sortedDesc = array_reverse(array_sort($dates));
+            $sorted = $dates;
+            asort($sorted);
+            $sortedDesc = array_reverse(array_values($sorted));
         }
 
         return $sortedDesc;

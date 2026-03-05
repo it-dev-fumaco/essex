@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ApplicantBackgroundCheckRequest;
+use App\Http\Requests\BackgroundCheckQuestionRequest;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
-use App\BackgroundCheck;
-use App\Backgroundquestion;
-use App\Applicant;
+use App\Models\BackgroundCheck;
+use App\Models\Backgroundquestion;
+use App\Models\Applicant;
 
 
 class BackgroundCheckController extends Controller
@@ -49,10 +51,8 @@ class BackgroundCheckController extends Controller
 
 
 
-  public function savequestion(Request $request){
-  
-    	$this->validate($request, [
-            'question' => 'required']);
+  public function savequestion(BackgroundCheckQuestionRequest $request){
+
     	$ques= new Backgroundquestion;
     	$ques->question=$request->question;
     	$ques->save();
@@ -181,15 +181,7 @@ public function saveexam(Request $request){
         return view('client.modules.human_resource.applicants.background_check_form', compact('designation', 'department', 'applicant','question'));
     }
 
-    public function ApplicantBackGroundCheckCreate(Request $request){
-      $this->validate($request, [
-            'examinee_name' => 'required', 
-            'name_interview' => 'required']);
-
-$validate_array = ['answer[]' => 'required'];
-
-$this->validate($request, $validate_array );
-
+    public function ApplicantBackGroundCheckCreate(ApplicantBackgroundCheckRequest $request){
   $data = $request->all();
 
   $ques = $data['question_id'];

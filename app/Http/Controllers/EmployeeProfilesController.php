@@ -2,12 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\EmployeeProfileService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
-use App\Gatepass;
-use App\ItemAccountability;
-use App\User;
-use App\AbsentNotice;
 use Carbon\Carbon;
 use DB;
 use Auth;
@@ -16,187 +12,60 @@ use DatePeriod;
 use DateInterval;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Hash;
+use App\Models\User;
 
 class EmployeeProfilesController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        // $this->middleware('auth:admin');
+    public function __construct(
+        private readonly EmployeeProfileService $employeeProfileService
+    ) {
     }
 
-    public function fetchProfiles(Request $request){
-    	if($request->ajax()){
-            $details = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
-
-            $designation = $details->designation;
-
-            if (in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant'])) {
-                $employee_profiles = User::join('departments','users.department_id','departments.department_id')
-                            ->join('designation','users.designation_id','designation.des_id');
-            }else{
-                $depts = [];
-                $departments = DB::table('department_approvers')->where('employee_id', Auth::user()->user_id)->get();
-                foreach ($departments as $row) {
-                    $depts[] = [
-                        'department' => $row->department_id];
-                }
-
-                $employee_profiles = User::join('departments','users.department_id','departments.department_id')
-                            ->join('designation','users.designation_id','designation.des_id')
-                            ->whereIn('users.department_id', $depts);
-            }
-            if ($request->q) {
-                $employee_profiles = $employee_profiles->where('employee_name', 'like' , '%'.$request->q.'%');
-            }
-
-            $employee_profiles = $employee_profiles->select('users.*','departments.department','designation.designation')
-                            // ->orderBy('department')
-                            // ->orderBy('designation')
-                            ->orderBy('employee_name')
-                            ->paginate(10);
-            
+    public function fetchProfiles(Request $request)
+    {
+        if ($request->ajax()) {
+            $employee_profiles = $this->employeeProfileService->fetchProfilesPaginated($request);
             return view('client.tables.employee_profiles_table', compact('employee_profiles'))->render();
         }
     }
 
-    public function viewProfile($user_id){
-        $employee_profile = User::join('departments','users.department_id','departments.department_id')
-                                    ->join('designation','users.designation_id','designation.des_id')
-                                    ->where('user_id',$user_id)
-                                    ->select('users.*','departments.department','designation.designation')
-                                    ->first();
-
-        $regular_shift = DB::table('shifts')
-                                    ->join('users', 'shifts.shift_id', '=','users.shift_group_id')
-                                    ->where('user_id', $user_id)
-                                    ->select('shift_schedule')
-                                    ->first();
-
-        $shifts = DB::table('shifts')->get(); 
-        $branch = DB::table('branch')->get(); 
-
-        $pending_notices = DB::table('notice_slip')
-                                ->join('leave_types','notice_slip.leave_type_id','leave_types.leave_type_id')
-                                ->where('user_id',$user_id)
-                                ->where('status','For Approval')
-                                ->select('notice_slip.*','leave_type')
-                                ->get();
-
-        $pending_gatepasses = DB::table('gatepass')
-                                ->where('user_id',$user_id)
-                                ->where('status','For Approval')
-                                ->get();
-
-        $unreturned_items = DB::table('gatepass')
-                                ->where('user_id',$user_id)
-                                ->where('item_status','Unreturned')
-                                ->get();
-
-        $departments = DB::table('departments')->get();
-        $designations = DB::table('designation')->get();
-
-        $itemlist = DB::table('issued_item')
-                        // ->select('item_id', 'item_code','item_desc','date_issued','issued_by','status','itemclass','brand','qty','model','serial_no','mcaddress')
-                        ->where('issued_to',$user_id)
-                        ->get();
-
-        $code = new ItemAccountability();
-        $lastcodeID = $code->orderBy('item_id', 'DESC')->pluck('item_id')->first();
-        $newcodeID = $lastcodeID + 1;
-        $neww= date('Y').'00000';
-        $newly=$neww + $newcodeID;
-        $newwwly='FUM'.'-'.$newly;
-
-        $data = [
-            'employee_profile' => $employee_profile,
-            'regular_shift' => $regular_shift,
-            'designation' => $this->sessionDetails('designation'),
-            'department' => $this->sessionDetails('department'),
-            'pending_notices' => $pending_notices,
-            'pending_gatepasses' => $pending_gatepasses,
-            'unreturned_items' => $unreturned_items,
-            'departments' => $departments,
-            'designations' => $designations,
-            'shifts' => $shifts,
-            'itemlist' => $itemlist,
-            'newwwly' => $newwwly,
-            'user_id' => $user_id,
-            'branch' => $branch
-        ];
+    public function viewProfile($user_id)
+    {
+        $data = $this->employeeProfileService->getViewProfileData($user_id);
         return view('client.view_employee_profile')->with($data);
     }
-    
-    public function sessionDetails($column){
-        $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
 
-        return $detail->$column;
+    public function sessionDetails($column)
+    {
+        return $this->employeeProfileService->getSessionDetail($column);
     }
 
-    public function resetEmployeePassword($user_id){
-        $user = User::where('user_id',$user_id)->first();
-        $user->password = bcrypt('fumaco');
-        $user->save();
-
-        return redirect()->route('client.view_employee_profile',$user_id);
+    public function resetEmployeePassword($user_id)
+    {
+        $this->employeeProfileService->resetEmployeePassword($user_id);
+        return redirect()->route('client.view_employee_profile', $user_id);
     }
 
-    public function updateEmployeeProfile(Request $request){
-        $employee = User::where('user_id',$request->user_id)->first();
-        $employee->employee_name = $request->employee_name;
-        $employee->birth_date = $request->birth_date;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
-        $employee->civil_status = $request->civil_status;
-        $employee->nick_name = $request->nick_name;
-        $employee->designation_id = $request->designation;
-        $employee->department_id = $request->department;
-        $employee->employment_status = $request->employment_status;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
-        $employee->status = $request->status;
-        $employee->user_group = $request->user_group;
-        $employee->save();
-
-        $employee = User::where('user_id',$request->user_id)->first();
-
-        return redirect()->route('client.view_employee_profile',$request->user_id);
+    public function updateEmployeeProfile(Request $request)
+    {
+        $this->employeeProfileService->updateEmployeeProfile($request);
+        return redirect()->route('client.view_employee_profile', $request->user_id);
     }
 
-    public function approveAbsentNotice($notice_id, $user_id){
-        $notice = AbsentNotice::find($notice_id)->first();
-        $notice->status = "Approved";
-        $notice->save();
-
-        return redirect()->route('client.view_employee_profile',$request->user_id);
+    public function approveAbsentNotice($notice_id, $user_id)
+    {
+        $this->employeeProfileService->approveAbsentNotice((int) $notice_id);
+        return redirect()->route('client.view_employee_profile', $user_id);
     }
 
-    public function changePassword(Request  $request){
-        // dd($request->all());
-        $employee = User::where('user_id',Auth::user()->user_id)->first();
-
-        if (Hash::check($request->current_pass, $employee['password'])) {
-            $employee->password = bcrypt($request->new_pass);
-            $employee->save();
+    public function changePassword(Request $request)
+    {
+        $result = $this->employeeProfileService->changePassword($request);
+        if ($result['success'] && $result['logout']) {
             Auth::logout();
             return redirect('/');
-        } else {
-            return redirect()->back();
         }
+        return redirect()->back();
     }
 
     // public function getAttendance(Request $request, $id){
@@ -306,61 +175,33 @@ class EmployeeProfilesController extends Controller
     //     return $deductions;
     // }
 
-    public function getNotices($employee_id){
-        $data = DB::table('notice_slip')
-                        ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
-                        ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-                        ->where('notice_slip.user_id', '=', $employee_id)
-                        ->orderBy('notice_slip.notice_id', 'desc')
-                        ->select('users.*', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
-                        ->get();
-
+    public function getNotices($employee_id)
+    {
+        $data = $this->employeeProfileService->getNotices($employee_id);
         return response()->json($data);
     }
 
-    public function getGatepass($employee_id){
-        $data = DB::table('gatepass')
-                        ->join('users', 'users.user_id', '=', 'gatepass.user_id')
-                        ->where('gatepass.user_id', '=', $employee_id)
-                        ->orderBy('gatepass.gatepass_id', 'desc')
-                        ->select('users.*', 'gatepass.*')
-                        ->get();
-
+    public function getGatepass($employee_id)
+    {
+        $data = $this->employeeProfileService->getGatepass($employee_id);
         return response()->json($data);
     }
 
-    public function getLeaves($employee_id, $year){
-        $data = DB::table('employee_leaves')
-                        ->join('leave_types', 'leave_types.leave_type_id', '=', 'employee_leaves.leave_type_id')
-                        ->where('employee_leaves.employee_id', '=', $employee_id)
-                        ->where('employee_leaves.year','=', $year)
-                        ->get();
-
+    public function getLeaves($employee_id, $year)
+    {
+        $data = $this->employeeProfileService->getLeaves($employee_id, $year);
         return response()->json($data);
     }
 
-    public function getExams($employee_id){
-        $data = DB::table('exams')
-                        ->join('examinee', 'examinee.exam_id', '=', 'exams.exam_id')
-                        ->join('users', 'examinee.user_id', '=', 'users.id')
-                        ->join('exam_group', 'exams.exam_group_id', '=', 'exam_group.exam_group_id')
-                        ->where('examinee.user_id', $employee_id)
-                        ->orderBy('validity_date','desc')
-                        ->orderBy('date_of_exam','desc')
-                        ->get();
-
+    public function getExams($employee_id)
+    {
+        $data = $this->employeeProfileService->getExams($employee_id);
         return response()->json($data);
     }
 
-    public function getEvaluations($employee_id){
-        $data = DB::table('evaluation_files')
-                        ->join('users', 'users.user_id', '=', 'evaluation_files.employee_id')
-                        ->where('employee_id', $employee_id)
-                        ->select('users.employee_name', 'evaluation_files.*', DB::raw('(select employee_name from users where user_id = evaluation_files.evaluated_by) as evaluated_by'))
-                        ->orderBy('id', 'desc')
-                        ->get();
-
+    public function getEvaluations($employee_id)
+    {
+        $data = $this->employeeProfileService->getEvaluations($employee_id);
         return response()->json($data);
     }
 
@@ -399,7 +240,7 @@ class EmployeeProfilesController extends Controller
 
         DB::table('biometrics')->insert($data);
 
-        return response()->json(['success' => 'Updated: Biometric Logs']);
+        return response()->json(['success' => 'Updated: Biometric Logssss']);
     }
 
     public function getWorkingDays($begin, $end){
@@ -863,7 +704,9 @@ class EmployeeProfilesController extends Controller
             break;
         }
            
-            $sortedDesc = array_reverse(array_sort($dates));
+            $sorted = $dates;
+            asort($sorted);
+            $sortedDesc = array_reverse(array_values($sorted));
         }
 
         return $sortedDesc;

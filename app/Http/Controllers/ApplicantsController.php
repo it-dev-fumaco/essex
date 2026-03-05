@@ -6,11 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Validator;
 use Auth;
-use App\User;
-use App\Examinee;
-use App\BackgroundCheck;
-use App\Backgroundquestion;
-use App\Applicant;
+use App\Models\User;
+use App\Models\Examinee;
+use App\Models\BackgroundCheck;
+use App\Models\Backgroundquestion;
+use App\Models\Applicant;
 use DB;
 
 class ApplicantsController extends Controller

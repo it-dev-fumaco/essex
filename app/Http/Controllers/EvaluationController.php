@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EditEvaluationRequest;
+use App\Http\Requests\StoreEvaluationRequest;
+use App\Pipelines\AddEvaluation\AddEvaluationPayload;
+use App\Pipelines\AddEvaluation\AddEvaluationPipeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Validator;
 use Carbon\Carbon;
 use Auth;
 use DB;
 use DateTime;
 use DatePeriod;
 use DateInterval;
-use App\DataInputKPI;
-use App\KPIResult;
-use App\DataInputModel;
-use App\Http\Traits\KpiTrait;
-use App\Http\Traits\AttendanceTrait;
+use App\Models\KPIResult;
+use App\Models\DataInputModel;
+use App\Traits\KpiTrait;
+use App\Traits\AttendanceTrait;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -24,75 +26,32 @@ class EvaluationController extends Controller
     use KpiTrait;
     use AttendanceTrait;
 
-    public function addEvaluation(Request $request){
-
-        $validator = Validator::make($request->all(), [
-           'employee_id' => 'required',
-           'title' => 'required',
-           'evaluation_file' => 'required|mimes:pdf',
-           'evaluation_date' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message'   => $validator->errors()->all(),
-                'class_name'  => 'danger',
-                'icon' => 'fa-times-circle-o'
-            ]);
-        }else{
-            $filenametostore = null;
-            if($request->hasFile('evaluation_file')){
-                $file = $request->file('evaluation_file');
-
-                //get filename with extension
-                $filenamewithextension = $file->getClientOriginalName();
-         
-                //get filename without extension
-                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-         
-                //get file extension
-                $extension = $file->getClientOriginalExtension();
-         
-                //filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
-         
-                Storage::put('public/uploads/evaluations/'. $filenametostore, fopen($file, 'r+'));
-            }
-
-            $data[] = [
-                'employee_id' => $request->employee_id,
-                'title' => $request->title,
-                'evaluation_file' => $filenametostore,
-                'evaluation_date' => $request->evaluation_date,
-                'evaluated_by' => Auth::user()->user_id,
-                'remarks' => $request->remarks
-            ];
-
-            $evaluation = DB::table('evaluation_files')->insert($data);
-
-            return response()->json([
-                'message'   => ['Evaluation <b>' . $request->title . '</b> has been added.'],
-                'class_name'  => 'success',
-                'icon' => 'fa-check-square-o'
-            ]);
-        }
+    public function __construct(
+        private readonly AddEvaluationPipeline $addEvaluationPipeline
+    ) {
     }
 
-    public function editEvaluation(Request $request){
-        $validator = Validator::make($request->all(), [
-           'employee_id' => 'required',
-           'title' => 'required',
-           'evaluation_file' => 'mimes:pdf',
-           'evaluation_date' => 'required'
-        ]);
+    public function addEvaluation(StoreEvaluationRequest $request)
+    {
+        $payload = new AddEvaluationPayload(
+            employeeId: $request->input('employee_id'),
+            title: $request->input('title'),
+            evaluationFile: $request->file('evaluation_file'),
+            evaluationDate: $request->input('evaluation_date'),
+            evaluatedBy: Auth::user()->user_id,
+            remarks: $request->input('remarks'),
+        );
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message'   => $validator->errors()->all(),
-                'class_name'  => 'danger',
-                'icon' => 'fa-times-circle-o'
-            ]);
-        }else{
+        $this->addEvaluationPipeline->run($payload);
+
+        return response()->json([
+            'message'   => ['Evaluation <b>' . $request->title . '</b> has been added.'],
+            'class_name'  => 'success',
+            'icon' => 'fa-check-square-o',
+        ]);
+    }
+
+    public function editEvaluation(EditEvaluationRequest $request){
             $filenametostore = $request->eval_file;
             if($request->hasFile('evaluation_file')){
                 $file = $request->file('evaluation_file');
@@ -128,7 +87,6 @@ class EvaluationController extends Controller
                 'class_name'  => 'success',
                 'icon' => 'fa-check-square-o'
             ]);
-        }
     }
 
     public function deleteEvaluation(Request $request){
@@ -470,19 +428,27 @@ class EvaluationController extends Controller
 
     public function kpiTree($department){
         $kpi_list = DB::table('kpi')->where('department_id', $department)->get();
+        if ($kpi_list->isEmpty()) {
+            $tree = [];
+            return view('client.modules.evaluation.setup.kpi_tree', compact('tree'));
+        }
+        $kpi_ids = $kpi_list->pluck('kpi_id')->all();
+        $all_metrics = DB::table('metrics')->whereIn('kpi_id', $kpi_ids)->get();
+        $metric_ids = $all_metrics->pluck('metric_id')->all();
+        $all_data_inputs = $metric_ids === []
+            ? collect()
+            : DB::table('data_input')->whereIn('metric_id', $metric_ids)->get();
+        $data_inputs_by_metric = $all_data_inputs->groupBy('metric_id');
+
+        $metrics_by_kpi = $all_metrics->groupBy('kpi_id');
         $tree = [];
         foreach ($kpi_list as $lvl1) {
-            $metrics = DB::table('metrics')->where('kpi_id', $lvl1->kpi_id)->get();
             $metric_list = [];
-            foreach ($metrics as $lvl2) {
-                $data_inputs = DB::table('data_input')->where('metric_id', $lvl2->metric_id)->get();
-                $input_list = [];
-                foreach ($data_inputs as $lvl3) {
-                    $input_list[] = [
-                        'input_id' => $lvl3->input_id,
-                        'data_input' => $lvl3->data_input
-                    ];
-                }
+            foreach ($metrics_by_kpi->get($lvl1->kpi_id, []) as $lvl2) {
+                $input_list = collect($data_inputs_by_metric->get($lvl2->metric_id, []))
+                    ->map(fn ($lvl3) => ['input_id' => $lvl3->input_id, 'data_input' => $lvl3->data_input])
+                    ->values()
+                    ->all();
                 $metric_list[] = [
                     'metric_id' => $lvl2->metric_id,
                     'metric_name' => $lvl2->metric_name,
@@ -490,7 +456,6 @@ class EvaluationController extends Controller
                     'input_list' => $input_list
                 ];
             }
-
             $tree[] = [
                 'kpi_id' => $lvl1->kpi_id,
                 'kpi_description' => $lvl1->kpi_description,

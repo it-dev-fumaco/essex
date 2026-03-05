@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ItemAccountabilityUpdateRequest;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
-use App\BackgroundCheck;
-use App\User;
-use App\Backgroundquestion;
-use App\ItemAccountability;
-use App\CompanyAsset;
+use App\Models\BackgroundCheck;
+use App\Models\User;
+use App\Models\Backgroundquestion;
+use App\Models\ItemAccountability;
+use App\Models\CompanyAsset;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Storage;
 use Image;  
@@ -340,16 +341,7 @@ class ItemAccountabilityController extends Controller
      return redirect()->back()->with(["message" => "Item has been successfully added!"]);
                 // return $data;
 }
-    public function update(Request $request){
-              $this->validate($request, [
-            'itemclass' => 'required', 
-            'item_code' => 'required', 
-            'brand' => 'required',
-            'qty' => 'required',
-            'model' => 'required',
-            'serial' => 'required',
-            'mcaddress' => 'required',
-            'itemdesc' => 'required']);
+    public function update(ItemAccountabilityUpdateRequest $request){
         $itemissued = ItemAccountability::find($request->id);
         $status="Active";
         $date=date('Y-d-m');

@@ -2,109 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\AttendanceTrait;
+use App\Models\Attendance;
+use App\Services\AttendanceService;
 use Illuminate\Http\Request;
-use App\Attendance;
-use DB;
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Biometric_logs;
 use DateTime;
 use DatePeriod;
 use DateInterval;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Traits\AttendanceTrait;
 
 class AttendanceController extends Controller
 {
     use AttendanceTrait;
 
-    public function refreshAttendance(){
-        $existing_bio = DB::table('biometrics')->where('employee_id', (int)Auth::user()->user_id)->where('type', '!=', 'adjustment')->select('biometric_id')->get();
-
-        $bio_ids = '0000';
-
-        if (!empty($existing_bio)) {
-
-            foreach ($existing_bio as $bio_id) {
-                $bio_ids .= $bio_id->biometric_id.',';
-            }
-
-            $bio_ids = rtrim($bio_ids,',');
-            $bio_ids = "AND Transactions.[ID] NOT IN (".$bio_ids.")"; 
-        }
-
-        $attendance = DB::connection('access')->select('SELECT Transactions.[ID], Transactions.[date], Transactions.[time], Transactions.[SerialNo], Transactions.[TransType], Transactions.[pin], Transactions.[ReceivedDate], Transactions.[ReceivedTime], templates.[FirstName], templates.[LastName], UnitSiteQuery.[UnitName] FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE (Transactions.[TransType] = 7 OR Transactions.[TransType] = 8) AND Transactions.[ID] > 704020 AND Transactions.[pin] = '.Auth::user()->user_id.' '.$bio_ids.'');
-
-        $data = [];
-
-        foreach ($attendance as $row) {
-
-            $data[] = ['biometric_id' => $row->ID,
-                    'bio_date' => $row->date,
-                    'bio_time' => $row->time,
-                    'serial_no' => $row->SerialNo,
-                    'trans_type' => $row->TransType,
-                    'employee_id' => $row->pin,
-                    'received_date' => $row->ReceivedDate,
-                    'received_time' => $row->ReceivedTime,
-                    'unit_name' => $row->UnitName,
-                    'type' => 'raw data',
-                ];
-        }
-
-        DB::table('biometrics')->insert($data);
-
-        return response()->json(['success' => 'Updated: Biometric Logs']);
+    public function __construct(
+        private readonly AttendanceService $attendanceService
+    ) {
     }
 
-    public function getBioAdjustments(Request $request){
+    public function refreshAttendance(): \Illuminate\Http\JsonResponse
+    {
+        $employeeId = (int) Auth::user()->user_id;
+        $result = $this->attendanceService->refreshAttendance($employeeId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * @return \Illuminate\Http\Response|\Illuminate\Contracts\View\View|string|null
+     */
+    public function getBioAdjustments(Request $request)
+    {
         if ($request->ajax()) {
-            $adjustments = DB::table('biometrics')
-                        ->join('users', 'users.user_id', '=', 'biometrics.employee_id')
-                        ->select('biometrics.*', 'users.employee_name')
-                        ->where('type', 'adjustment')
-                        ->paginate(8);
+            $adjustments = $this->attendanceService->getBioAdjustmentsPaginated(8);
 
             return view('client.tables.biometric_adjustments_table', compact('adjustments'))->render();
         }
+
+        return null;
     }
 
-    public function addAdjustment(Request $request){
-        if($request->transaction == 7) {
-            $date=date('Y-m-d');
-            $adj = Biometric_logs::find($request->rowid_data);
-            $adj->user_id = $request->employee_id;
-            $adj->transaction_date = $request->transaction_date;
-            $adj->time_in = $request->adjusted_time;
-            $adj->remarks = 'adjustment';
-            $adj->adj_type = '7';
-            $adj->last_date_modified = $date;
-            $adj->last_modified_by=Auth::user()->employee_name;
-            $adj->save();
-        }elseif ($request->transaction == 8){
-            $date=date('Y-m-d');
-            $adj = Biometric_logs::find($request->rowid_data);
-            $adj->user_id = $request->employee_id;
-            $adj->transaction_date = $request->transaction_date;
-            $adj->time_out = $request->adjusted_time;
-            $adj->remarks = 'adjustment';
-            $adj->adj_type = '8';
-            $adj->last_date_modified = $date;
-            $adj->last_modified_by=Auth::user()->employee_name;
-            $adj->save();
-        }
+    public function addAdjustment(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $result = $this->attendanceService->addAdjustment($request);
 
-        return response()->json(['message' => 'Adjustment has been added.']);
+        return response()->json($result);
     }
 
-    public function deleteAdjustment(Request $request){
-        DB::table('biometrics')
-                ->where('biometric_id', $request->biometric_id)
-                ->where('type', 'adjustment')
-                ->delete();
+    public function deleteAdjustment(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $biometricId = (int) $request->input('biometric_id', 0);
+        $result = $this->attendanceService->deleteAdjustment($biometricId);
 
-        return response()->json(['message' => 'Adjustment has been deleted.']);;
+        return response()->json($result);
     }
 
     public function showLateEmployeeReport(){
@@ -132,14 +86,9 @@ class AttendanceController extends Controller
         return $sorted_data->values()->all();
     }
 
-    public function sessionDetails($column){
-        $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
-
-        return $detail->$column;
+    public function sessionDetails($column)
+    {
+        return $this->attendanceService->getSessionDetail($column);
     }
 
     public function getTotalAbsences($employee_id, $date_from, $date_to){
@@ -523,7 +472,9 @@ class AttendanceController extends Controller
             break;
         }
            
-            $sortedDesc = array_reverse(array_sort($dates));
+            $sorted = $dates;
+            asort($sorted);
+            $sortedDesc = array_reverse(array_values($sorted));
         }
 
         return $sortedDesc;
@@ -1065,6 +1016,10 @@ class AttendanceController extends Controller
     }
 
     public function updateAttendanceLogs($employee){
+        if (app()->environment('local')) {
+            return response()->json(['success' => 'Skipped: Access sync disabled in local environment']);
+        }
+
         $for_delete = DB::table('biometric_logs')->where('user_id', $employee)
                 ->where(function($q) {
                     $q->where('time_in', null)->orWhere('time_out', null);

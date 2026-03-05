@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendMail_notice;
 use DateTime;
-use App\AbsentNotice;
-use App\Department;
-use App\LeaveType;
+use App\Models\AbsentNotice;
+use App\Models\Department;
+use App\Models\LeaveType;
 use Auth;
 use DB;
 use DatePeriod;
@@ -165,10 +165,11 @@ class AbsentNoticesController extends Controller
 
                 $email_sent = 0;
                 try {
-                    Mail::to($email)->send(new SendMail_notice($data)); //
-
-                    $email_sent = Mail::failures() ? 0 : 1;
-                } catch (\Throwable $th) {}
+                    Mail::to($email)->queue(new SendMail_notice($data));
+                    $email_sent = 1;
+                } catch (\Throwable $th) {
+                    $email_sent = 0;
+                }
 
                 DB::table('email_notifications')->insert([
                     'type' => 'Absent Notice Slip',

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Examinee;
-use App\Exam;
-use App\User;
+use App\Models\Examinee;
+use App\Models\Exam;
+use App\Models\User;
 use DB;
 
-use App\Department;
-use App\ExamGroup;
+use App\Models\Department;
+use App\Models\ExamGroup;
 
-use App\Question;
-use App\ExamType;
+use App\Models\Question;
+use App\Models\ExamType;
 
 use Exception;
 

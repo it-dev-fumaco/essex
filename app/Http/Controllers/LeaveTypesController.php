@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
-use App\LeaveType;
+use App\Models\LeaveType;
 
 class LeaveTypesController extends Controller
 {
