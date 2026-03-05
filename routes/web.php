@@ -10,1026 +10,1055 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/local', 'TestingEnvironmentController@local_login');
-Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus');
+
+use App\Http\Controllers\AbsentNoticesController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ApplicantExaminationsController;
+use App\Http\Controllers\ApplicantExamineesController;
+use App\Http\Controllers\ApplicantsController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\BackgroundCheckController;
+use App\Http\Controllers\BiometricLogsController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CalendarViewController;
+use App\Http\Controllers\ClientExamsController;
+use App\Http\Controllers\DepartmentHeadListController;
+use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\DesignationsController;
+use App\Http\Controllers\EmployeeLeavesController;
+use App\Http\Controllers\EmployeeProfilesController;
+use App\Http\Controllers\EmployeesController;
+use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\ExamGroupsController;
+use App\Http\Controllers\ExamTypesController;
+use App\Http\Controllers\ExaminationReportsController;
+use App\Http\Controllers\ExaminationSchedulesController;
+use App\Http\Controllers\ExamsController;
+use App\Http\Controllers\ExamineesController;
+use App\Http\Controllers\GatepassesController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HumanResourcesController;
+use App\Http\Controllers\ItemAccountabilityController;
+use App\Http\Controllers\ItemsController;
+use App\Http\Controllers\ItineraryController;
+use App\Http\Controllers\KioskController;
+use App\Http\Controllers\LeaveTypesController;
+use App\Http\Controllers\ApproversController;
+use App\Http\Controllers\PortalController;
+use App\Http\Controllers\PromotionalEvaluationsController;
+use App\Http\Controllers\PromotionalExamsController;
+use App\Http\Controllers\QuestionsController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ShiftsController;
+use App\Http\Controllers\TestingEnvironmentController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/local', [TestingEnvironmentController::class, 'local_login']);
+Route::post('/updateExamineeStatus', [ExamineesController::class, 'updateExamineeStatus']);
 
 // E M P L O Y E E  P O R T A L
-Route::get('/', 'PortalController@index')->name('portal');
-Route::get('/tbl_manuals', 'PortalController@load_manuals');
-Route::get('/email_logs', 'PortalController@email_logs');
-Route::get('/resend_email/{id}', 'PortalController@resend_email');
+Route::get('/', [PortalController::class, 'index'])->name('portal');
+Route::get('/tbl_manuals', [PortalController::class, 'load_manuals']);
+Route::get('/email_logs', [PortalController::class, 'email_logs']);
+Route::get('/resend_email/{id}', [PortalController::class, 'resend_email']);
 
 // G A L L E R Y
-Route::get('/gallery', 'PortalController@showGallery');
-Route::get('/gallery/fetchAlbums', 'PortalController@fetchAlbums');
+Route::get('/gallery', [PortalController::class, 'showGallery']);
+Route::get('/gallery/fetchAlbums', [PortalController::class, 'fetchAlbums']);
 
 // M A N U A L S
-Route::get('/manuals', 'PortalController@showManuals');
-Route::get('/article/{slug}', 'PortalController@showArticle');
-Route::get('/services/directory', 'PortalController@phoneEmailDirectory');
-Route::get('/services/internet', 'PortalController@showInternet');
-Route::get('/services/email', 'PortalController@email');
-Route::get('/services/system', 'PortalController@system');
-Route::get('/gallery/album/{id}', 'PortalController@showAlbum');
-Route::get('/historical_milestones', 'PortalController@showHistoricalMilestones');
-// Route::get('/manuals', 'PortalController@showManuals');
-Route::get('/policies', 'PortalController@showMemorandum');
-Route::get('/updates', 'PortalController@showUpdates');
-Route::get('/itguidelines', 'PortalController@showitGuidelines');
+Route::get('/manuals', [PortalController::class, 'showManuals']);
+Route::get('/article/{slug}', [PortalController::class, 'showArticle']);
+Route::get('/services/directory', [PortalController::class, 'phoneEmailDirectory']);
+Route::get('/services/internet', [PortalController::class, 'showInternet']);
+Route::get('/services/email', [PortalController::class, 'email']);
+Route::get('/services/system', [PortalController::class, 'system']);
+Route::get('/gallery/album/{id}', [PortalController::class, 'showAlbum']);
+Route::get('/historical_milestones', [PortalController::class, 'showHistoricalMilestones']);
+// Route::get('/manuals', [PortalController::class, 'showManuals']);
+Route::get('/policies', [PortalController::class, 'showMemorandum']);
+Route::get('/updates', [PortalController::class, 'showUpdates']);
+Route::get('/itguidelines', [PortalController::class, 'showitGuidelines']);
 
-Route::get('/search', 'SearchController@search')->name('search');
+Route::get('/search', [SearchController::class, 'search'])->name('search');
 
-Route::get('/exam', 'HomeController@takeExam');
+Route::get('/exam', [HomeController::class, 'takeExam']);
 
-Route::get('/userLogout', 'Auth\LoginController@userLogout')->name('user.logout');
-Route::post('/userLogin', 'Auth\LoginController@userLogin');
+Route::get('/userLogout', [LoginController::class, 'userLogout'])->name('user.logout');
+Route::post('/userLogin', [LoginController::class, 'userLogin']);
 
     // //Applicant Examination
-    // Route::get('/applicant','ApplicantExaminationsController@index')->name('client.applicant');
-    // Route::post('/applicant/examinee','ApplicantExaminationsController@show')->name('client.appli_examinee');
-    // Route::get('/applicant/takeExam/{id}','ApplicantExaminationsController@takeExam')->name('applicant.take_exam');
-    // Route::post('/applicant/saveExam','ApplicantExaminationsController@saveExam')->name('applicant.save_exam');
-    Route::get('/applicant/examSubmitted/{id}','ApplicantExaminationsController@examSuccess')->name('applicant.exam_success');
+    // Route::get('/applicant',[ApplicantExaminationsController::class, 'index'])->name('client.applicant');
+    // Route::post('/applicant/examinee',[ApplicantExaminationsController::class, 'show'])->name('client.appli_examinee');
+    // Route::get('/applicant/takeExam/{id}',[ApplicantExaminationsController::class, 'takeExam'])->name('applicant.take_exam');
+    // Route::post('/applicant/saveExam',[ApplicantExaminationsController::class, 'saveExam'])->name('applicant.save_exam');
+    Route::get('/applicant/examSubmitted/{id}',[ApplicantExaminationsController::class, 'examSuccess'])->name('applicant.exam_success');
 
 // Auth routes (Laravel 12: no laravel/ui; define explicitly to preserve route names)
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('login', 'Auth\LoginController@userLogin');
-Route::post('logout', 'Auth\LoginController@userLogout')->name('logout');
-Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
-Route::post('register', 'Auth\RegisterController@register');
-Route::get('password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
-Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
-Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
-Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
+Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'userLogin']);
+Route::post('logout', [LoginController::class, 'userLogout'])->name('logout');
+Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('register', [RegisterController::class, 'register']);
+Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-Route::group(['prefix' => 'admin'], function(){
-    Route::get('/login', 'Auth\AdminLoginController@showLoginForm')->name('admin.login');
-    Route::post('/login', 'Auth\AdminLoginController@login')->name('admin.login.submit');
-    Route::get('/', 'AdminController@index')->name('admin.dashboard');
-    Route::get('/logout', 'Auth\AdminLoginController@adminLogout')->name('admin.logout');
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [AdminLoginController::class, 'login'])->name('admin.login.submit');
+    Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/logout', [AdminLoginController::class, 'adminLogout'])->name('admin.logout');
 });
-Route::post('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
+Route::post('/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
 
 // C L I E N T
-Route::group(['middleware' => 'auth'], function(){
+Route::middleware('auth')->group(function () {
 
     //HR (Client Designations)
-Route::get('/module/hr/designation', 'DesignationsController@hr_desig_index');
-Route::post('/module/hr/designation/create', 'DesignationsController@store');
-Route::post('/module/hr/designation/update', 'DesignationsController@update');
-Route::post('/module/hr/designation/delete', 'DesignationsController@delete');
+Route::get('/module/hr/designation', [DesignationsController::class, 'hr_desig_index']);
+Route::post('/module/hr/designation/create', [DesignationsController::class, 'store']);
+Route::post('/module/hr/designation/update', [DesignationsController::class, 'update']);
+Route::post('/module/hr/designation/delete', [DesignationsController::class, 'delete']);
     
 
 //calendar
-    Route::post('/addEvent', 'CalendarViewController@store');
-    Route::get('/calendar/fetch', 'HomeController@getLeaves'); 
-    Route::get('/holidays', 'CalendarViewController@getholidays'); 
-    Route::get('/bday', 'CalendarViewController@employeeBirthdates');
+    Route::post('/addEvent', [CalendarViewController::class, 'store']);
+    Route::get('/calendar/fetch', [HomeController::class, 'getLeaves']); 
+    Route::get('/holidays', [CalendarViewController::class, 'getholidays']); 
+    Route::get('/bday', [CalendarViewController::class, 'employeeBirthdates']);
 
-    Route::post('/updateAllBiologs', 'AttendanceController@updateEmployeesLogs');
+    Route::post('/updateAllBiologs', [AttendanceController::class, 'updateEmployeesLogs']);
 
 
 
     
-    Route::post('/employee/update', 'EmployeesController@update');
-    Route::post('/employee/reset_password', 'EmployeesController@reset_password');
-    Route::post('/employee/reset_leaves', 'EmployeesController@reset_leaves');
+    Route::post('/employee/update', [EmployeesController::class, 'update']);
+    Route::post('/employee/reset_password', [EmployeesController::class, 'reset_password']);
+    Route::post('/employee/reset_leaves', [EmployeesController::class, 'reset_leaves']);
 
 
     // Gallery
-    Route::post('/addAlbum', 'PortalController@addAlbum');
-    Route::post('/editAlbum', 'PortalController@editAlbum');
-    Route::post('/deleteAlbum', 'PortalController@deleteAlbum');
+    Route::post('/addAlbum', [PortalController::class, 'addAlbum']);
+    Route::post('/editAlbum', [PortalController::class, 'editAlbum']);
+    Route::post('/deleteAlbum', [PortalController::class, 'deleteAlbum']);
     // Posts
-    Route::post('/addPost', 'PortalController@addPost');
-    Route::post('/updatePost', 'PortalController@updatePost');
-    Route::post('/deletePost', 'PortalController@deletePost');
+    Route::post('/addPost', [PortalController::class, 'addPost']);
+    Route::post('/updatePost', [PortalController::class, 'updatePost']);
+    Route::post('/deletePost', [PortalController::class, 'deletePost']);
     // Policy
-    Route::post('/addPolicy', 'PortalController@addPolicy');
-    Route::post('/editPolicy', 'PortalController@editPolicy');
-    Route::post('/deletePolicy', 'PortalController@deletePolicy');
+    Route::post('/addPolicy', [PortalController::class, 'addPolicy']);
+    Route::post('/editPolicy', [PortalController::class, 'editPolicy']);
+    Route::post('/deletePolicy', [PortalController::class, 'deletePolicy']);
 
-    Route::post('/gallery/album/uploadImages', 'PortalController@uploadImage');
-    Route::delete('/image/delete/{id}', 'PortalController@deleteImage');
-    Route::post('/setAsFeatured', 'PortalController@setAsFeatured');
+    Route::post('/gallery/album/uploadImages', [PortalController::class, 'uploadImage']);
+    Route::delete('/image/delete/{id}', [PortalController::class, 'deleteImage']);
+    Route::post('/setAsFeatured', [PortalController::class, 'setAsFeatured']);
 
     // Dashboard
-    Route::get('/home', 'HomeController@index')->name('home'); // comment this line on maintenance
+    Route::get('/home', [HomeController::class, 'index'])->name('home'); // comment this line on maintenance
 
     // Under Maintenance
-    // Route::get('/home1', 'HomeController@index')->name('home1');
-    // Route::get('/home', 'HomeController@systemUnderMaitenance')->name('home');
+    // Route::get('/home1', [HomeController::class, 'index'])->name('home1');
+    // Route::get('/home', [HomeController::class, 'systemUnderMaitenance'])->name('home');
 
     // Attendance
-    Route::get('/attendance', 'AttendanceController@index');
-    Route::post('/attendance/refresh', 'AttendanceController@refreshAttendance');
-    Route::get('/attendance/fetch/{user_id}', 'BiometricLogsController@employeeAttendance');
-    Route::get('/getDeductions', 'AttendanceController@getDeductions');
-    Route::get('/getBioAdjustments', 'AttendanceController@getBioAdjustments');
-    // Route::post('/addAdjustment', 'AttendanceController@addAdjustment');
-    Route::post('/deleteAdjustment', 'AttendanceController@deleteAdjustment');
+    Route::get('/attendance', [AttendanceController::class, 'index']);
+    Route::post('/attendance/refresh', [AttendanceController::class, 'refreshAttendance']);
+    Route::get('/attendance/fetch/{user_id}', [BiometricLogsController::class, 'employeeAttendance']);
+    Route::get('/getDeductions', [AttendanceController::class, 'getDeductions']);
+    Route::get('/getBioAdjustments', [AttendanceController::class, 'getBioAdjustments']);
+    // Route::post('/addAdjustment', [AttendanceController::class, 'addAdjustment']);
+    Route::post('/deleteAdjustment', [AttendanceController::class, 'deleteAdjustment']);
     // Attendance History
-    Route::get('/attendance_history/fetch', 'AttendanceController@attendance_history');
+    Route::get('/attendance_history/fetch', [AttendanceController::class, 'attendance_history']);
     // Absent Notice
-    Route::get('/notice_slip/fetch', 'AbsentNoticesController@fetchNotices');
-    Route::get('/notice_slip/getDetails', 'AbsentNoticesController@getNoticeDetails');
-    Route::post('/notice_slip/create', 'AbsentNoticesController@store');
-    Route::post('/notice_slip/updateDetails', 'AbsentNoticesController@updateNoticeDetails');
-    Route::post('/notice_slip/cancelNotice', 'AbsentNoticesController@cancelNotice');
-    Route::get('/notice_slip/absentToday', 'AbsentNoticesController@getAbsentToday');
-    Route::get('/notice_slip/forApproval/fetch', 'AbsentNoticesController@noticesForApproval');
-    Route::get('/getAbsentNotices', 'AbsentNoticesController@getAbsentNotices');
-    Route::get('/printNotice/{id}', 'AbsentNoticesController@printNotice');
-    Route::get('/countPendingNotices', 'AbsentNoticesController@countPendingNotices');
-    Route::post('/notice_slip/cancelNotice_per_employee', 'AbsentNoticesController@cancelNotice_per_employee');
+    Route::get('/notice_slip/fetch', [AbsentNoticesController::class, 'fetchNotices']);
+    Route::get('/notice_slip/getDetails', [AbsentNoticesController::class, 'getNoticeDetails']);
+    Route::post('/notice_slip/create', [AbsentNoticesController::class, 'store']);
+    Route::post('/notice_slip/updateDetails', [AbsentNoticesController::class, 'updateNoticeDetails']);
+    Route::post('/notice_slip/cancelNotice', [AbsentNoticesController::class, 'cancelNotice']);
+    Route::get('/notice_slip/absentToday', [AbsentNoticesController::class, 'getAbsentToday']);
+    Route::get('/notice_slip/forApproval/fetch', [AbsentNoticesController::class, 'noticesForApproval']);
+    Route::get('/getAbsentNotices', [AbsentNoticesController::class, 'getAbsentNotices']);
+    Route::get('/printNotice/{id}', [AbsentNoticesController::class, 'printNotice']);
+    Route::get('/countPendingNotices', [AbsentNoticesController::class, 'countPendingNotices']);
+    Route::post('/notice_slip/cancelNotice_per_employee', [AbsentNoticesController::class, 'cancelNotice_per_employee']);
     // Gatepass
-    Route::get('/gatepass/fetch', 'GatepassesController@fetchGatepasses');
-    Route::get('/gatepass/getDetails', 'GatepassesController@getGatepassDetails');
-    Route::post('/gatepass/create', 'GatepassesController@store');
-    Route::post('/gatepass/updateDetails', 'GatepassesController@updateGatepassDetails');
-    Route::post('/gatepass/cancelGatepass', 'GatepassesController@cancelGatepass');
-    Route::get('/getGatepasses', 'GatepassesController@getGatepasses');
-    Route::get('/printGatepass/{id}', 'GatepassesController@printGatepass');
-    Route::get('/getUnreturnedGatepass', 'GatepassesController@getUnreturnedGatepass');
-    Route::post('/updateUnreturnedGatepass', 'GatepassesController@updateUnreturnedGatepass');
-    Route::get('/countPendingGatepass', 'GatepassesController@countPendingGatepass');
+    Route::get('/gatepass/fetch', [GatepassesController::class, 'fetchGatepasses']);
+    Route::get('/gatepass/getDetails', [GatepassesController::class, 'getGatepassDetails']);
+    Route::post('/gatepass/create', [GatepassesController::class, 'store']);
+    Route::post('/gatepass/updateDetails', [GatepassesController::class, 'updateGatepassDetails']);
+    Route::post('/gatepass/cancelGatepass', [GatepassesController::class, 'cancelGatepass']);
+    Route::get('/getGatepasses', [GatepassesController::class, 'getGatepasses']);
+    Route::get('/printGatepass/{id}', [GatepassesController::class, 'printGatepass']);
+    Route::get('/getUnreturnedGatepass', [GatepassesController::class, 'getUnreturnedGatepass']);
+    Route::post('/updateUnreturnedGatepass', [GatepassesController::class, 'updateUnreturnedGatepass']);
+    Route::get('/countPendingGatepass', [GatepassesController::class, 'countPendingGatepass']);
 
-    Route::get('/gatepass/forApproval/fetch', 'GatepassesController@gatepassesForApproval');
-    Route::post('/gatepass/updateStatus', 'GatepassesController@updateStatus');
-    Route::get('/forApproval', 'HomeController@showForApproval');
+    Route::get('/gatepass/forApproval/fetch', [GatepassesController::class, 'gatepassesForApproval']);
+    Route::post('/gatepass/updateStatus', [GatepassesController::class, 'updateStatus']);
+    Route::get('/forApproval', [HomeController::class, 'showForApproval']);
 
-    Route::get('/getShiftSchedules', 'ShiftsController@getShiftSchedules');
-    Route::post('/addShiftSchedule', 'ShiftsController@addShiftSchedule');
-    Route::post('/editShiftSchedule', 'ShiftsController@editShiftSchedule');
-    Route::post('/deleteShiftSchedule', 'ShiftsController@deleteShiftSchedule');
+    Route::get('/getShiftSchedules', [ShiftsController::class, 'getShiftSchedules']);
+    Route::post('/addShiftSchedule', [ShiftsController::class, 'addShiftSchedule']);
+    Route::post('/editShiftSchedule', [ShiftsController::class, 'editShiftSchedule']);
+    Route::post('/deleteShiftSchedule', [ShiftsController::class, 'deleteShiftSchedule']);
 
-    Route::get('/getShifts', 'ShiftsController@getShifts');
-    Route::get('/getShiftDetails', 'ShiftsController@getShiftDetails');
-    Route::post('/addShift', 'ShiftsController@addShift');
-    Route::post('/editShift', 'ShiftsController@editShift');
-    Route::post('/deleteShift', 'ShiftsController@deleteShift');
+    Route::get('/getShifts', [ShiftsController::class, 'getShifts']);
+    Route::get('/getShiftDetails', [ShiftsController::class, 'getShiftDetails']);
+    Route::post('/addShift', [ShiftsController::class, 'addShift']);
+    Route::post('/editShift', [ShiftsController::class, 'editShift']);
+    Route::post('/deleteShift', [ShiftsController::class, 'deleteShift']);
     // Applicants
-    Route::get('/tabApplicants', 'ApplicantsController@showApplicants');
-    Route::post('/tabAddApplicant', 'ApplicantsController@store');
-    Route::post('/tabUpdateApplicant', 'ApplicantsController@update');
-    Route::post('/tabDeleteApplicant', 'ApplicantsController@delete');
+    Route::get('/tabApplicants', [ApplicantsController::class, 'showApplicants']);
+    Route::post('/tabAddApplicant', [ApplicantsController::class, 'store']);
+    Route::post('/tabUpdateApplicant', [ApplicantsController::class, 'update']);
+    Route::post('/tabDeleteApplicant', [ApplicantsController::class, 'delete']);
     //EXAMINATION
-    Route::get('/examPanel', 'HomeController@showExamPanel');
-    Route::get('/tabExams', 'HomeController@showExams')->name('client.tabExams');
-    Route::get('/tabviewExamDetails/{id}', 'ExamsController@tabviewExamDetails');
-    Route::post('/updateInstruction', 'ExamTypesController@editInstructions');
-    Route::post('/tabAddExam', 'ExamsController@tabAddExam');
-    Route::post('/examinee/updateStatus', 'ExamineesController@updateExamineeStatus');
+    Route::get('/examPanel', [HomeController::class, 'showExamPanel']);
+    Route::get('/tabExams', [HomeController::class, 'showExams'])->name('client.tabExams');
+    Route::get('/tabviewExamDetails/{id}', [ExamsController::class, 'tabviewExamDetails']);
+    Route::post('/updateInstruction', [ExamTypesController::class, 'editInstructions']);
+    Route::post('/tabAddExam', [ExamsController::class, 'tabAddExam']);
+    Route::post('/examinee/updateStatus', [ExamineesController::class, 'updateExamineeStatus']);
     
-    Route::post('/tabUpdateExam', 'ExamsController@tabUpdateExam');
-    Route::post('/tabDeleteExam', 'ExamsController@tabDeleteExam');
-    Route::get('/tabExaminees', 'HomeController@showExaminees')->name('client.tabExaminees');
-    Route::get('/cancel_ongoing_exam/{id}', 'HomeController@cancelOnGoingExam');
-    Route::post('/tabAddExaminee', 'ExamineesController@tabAddExaminee');
-    Route::post('/tabUpdateExaminee', 'ExamineesController@tabUpdateExaminee');
-    Route::post('/tabDeleteExaminee', 'ExamineesController@tabDeleteExaminee');
-    Route::get('/tabExamReport', 'HomeController@showExaminationReport');
-    Route::get('/viewExamResult/{examinee_id}/{exam_id}','ExaminationReportsController@showExamResults')->name('viewAnswers');
-    Route::get('/printExamResult/{examinee_id}/{exam_id}','ExaminationReportsController@printExamResults');
-    Route::get('/viewAnswers/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@showExamineeAnswers');
-    Route::get('/checkAnswers/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@showAnswersForChecking');
-    Route::post('/saveScore/{examinee_id}/{exam_id}','ExaminationReportsController@saveScore');
+    Route::post('/tabUpdateExam', [ExamsController::class, 'tabUpdateExam']);
+    Route::post('/tabDeleteExam', [ExamsController::class, 'tabDeleteExam']);
+    Route::get('/tabExaminees', [HomeController::class, 'showExaminees'])->name('client.tabExaminees');
+    Route::get('/cancel_ongoing_exam/{id}', [HomeController::class, 'cancelOnGoingExam']);
+    Route::post('/tabAddExaminee', [ExamineesController::class, 'tabAddExaminee']);
+    Route::post('/tabUpdateExaminee', [ExamineesController::class, 'tabUpdateExaminee']);
+    Route::post('/tabDeleteExaminee', [ExamineesController::class, 'tabDeleteExaminee']);
+    Route::get('/tabExamReport', [HomeController::class, 'showExaminationReport']);
+    Route::get('/viewExamResult/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'showExamResults'])->name('viewAnswers');
+    Route::get('/printExamResult/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'printExamResults']);
+    Route::get('/viewAnswers/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'showExamineeAnswers']);
+    Route::get('/checkAnswers/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'showAnswersForChecking']);
+    Route::post('/saveScore/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'saveScore']);
 
     //ADD QUESTION
-    Route::post('/tabAddQuestion', 'QuestionsController@tabAddQuestion');
-    Route::post('/tabUpdateQuestion', 'QuestionsController@tabUpdateQuestion');
-    Route::post('/tabDeleteQuestion', 'QuestionsController@tabDeleteQuestion');
+    Route::post('/tabAddQuestion', [QuestionsController::class, 'tabAddQuestion']);
+    Route::post('/tabUpdateQuestion', [QuestionsController::class, 'tabUpdateQuestion']);
+    Route::post('/tabDeleteQuestion', [QuestionsController::class, 'tabDeleteQuestion']);
 
     //AJAX
-    Route::get('/getQuestions', 'QuestionsController@getQuestions');
-    Route::get('/getQuestionDetails', 'QuestionsController@getQuestionDetails');
-    Route::get('/getExaminees', 'ExamineesController@getExaminees');
-    Route::get('/getExams', 'ExamsController@getExams');
-    Route::post('/addExam', 'ExamsController@addExam');
-    Route::post('/addQuestion', 'QuestionsController@addQuestion');
-    Route::post('/editQuestion', 'QuestionsController@editQuestion');
-    Route::post('/deleteQuestion', 'QuestionsController@deleteQuestion');
+    Route::get('/getQuestions', [QuestionsController::class, 'getQuestions']);
+    Route::get('/getQuestionDetails', [QuestionsController::class, 'getQuestionDetails']);
+    Route::get('/getExaminees', [ExamineesController::class, 'getExaminees']);
+    Route::get('/getExams', [ExamsController::class, 'getExams']);
+    Route::post('/addExam', [ExamsController::class, 'addExam']);
+    Route::post('/addQuestion', [QuestionsController::class, 'addQuestion']);
+    Route::post('/editQuestion', [QuestionsController::class, 'editQuestion']);
+    Route::post('/deleteQuestion', [QuestionsController::class, 'deleteQuestion']);
 
-    Route::post('/addExaminee', 'ExamineesController@addExaminee');
-    Route::post('/editExaminee', 'ExamineesController@editExaminee');
-    Route::post('/deleteExaminee', 'ExamineesController@deleteExaminee');
+    Route::post('/addExaminee', [ExamineesController::class, 'addExaminee']);
+    Route::post('/editExaminee', [ExamineesController::class, 'editExaminee']);
+    Route::post('/deleteExaminee', [ExamineesController::class, 'deleteExaminee']);
 
-    Route::get('/calendar', 'HomeController@showCalendar');
-    Route::get('/calendar/fetch', 'HomeController@getLeaves');  
+    Route::get('/calendar', [HomeController::class, 'showCalendar']);
+    Route::get('/calendar/fetch', [HomeController::class, 'getLeaves']);  
 
     //EVALUATION MODULE
-    Route::get('/getEvaluations', 'HomeController@getEvaluations');
-    Route::post('/addEvaluation', 'EvaluationController@addEvaluation');
-    Route::post('/editEvaluation', 'EvaluationController@editEvaluation');
-    Route::post('/deleteEvaluation', 'EvaluationController@deleteEvaluation');
+    Route::get('/getEvaluations', [HomeController::class, 'getEvaluations']);
+    Route::post('/addEvaluation', [EvaluationController::class, 'addEvaluation']);
+    Route::post('/editEvaluation', [EvaluationController::class, 'editEvaluation']);
+    Route::post('/deleteEvaluation', [EvaluationController::class, 'deleteEvaluation']);
 
 
 
     // Exam
-    Route::get('/exam/take/{id}','ClientExamsController@takeExam')->name('client.take_exam');
-    Route::post('/exam/save','ClientExamsController@saveExam')->name('client.save_exam');
-    Route::get('/exam_success/{examinee_id}','ClientExamsController@examSuccess')->name('client.exam_success');
+    Route::get('/exam/take/{id}',[ClientExamsController::class, 'takeExam'])->name('client.take_exam');
+    Route::post('/exam/save',[ClientExamsController::class, 'saveExam'])->name('client.save_exam');
+    Route::get('/exam_success/{examinee_id}',[ClientExamsController::class, 'examSuccess'])->name('client.exam_success');
 
     // Employee Profiles
-    Route::get('/profiles/fetch','EmployeeProfilesController@fetchProfiles')->name('admin.fetch_employee_profiles');
-    Route::get('/view_profile/{id}','EmployeeProfilesController@viewProfile')->name('client.view_employee_profile');
-    Route::get('/reset_password/{id}','EmployeeProfilesController@resetEmployeePassword')->name('client.reset_password');
-    Route::post('/update_profile','EmployeeProfilesController@updateEmployeeProfile')->name('client.update_profile');
-    Route::post('/update_password','EmployeeProfilesController@changePassword')->name('client.updatePassword');
+    Route::get('/profiles/fetch',[EmployeeProfilesController::class, 'fetchProfiles'])->name('admin.fetch_employee_profiles');
+    Route::get('/view_profile/{id}',[EmployeeProfilesController::class, 'viewProfile'])->name('client.view_employee_profile');
+    Route::get('/reset_password/{id}',[EmployeeProfilesController::class, 'resetEmployeePassword'])->name('client.reset_password');
+    Route::post('/update_profile',[EmployeeProfilesController::class, 'updateEmployeeProfile'])->name('client.update_profile');
+    Route::post('/update_password',[EmployeeProfilesController::class, 'changePassword'])->name('client.updatePassword');
 
     //Emp Profile
-    Route::post('/refreshAttendance/{id}', 'EmployeeProfilesController@refreshAttendance');
-    Route::get('/employeeAttendance', 'EmployeeProfilesController@getAttendance');
-    Route::get('/employeeNotices/{employee_id}', 'EmployeeProfilesController@getNotices');
-    Route::get('/employeeGatepass/{employee_id}', 'EmployeeProfilesController@getGatepass');
-    Route::get('/employeeLeaves/{employee_id}', 'EmployeeProfilesController@getLeaves');
-    Route::get('/employeeExams/{employee_id}', 'EmployeeProfilesController@getExams');
-    Route::get('/employeeEvaluations/{employee_id}', 'EmployeeProfilesController@getEvaluations');
+    Route::post('/refreshAttendance/{id}', [EmployeeProfilesController::class, 'refreshAttendance']);
+    Route::get('/employeeAttendance', [EmployeeProfilesController::class, 'getAttendance']);
+    Route::get('/employeeNotices/{employee_id}', [EmployeeProfilesController::class, 'getNotices']);
+    Route::get('/employeeGatepass/{employee_id}', [EmployeeProfilesController::class, 'getGatepass']);
+    Route::get('/employeeLeaves/{employee_id}', [EmployeeProfilesController::class, 'getLeaves']);
+    Route::get('/employeeExams/{employee_id}', [EmployeeProfilesController::class, 'getExams']);
+    Route::get('/employeeEvaluations/{employee_id}', [EmployeeProfilesController::class, 'getEvaluations']);
 
     // Employee Profile Notice Slip
-    Route::get('/approve_notice_slip/{notice_id}/{user_id}','EmployeeProfilesController@approveAbsentNotice')->name('client.approve_notice_slip');
+    Route::get('/approve_notice_slip/{notice_id}/{user_id}',[EmployeeProfilesController::class, 'approveAbsentNotice'])->name('client.approve_notice_slip');
 
     //Background Check Form
-    Route::get('/backgroundcheck/{id}', 'BackgroundCheckController@backcheck');
-    Route::get('/addbackquestion', 'BackgroundCheckController@addbackquestion');
-    Route::post('/savequestion', 'BackgroundCheckController@savequestion');
-    Route::post('/saveexam', 'BackgroundCheckController@saveexam');
-    Route::get('/background_check/view_exam_panel/{id}', 'BackgroundCheckController@view_panel');
-    Route::get('/background_check/tblQuestions', 'BackgroundCheckController@showquestiontable');
-    Route::post('/crudAddQuestion', 'BackgroundCheckController@store');
-    Route::post('/crudEditQuestion', 'BackgroundCheckController@update');
-    Route::post('/crudDeleteQuestion', 'BackgroundCheckController@delete');
+    Route::get('/backgroundcheck/{id}', [BackgroundCheckController::class, 'backcheck']);
+    Route::get('/addbackquestion', [BackgroundCheckController::class, 'addbackquestion']);
+    Route::post('/savequestion', [BackgroundCheckController::class, 'savequestion']);
+    Route::post('/saveexam', [BackgroundCheckController::class, 'saveexam']);
+    Route::get('/background_check/view_exam_panel/{id}', [BackgroundCheckController::class, 'view_panel']);
+    Route::get('/background_check/tblQuestions', [BackgroundCheckController::class, 'showquestiontable']);
+    Route::post('/crudAddQuestion', [BackgroundCheckController::class, 'store']);
+    Route::post('/crudEditQuestion', [BackgroundCheckController::class, 'update']);
+    Route::post('/crudDeleteQuestion', [BackgroundCheckController::class, 'delete']);
         
 });
 
 // A D M I N
-Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
-
+Route::prefix('admin')->middleware('auth:admin')->group(function () {
     // Attendance Adjustments
-    Route::get('/getBioAdjustments', 'AttendanceController@getBioAdjustments');
-    // Route::post('/addAdjustment', 'AttendanceController@addAdjustment');
-    Route::post('/deleteAdjustment', 'AttendanceController@deleteAdjustment');
-    Route::get('/attendance_adjustments', 'BiometricLogsController@showAttendanceAdjustments');
-    // Route::get('/adj_monitoring', 'BiometricLogsController@attendanceAdjMonitoring');
+    Route::get('/getBioAdjustments', [AttendanceController::class, 'getBioAdjustments']);
+    // Route::post('/addAdjustment', [AttendanceController::class, 'addAdjustment']);
+    Route::post('/deleteAdjustment', [AttendanceController::class, 'deleteAdjustment']);
+    Route::get('/attendance_adjustments', [BiometricLogsController::class, 'showAttendanceAdjustments']);
+    // Route::get('/adj_monitoring', [BiometricLogsController::class, 'attendanceAdjMonitoring']);
 
     
     // Statistical Report
-    Route::get('/statistical_report/{from_date}/{to_date}', 'BiometricLogsController@statisticalReport');
-    Route::get('/report_date_filters', 'BiometricLogsController@reportDateFilter');
-    Route::post('/updateEmployeesLogs', 'AttendanceController@updateEmployeesLogs');
+    Route::get('/statistical_report/{from_date}/{to_date}', [BiometricLogsController::class, 'statisticalReport']);
+    Route::get('/report_date_filters', [BiometricLogsController::class, 'reportDateFilter']);
+    Route::post('/updateEmployeesLogs', [AttendanceController::class, 'updateEmployeesLogs']);
     
     //Late Employee Report
-    Route::get('/lateEmployees', 'AttendanceController@showLateEmployeeReport');
-    Route::get('/getLateEmployees', 'AttendanceController@getLateEmployees');
+    Route::get('/lateEmployees', [AttendanceController::class, 'showLateEmployeeReport']);
+    Route::get('/getLateEmployees', [AttendanceController::class, 'getLateEmployees']);
     //Employees
-    Route::get('/employees', 'EmployeesController@index');
-    Route::post('/employee/create', 'EmployeesController@store');
-    Route::post('/employee/update', 'EmployeesController@update');
-    Route::post('/employee/delete', 'EmployeesController@delete');
-    Route::post('/employee/reset_password', 'EmployeesController@reset_password');
+    Route::get('/employees', [EmployeesController::class, 'index']);
+    Route::post('/employee/create', [EmployeesController::class, 'store']);
+    Route::post('/employee/update', [EmployeesController::class, 'update']);
+    Route::post('/employee/delete', [EmployeesController::class, 'delete']);
+    Route::post('/employee/reset_password', [EmployeesController::class, 'reset_password']);
     //Departments
-    Route::get('/departments', 'DepartmentsController@index');
-    Route::post('/department/create', 'DepartmentsController@store');
-    Route::post('/department/update', 'DepartmentsController@update');
-    Route::post('/department/delete', 'DepartmentsController@delete');
+    Route::get('/departments', [DepartmentsController::class, 'index']);
+    Route::post('/department/create', [DepartmentsController::class, 'store']);
+    Route::post('/department/update', [DepartmentsController::class, 'update']);
+    Route::post('/department/delete', [DepartmentsController::class, 'delete']);
     //Designations
-    Route::get('/designations', 'DesignationsController@index');
-    Route::post('/designation/create', 'DesignationsController@store');
-    Route::post('/designation/update', 'DesignationsController@update');
-    Route::post('/designation/delete', 'DesignationsController@delete');
+    Route::get('/designations', [DesignationsController::class, 'index']);
+    Route::post('/designation/create', [DesignationsController::class, 'store']);
+    Route::post('/designation/update', [DesignationsController::class, 'update']);
+    Route::post('/designation/delete', [DesignationsController::class, 'delete']);
     //Branch
-    Route::get('/branches', 'BranchController@index');
-    Route::post('/branch/create', 'BranchController@store');
-    Route::post('/branch/update', 'BranchController@update');
-    Route::post('/branch/delete', 'BranchController@delete');
+    Route::get('/branches', [BranchController::class, 'index']);
+    Route::post('/branch/create', [BranchController::class, 'store']);
+    Route::post('/branch/update', [BranchController::class, 'update']);
+    Route::post('/branch/delete', [BranchController::class, 'delete']);
     //Holidays
-    Route::get('/holidays', 'HolidayController@index');
-    Route::post('/holiday/create', 'HolidayController@store');
-    Route::post('/holiday/update', 'HolidayController@update');
-    Route::post('/holiday/delete', 'HolidayController@delete');
+    Route::get('/holidays', [HolidayController::class, 'index']);
+    Route::post('/holiday/create', [HolidayController::class, 'store']);
+    Route::post('/holiday/update', [HolidayController::class, 'update']);
+    Route::post('/holiday/delete', [HolidayController::class, 'delete']);
     //Admins
-    Route::get('/admins', 'EmployeesController@adminList');
-    Route::post('/admin/create', 'EmployeesController@storeAdmin');
-    Route::post('/admin/update', 'EmployeesController@updateAdmin');
-    Route::post('/admin/delete', 'EmployeesController@deleteAdmin');
-    Route::post('/admin/reset_password', 'EmployeesController@reset_admin_password');
+    Route::get('/admins', [EmployeesController::class, 'adminList']);
+    Route::post('/admin/create', [EmployeesController::class, 'storeAdmin']);
+    Route::post('/admin/update', [EmployeesController::class, 'updateAdmin']);
+    Route::post('/admin/delete', [EmployeesController::class, 'deleteAdmin']);
+    Route::post('/admin/reset_password', [EmployeesController::class, 'reset_admin_password']);
     //Applicants
-    Route::resource('/applicants', 'ApplicantsController');
-    Route::post('/applicant/create', 'ApplicantsController@store');
-    Route::post('/applicant/update', 'ApplicantsController@update');
-    Route::post('/applicant/delete', 'ApplicantsController@delete');
+    Route::resource('/applicants', ApplicantsController::class);
+    Route::post('/applicant/create', [ApplicantsController::class, 'store']);
+    Route::post('/applicant/update', [ApplicantsController::class, 'update']);
+    Route::post('/applicant/delete', [ApplicantsController::class, 'delete']);
     
 
-    Route::get('/leave_calendar', 'AbsentNoticesController@showLeaveCalendar');
-    Route::get('/leave_calendar/load', 'AbsentNoticesController@employeeLeaves');
+    Route::get('/leave_calendar', [AbsentNoticesController::class, 'showLeaveCalendar']);
+    Route::get('/leave_calendar/load', [AbsentNoticesController::class, 'employeeLeaves']);
 
     //Gatepasses
-    Route::resource('/gatepasses', 'GatepassesController');
-    Route::get('/gatepass/forApproval', 'GatepassesController@gatepassesForApproval')->name('admin.gatepasses_for_approval');
-    Route::get('/gatepass/unreturned', 'GatepassesController@unreturnedItems')->name('admin.unreturned_items');
+    Route::resource('/gatepasses', GatepassesController::class);
+    Route::get('/gatepass/forApproval', [GatepassesController::class, 'gatepassesForApproval'])->name('admin.gatepasses_for_approval');
+    Route::get('/gatepass/unreturned', [GatepassesController::class, 'unreturnedItems'])->name('admin.unreturned_items');
 
-    Route::get('/notices_for_approval', 'AbsentNoticesController@noticesForApproval');
+    Route::get('/notices_for_approval', [AbsentNoticesController::class, 'noticesForApproval']);
 
     //Shifts
-    Route::resource('/shifts', 'ShiftsController');
-    Route::post('/saveShift', 'ShiftsController@store')->name('admin.shift.create');
-    Route::patch('/shifts/{id}', 'ShiftsController@update')->name('admin.shift.update');
-    Route::delete('/shifts/delete/{id}', 'ShiftsController@destroy')->name('admin.shift.delete');
+    Route::resource('/shifts', ShiftsController::class);
+    Route::post('/saveShift', [ShiftsController::class, 'store'])->name('admin.shift.create');
+    Route::patch('/shifts/{id}', [ShiftsController::class, 'update'])->name('admin.shift.update');
+    Route::delete('/shifts/delete/{id}', [ShiftsController::class, 'destroy'])->name('admin.shift.delete');
 
     //Leave Types
-    Route::resource('/leave_types', 'LeaveTypesController');
-    Route::post('/saveLeaveType', 'LeaveTypesController@store')->name('admin.leave_type.create');
-    Route::patch('/leave_types/{id}', 'LeaveTypesController@update')->name('admin.leave_type.update');
-    Route::delete('/leave_types/delete/{id}', 'LeaveTypesController@destroy')->name('admin.department.delete');
+    Route::resource('/leave_types', LeaveTypesController::class);
+    Route::post('/saveLeaveType', [LeaveTypesController::class, 'store'])->name('admin.leave_type.create');
+    Route::patch('/leave_types/{id}', [LeaveTypesController::class, 'update'])->name('admin.leave_type.update');
+    Route::delete('/leave_types/delete/{id}', [LeaveTypesController::class, 'destroy'])->name('admin.department.delete');
 
     //Approvers
-    Route::resource('/approvers', 'ApproversController');
-    Route::post('/saveApprover', 'ApproversController@store')->name('admin.approver.create');
-    Route::patch('/approvers/{id}', 'ApproversController@update')->name('admin.approver.update');
-    Route::delete('/approvers/delete/{id}', 'ApproversController@destroy')->name('admin.approver.delete');
+    Route::resource('/approvers', ApproversController::class);
+    Route::post('/saveApprover', [ApproversController::class, 'store'])->name('admin.approver.create');
+    Route::patch('/approvers/{id}', [ApproversController::class, 'update'])->name('admin.approver.update');
+    Route::delete('/approvers/delete/{id}', [ApproversController::class, 'destroy'])->name('admin.approver.delete');
 
     //Employee Leaves
-    Route::resource('/employee_leaves', 'EmployeeLeavesController');
-    Route::post('/saveEmployeeLeave', 'EmployeeLeavesController@store')->name('admin.employee_leave.create');
-    Route::patch('/employee_leaves/{id}', 'EmployeeLeavesController@update')->name('admin.employee_leave.update');
-    Route::delete('/employee_leaves/delete/{id}', 'EmployeeLeavesController@destroy')->name('admin.employee_leave.delete');
-    Route::get('/leave_balances', 'EmployeeLeavesController@leaveBalances')->name('admin.leave_balances');
+    Route::resource('/employee_leaves', EmployeeLeavesController::class);
+    Route::post('/saveEmployeeLeave', [EmployeeLeavesController::class, 'store'])->name('admin.employee_leave.create');
+    Route::patch('/employee_leaves/{id}', [EmployeeLeavesController::class, 'update'])->name('admin.employee_leave.update');
+    Route::delete('/employee_leaves/delete/{id}', [EmployeeLeavesController::class, 'destroy'])->name('admin.employee_leave.delete');
+    Route::get('/leave_balances', [EmployeeLeavesController::class, 'leaveBalances'])->name('admin.leave_balances');
 
     //Absent Notices
-    Route::resource('/absent_notices', 'AbsentNoticesController');
+    Route::resource('/absent_notices', AbsentNoticesController::class);
     
     //Items
-    Route::resource('/items', 'ItemsController');
-    Route::post('/saveItem', 'ItemsController@store')->name('admin.item.create');
-    Route::patch('/items/{id}', 'ItemsController@update')->name('admin.item.update');
-    Route::delete('/items/delete/{id}', 'ItemsController@destroy')->name('admin.item.delete');
-    Route::get('/items_issued', 'ItemsController@issuedItems')->name('admin.items_issued');
-    Route::post('/items_issued/create', 'ItemsController@issueItems')->name('admin.items_issued.create');
-    Route::patch('/items_issued/update/{id}', 'ItemsController@updateIssuedItems')->name('admin.items_issued.update');
+    Route::resource('/items', ItemsController::class);
+    Route::post('/saveItem', [ItemsController::class, 'store'])->name('admin.item.create');
+    Route::patch('/items/{id}', [ItemsController::class, 'update'])->name('admin.item.update');
+    Route::delete('/items/delete/{id}', [ItemsController::class, 'destroy'])->name('admin.item.delete');
+    Route::get('/items_issued', [ItemsController::class, 'issuedItems'])->name('admin.items_issued');
+    Route::post('/items_issued/create', [ItemsController::class, 'issueItems'])->name('admin.items_issued.create');
+    Route::patch('/items_issued/update/{id}', [ItemsController::class, 'updateIssuedItems'])->name('admin.items_issued.update');
 
     //Exams
-    Route::get('/exams/index','ExamsController@index')->name('admin.exams_index');
-    Route::get('/exam/view/{id}','ExamsController@view')->name('admin.exam_view');
-    Route::post('/exam/save','ExamsController@save')->name('admin.exam_save');
-    Route::post('/exam/update','ExamsController@update')->name('admin.exam_update');
-    Route::post('/exam/delete','ExamsController@delete')->name('admin.exam_delete');
+    Route::get('/exams/index',[ExamsController::class, 'index'])->name('admin.exams_index');
+    Route::get('/exam/view/{id}',[ExamsController::class, 'view'])->name('admin.exam_view');
+    Route::post('/exam/save',[ExamsController::class, 'save'])->name('admin.exam_save');
+    Route::post('/exam/update',[ExamsController::class, 'update'])->name('admin.exam_update');
+    Route::post('/exam/delete',[ExamsController::class, 'delete'])->name('admin.exam_delete');
 
     //Applicant Examinees
-    Route::get('/applicant_examinees/index','ApplicantExamineesController@index')->name('admin.applicant_examinees_index');
-    Route::post('/applicant_examinee/save','ApplicantExamineesController@save')->name('admin.applicant_examinee_save');
-    Route::post('/applicant_examinee/update','ApplicantExamineesController@update')->name('admin.applicant_examinee_update');
-    Route::post('/applicant_examinee/delete','ApplicantExamineesController@delete')->name('admin.applicant_examinee_delete');
-});
+    Route::get('/applicant_examinees/index',[ApplicantExamineesController::class, 'index'])->name('admin.applicant_examinees_index');
+    Route::post('/applicant_examinee/save',[ApplicantExamineesController::class, 'save'])->name('admin.applicant_examinee_save');
+    Route::post('/applicant_examinee/update',[ApplicantExamineesController::class, 'update'])->name('admin.applicant_examinee_update');
+    Route::post('/applicant_examinee/delete',[ApplicantExamineesController::class, 'delete'])->name('admin.applicant_examinee_delete');
 
-
-Route::group(['prefix' => 'admin', 'middleware' => 'auth:admin'], function(){
     //Exam Types
-    Route::get('/exam_types/index','ExamTypesController@index')->name('admin.exam_types_index');
-    Route::post('/exam_type/save','ExamTypesController@save')->name('admin.exam_type_save');
-    Route::post('/exam_type/update','ExamTypesController@update')->name('admin.exam_type_update');
-    Route::post('/exam_type/delete','ExamTypesController@delete')->name('admin.exam_type_delete');
+    Route::get('/exam_types/index',[ExamTypesController::class, 'index'])->name('admin.exam_types_index');
+    Route::post('/exam_type/save',[ExamTypesController::class, 'save'])->name('admin.exam_type_save');
+    Route::post('/exam_type/update',[ExamTypesController::class, 'update'])->name('admin.exam_type_update');
+    Route::post('/exam_type/delete',[ExamTypesController::class, 'delete'])->name('admin.exam_type_delete');
 
     //Exam Groups
-    Route::get('/exam_groups/index','ExamGroupsController@index')->name('admin.exam_groups_index');
-    Route::post('/exam_group/save','ExamGroupsController@save')->name('admin.exam_group_save');
-    Route::post('/exam_group/update','ExamGroupsController@update')->name('admin.exam_group_update');
-    Route::post('/exam_group/delete','ExamGroupsController@delete')->name('admin.exam_group_delete');
+    Route::get('/exam_groups/index',[ExamGroupsController::class, 'index'])->name('admin.exam_groups_index');
+    Route::post('/exam_group/save',[ExamGroupsController::class, 'save'])->name('admin.exam_group_save');
+    Route::post('/exam_group/update',[ExamGroupsController::class, 'update'])->name('admin.exam_group_update');
+    Route::post('/exam_group/delete',[ExamGroupsController::class, 'delete'])->name('admin.exam_group_delete');
     
     // //Exams
-    // Route::get('/exams/index','ExamsController@index')->name('admin.exams_index');
-    // Route::get('/exam/view/{id}','ExamsController@view')->name('admin.exam_view');
-    // Route::post('/exam/save','ExamsController@save')->name('admin.exam_save');
-    // Route::post('/exam/update','ExamsController@update')->name('admin.exam_update');
-    // Route::post('/exam/delete','ExamsController@delete')->name('admin.exam_delete');
+    // Route::get('/exams/index',[ExamsController::class, 'index'])->name('admin.exams_index');
+    // Route::get('/exam/view/{id}',[ExamsController::class, 'view'])->name('admin.exam_view');
+    // Route::post('/exam/save',[ExamsController::class, 'save'])->name('admin.exam_save');
+    // Route::post('/exam/update',[ExamsController::class, 'update'])->name('admin.exam_update');
+    // Route::post('/exam/delete',[ExamsController::class, 'delete'])->name('admin.exam_delete');
 
     //Questions
-    Route::get('/questions/index','QuestionsController@index')->name('admin.questions_index');
-    Route::post('/question/save','QuestionsController@save')->name('admin.question_save');
-    Route::post('/question/update','QuestionsController@update')->name('admin.question_update');
-    Route::post('/question/delete','QuestionsController@delete')->name('admin.question_delete');
+    Route::get('/questions/index',[QuestionsController::class, 'index'])->name('admin.questions_index');
+    Route::post('/question/save',[QuestionsController::class, 'save'])->name('admin.question_save');
+    Route::post('/question/update',[QuestionsController::class, 'update'])->name('admin.question_update');
+    Route::post('/question/delete',[QuestionsController::class, 'delete'])->name('admin.question_delete');
 
     //Exam Multiple Choice
-    Route::post('/exam/multiple_choice/save', 'ExamsController@saveMultipleChoice')->name('admin.exam_multiplechoice_save');
-    Route::post('/exam/multiple_choice/update', 'ExamsController@updateMultipleChoice')->name('admin.exam_multiplechoice_update');
-    Route::post('/exam/multiple_choice/delete', 'ExamsController@deleteExamQuestion')->name('admin.exam_multiplechoice_delete');
+    Route::post('/exam/multiple_choice/save', [ExamsController::class, 'saveMultipleChoice'])->name('admin.exam_multiplechoice_save');
+    Route::post('/exam/multiple_choice/update', [ExamsController::class, 'updateMultipleChoice'])->name('admin.exam_multiplechoice_update');
+    Route::post('/exam/multiple_choice/delete', [ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_multiplechoice_delete');
 
     //Exam True or False
-    Route::post('/exam/true_false/save', 'ExamsController@saveTrueFalse')->name('admin.exam_truefalse_save');
-    Route::post('/exam/true_false/update', 'ExamsController@updateTrueFalse')->name('admin.exam_truefalse_update');
-    Route::post('/exam/true_false/delete', 'ExamsController@deleteExamQuestion')->name('admin.exam_truefalse_delete');
+    Route::post('/exam/true_false/save', [ExamsController::class, 'saveTrueFalse'])->name('admin.exam_truefalse_save');
+    Route::post('/exam/true_false/update', [ExamsController::class, 'updateTrueFalse'])->name('admin.exam_truefalse_update');
+    Route::post('/exam/true_false/delete', [ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_truefalse_delete');
 
     //Exam Essay
-    Route::post('/exam/essay/save','ExamsController@saveEssay')->name('admin.exam_essay_save');
-    Route::post('/exam/essay/update','ExamsController@updateEssay')->name('admin.exam_essay_update');
-    Route::post('/exam/essay/delete','ExamsController@deleteExamQuestion')->name('admin.exam_essay_delete');
+    Route::post('/exam/essay/save',[ExamsController::class, 'saveEssay'])->name('admin.exam_essay_save');
+    Route::post('/exam/essay/update',[ExamsController::class, 'updateEssay'])->name('admin.exam_essay_update');
+    Route::post('/exam/essay/delete',[ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_essay_delete');
 
     //Exam Numerical
     //copt Multiple Choice
 
     //Exam Identification
-    Route::post('/exam/identif/save','ExamsController@saveIdentif')->name('admin.exam_identif_save');
-    Route::post('/exam/identif/update','ExamsController@updateIdentif')->name('admin.exam_identif_update');
-    Route::post('/exam/identif/delete','ExamsController@didentifeleteExamQuestion')->name('admin.exam_essay_delete');
+    Route::post('/exam/identif/save',[ExamsController::class, 'saveIdentif'])->name('admin.exam_identif_save');
+    Route::post('/exam/identif/update',[ExamsController::class, 'updateIdentif'])->name('admin.exam_identif_update');
+    Route::post('/exam/identif/delete',[ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_essay_delete');
 
 
     //Examinees
-    Route::get('/examinees/index', 'ExamineesController@index')->name('admin.examinees_index');
-    Route::post('/examinee/save', 'ExamineesController@save')->name('admin.examinee_save');
-    Route::post('/examinee/update', 'ExamineesController@update')->name('admin.examinee_update');
-    Route::post('/examinee/delete', 'ExamineesController@delete')->name('admin.examinee_delete');
-    Route::get('/get_users/{id}','ExamineesController@getUserByDepartment')->name('admin.get_user_by_dept');
+    Route::get('/examinees/index', [ExamineesController::class, 'index'])->name('admin.examinees_index');
+    Route::post('/examinee/save', [ExamineesController::class, 'save'])->name('admin.examinee_save');
+    Route::post('/examinee/update', [ExamineesController::class, 'update'])->name('admin.examinee_update');
+    Route::post('/examinee/delete', [ExamineesController::class, 'delete'])->name('admin.examinee_delete');
+    Route::get('/get_users/{id}',[ExamineesController::class, 'getUserByDepartment'])->name('admin.get_user_by_dept');
 
     //Examinee Test Sheet
-    Route::get('/examinee/test_sheet/{id}', 'ExamineesController@examineeTestSheet')->name('admin.examinee_testsheet');
-    Route::post('/examinee/test_sheet/save', 'ExamineesController@saveExamineeTestSheet')->name('admin.examinee_testsheet_save');
+    Route::get('/examinee/test_sheet/{id}', [ExamineesController::class, 'examineeTestSheet'])->name('admin.examinee_testsheet');
+    Route::post('/examinee/test_sheet/save', [ExamineesController::class, 'saveExamineeTestSheet'])->name('admin.examinee_testsheet_save');
 
 
 
     
 
     //Promotional Exams
-    Route::get('/promotional_exams/index', 'PromotionalExamsController@index')->name('admin.promotional_exams_index');
-    Route::post('/promotional_exams/save', 'PromotionalExamsController@save')->name('admin.promotional_exam_save');
-    Route::post('/promotional_exams/update', 'PromotionalExamsController@update')->name('admin.promotional_exam_update');
-    Route::post('/promotional_exams/delete', 'PromotionalExamsController@delete')->name('admin.promotional_exam_delete');
+    Route::get('/promotional_exams/index', [PromotionalExamsController::class, 'index'])->name('admin.promotional_exams_index');
+    Route::post('/promotional_exams/save', [PromotionalExamsController::class, 'save'])->name('admin.promotional_exam_save');
+    Route::post('/promotional_exams/update', [PromotionalExamsController::class, 'update'])->name('admin.promotional_exam_update');
+    Route::post('/promotional_exams/delete', [PromotionalExamsController::class, 'delete'])->name('admin.promotional_exam_delete');
 
     //Examination Schedules
-    Route::get('/examination_schedules/index','ExaminationSchedulesController@index')->name('admin.examination_schedules_index');
-    Route::post('/examination_schedule/save','ExaminationSchedulesController@save')->name('admin.examination_schedule_save');
-    Route::post('/examination_schedule/update','ExaminationSchedulesController@update')->name('admin.examination_schedule_update');
-    Route::post('/examination_schedule/delete','ExaminationSchedulesController@delete')->name('admin.examination_schedule_delete');
+    Route::get('/examination_schedules/index',[ExaminationSchedulesController::class, 'index'])->name('admin.examination_schedules_index');
+    Route::post('/examination_schedule/save',[ExaminationSchedulesController::class, 'save'])->name('admin.examination_schedule_save');
+    Route::post('/examination_schedule/update',[ExaminationSchedulesController::class, 'update'])->name('admin.examination_schedule_update');
+    Route::post('/examination_schedule/delete',[ExaminationSchedulesController::class, 'delete'])->name('admin.examination_schedule_delete');
 
     //Promotional Evaluation
-    Route::get('/promotional_evaluation/index','PromotionalEvaluationsController@index')->name('admin.promotional_evaluations_index');
+    Route::get('/promotional_evaluation/index',[PromotionalEvaluationsController::class, 'index'])->name('admin.promotional_evaluations_index');
 
     //Examination Reports
-    Route::get('/examination_reports/index','ExaminationReportsController@index')->name('admin.examination_reports_index');
-    Route::get('/examination_report/show/{examinee_id}/{exam_id}','ExaminationReportsController@show')->name('admin.examination_report_show');
-    Route::get('/examination_report/view/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@viewByExamType')->name('admin.exam_result_by_type_view');
-    Route::get('/examination_report/update_score/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@updateScore')->name('admin.exam_result_score_update');
+    Route::get('/examination_reports/index',[ExaminationReportsController::class, 'index'])->name('admin.examination_reports_index');
+    Route::get('/examination_report/show/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'show'])->name('admin.examination_report_show');
+    Route::get('/examination_report/view/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'viewByExamType'])->name('admin.exam_result_by_type_view');
+    Route::get('/examination_report/update_score/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'updateScore'])->name('admin.exam_result_score_update');
 
-    Route::post('/examination_report/save_updated_score/{examinee_id}/{exam_id}','ExaminationReportsController@saveUpdatedScore')->name('admin.exam_result_save_updated_score');
+    Route::post('/examination_report/save_updated_score/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'saveUpdatedScore'])->name('admin.exam_result_save_updated_score');
 });
 
-
-Route::group(['middleware' => 'auth'], function(){
-    Route::get('/getprofile', 'HomeController@getprofile');
-    Route::get('/leave_analytics_filter', 'AbsentNoticesController@filterEmployeeLeaveAnalytics');
-    Route::get('/leaveAllocationChart', 'AbsentNoticesController@leaveAllocationChart');
-    Route::post('/updateEmployeesLogs', 'AttendanceController@updateEmployeesLogs');
-    Route::get('/module/absent_notice_slip/leave_types_stats','AbsentNoticesController@leaveTypeStats');
-    Route::get('/module/absent_notice_slip/absence_rate/{year}','AbsentNoticesController@absenceRate');
-    Route::get('/module/absent_notice_slip/analytics','AbsentNoticesController@showAnalytics');
-    Route::get('/module/absent_notice_slip/history','AbsentNoticesController@showNoticeHistory');
-    Route::get('/module/absent_notice_slip/leave_analytics/{from_date}/{to_date}','AttendanceController@showStatisticalReport');
+Route::middleware('auth')->group(function () {
+    Route::get('/getprofile', [HomeController::class, 'getprofile']);
+    Route::get('/leave_analytics_filter', [AbsentNoticesController::class, 'filterEmployeeLeaveAnalytics']);
+    Route::get('/leaveAllocationChart', [AbsentNoticesController::class, 'leaveAllocationChart']);
+    Route::post('/updateEmployeesLogs', [AttendanceController::class, 'updateEmployeesLogs']);
+    Route::get('/module/absent_notice_slip/leave_types_stats',[AbsentNoticesController::class, 'leaveTypeStats']);
+    Route::get('/module/absent_notice_slip/absence_rate/{year}',[AbsentNoticesController::class, 'absenceRate']);
+    Route::get('/module/absent_notice_slip/analytics',[AbsentNoticesController::class, 'showAnalytics']);
+    Route::get('/module/absent_notice_slip/history',[AbsentNoticesController::class, 'showNoticeHistory']);
+    Route::get('/module/absent_notice_slip/leave_analytics/{from_date}/{to_date}',[AttendanceController::class, 'showStatisticalReport']);
 
     // CLIENT LEAVE APPROVER CRUD
-    Route::get('/module/absent_notice_slip/leave_approvers','ApproversController@showLeaveApprovers');
-    Route::post('/client/leave_approver/create','ApproversController@approverCreate');
-    Route::post('/client/leave_approver/update/{id}','ApproversController@approverUpdate');
-    Route::post('/client/leave_approver/delete/{id}','ApproversController@approverDelete');
+    Route::get('/module/absent_notice_slip/leave_approvers',[ApproversController::class, 'showLeaveApprovers']);
+    Route::post('/client/leave_approver/create',[ApproversController::class, 'approverCreate']);
+    Route::post('/client/leave_approver/update/{id}',[ApproversController::class, 'approverUpdate']);
+    Route::post('/client/leave_approver/delete/{id}',[ApproversController::class, 'approverDelete']);
     // END CLIENT LEAVE APPROVER CRUD
 
     // CLIENT LEAVE BALANCE CRUD
-    Route::get('/module/absent_notice_slip/leave_balances','EmployeeLeavesController@showLeaveBalances');
-    Route::post('/client/leave_balance/create','EmployeeLeavesController@leaveBalanceCreate');
-    Route::post('/client/leave_balance/update/{id}','EmployeeLeavesController@leaveBalanceUpdate');
-    Route::post('/client/leave_balance/delete/{id}','EmployeeLeavesController@leaveBalanceDelete');
-    Route::post('/client/employee_leave_balances/create','EmployeeLeavesController@employeeLeaveBalanceCreate');
+    Route::get('/module/absent_notice_slip/leave_balances',[EmployeeLeavesController::class, 'showLeaveBalances']);
+    Route::post('/client/leave_balance/create',[EmployeeLeavesController::class, 'leaveBalanceCreate']);
+    Route::post('/client/leave_balance/update/{id}',[EmployeeLeavesController::class, 'leaveBalanceUpdate']);
+    Route::post('/client/leave_balance/delete/{id}',[EmployeeLeavesController::class, 'leaveBalanceDelete']);
+    Route::post('/client/employee_leave_balances/create',[EmployeeLeavesController::class, 'employeeLeaveBalanceCreate']);
     // END CLIENT LEAVE BALANCE CRUD
 
     // HR RECRUITMENT MODULE
-    Route::get('/module/hr/analytics','HumanResourcesController@showAnalytics');
-    Route::get('/module/hr/hiring_rate','HumanResourcesController@hiringRate');
-    Route::get('/module/hr/applicants_chart','HumanResourcesController@applicantsChart');
-    Route::get('/module/hr/employees_per_dept_chart','HumanResourcesController@employeesPerDeptChart');
-    Route::get('/module/hr/job_source_chart','HumanResourcesController@jobSourceChart');
+    Route::get('/module/hr/analytics',[HumanResourcesController::class, 'showAnalytics']);
+    Route::get('/module/hr/hiring_rate',[HumanResourcesController::class, 'hiringRate']);
+    Route::get('/module/hr/applicants_chart',[HumanResourcesController::class, 'applicantsChart']);
+    Route::get('/module/hr/employees_per_dept_chart',[HumanResourcesController::class, 'employeesPerDeptChart']);
+    Route::get('/module/hr/job_source_chart',[HumanResourcesController::class, 'jobSourceChart']);
 
     // CLIENT APPLICANTS
-    Route::get('/module/hr/applicants','ApplicantsController@showApplicantList');
-    Route::get('/client/applicant/profile/{id}','ApplicantsController@showApplicantProfile');
-    Route::get('/client/applicant/backgound_check/{id}','BackgroundCheckController@showBackGroundCheckForm');
-    Route::post('/client/applicant/create','ApplicantsController@applicantCreate');
-    Route::post('/client/applicant/update/{id}','ApplicantsController@applicantUpdate');
-    Route::post('/client/applicant/delete/{id}','ApplicantsController@applicantDelete');
+    Route::get('/module/hr/applicants',[ApplicantsController::class, 'showApplicantList']);
+    Route::get('/client/applicant/profile/{id}',[ApplicantsController::class, 'showApplicantProfile']);
+    Route::get('/client/applicant/backgound_check/{id}',[BackgroundCheckController::class, 'showBackGroundCheckForm']);
+    Route::post('/client/applicant/create',[ApplicantsController::class, 'applicantCreate']);
+    Route::post('/client/applicant/update/{id}',[ApplicantsController::class, 'applicantUpdate']);
+    Route::post('/client/applicant/delete/{id}',[ApplicantsController::class, 'applicantDelete']);
 
-    Route::post('/updateApplicantStatus/{id}','ApplicantsController@updateApplicantStatus');
-    Route::post('/hireApplicant/{id}','EmployeesController@hireApplicant');
+    Route::post('/updateApplicantStatus/{id}',[ApplicantsController::class, 'updateApplicantStatus']);
+    Route::post('/hireApplicant/{id}',[EmployeesController::class, 'hireApplicant']);
 
-    Route::get('/client/exams/applicant_exams','ExamsController@getExamList');
-    Route::get('/client/hr/applicant_exam_details/{applicant_id}','ApplicantsController@getApplicantExamDetails');
-    Route::post('/client/applicant/submitWizard','ApplicantsController@submitWizard');
+    Route::get('/client/exams/applicant_exams',[ExamsController::class, 'getExamList']);
+    Route::get('/client/hr/applicant_exam_details/{applicant_id}',[ApplicantsController::class, 'getApplicantExamDetails']);
+    Route::post('/client/applicant/submitWizard',[ApplicantsController::class, 'submitWizard']);
     // END CLIENT APPLICANTS
 
     // CLIENT EMPLOYEES
-    Route::get('/module/hr/employees','EmployeesController@showEmployees');
-    Route::get('/getEmployeeDetails/{id}','EmployeesController@getEmployeeDetails');
-    Route::post('/client/employee/create','EmployeesController@employeeCreate');
-    Route::post('/client/employee/update/{id}','EmployeesController@employeeUpdate');
-    Route::post('/client/employee/delete/{id}','EmployeesController@employeeDelete');
-    Route::post('/client/employee/reset_password', 'EmployeesController@reset_password');
-    Route::get('/client/employee/profile/{id}','EmployeesController@employeeProfile');
-    Route::get('/showBirthdaysToday','EmployeesController@checkEmployeeBirthday');
+    Route::get('/module/hr/employees',[EmployeesController::class, 'showEmployees']);
+    Route::get('/getEmployeeDetails/{id}',[EmployeesController::class, 'getEmployeeDetails']);
+    Route::post('/client/employee/create',[EmployeesController::class, 'employeeCreate']);
+    Route::post('/client/employee/update/{id}',[EmployeesController::class, 'employeeUpdate']);
+    Route::post('/client/employee/delete/{id}',[EmployeesController::class, 'employeeDelete']);
+    Route::post('/client/employee/reset_password', [EmployeesController::class, 'reset_password']);
+    Route::get('/client/employee/profile/{id}',[EmployeesController::class, 'employeeProfile']);
+    Route::get('/showBirthdaysToday',[EmployeesController::class, 'checkEmployeeBirthday']);
     // END CLIENT EMPLOYEES
 
     // CLIENT BACKGROUND INVESTIGATION
-    Route::get('/module/hr/background_check','BackgroundCheckController@showBackgroundInvQuestions');
-    Route::post('/client/background_check/crudAddQuestion', 'BackgroundCheckController@store');
-    Route::post('/client/background_check/crudEditQuestion', 'BackgroundCheckController@update');
-    Route::post('/client/background_check/crudDeleteQuestion', 'BackgroundCheckController@delete');
+    Route::get('/module/hr/background_check',[BackgroundCheckController::class, 'showBackgroundInvQuestions']);
+    Route::post('/client/background_check/crudAddQuestion', [BackgroundCheckController::class, 'store']);
+    Route::post('/client/background_check/crudEditQuestion', [BackgroundCheckController::class, 'update']);
+    Route::post('/client/background_check/crudDeleteQuestion', [BackgroundCheckController::class, 'delete']);
     // END CLIENT BACKGROUND INVESTIGATION
 
     // CLIENT APPLICANT EXAMS
-    Route::get('/module/hr/applicant_exams','ExamsController@showApplicantExams');
-    Route::get('/client/hr/applicant_exams/{id}', 'ExamsController@showApplicantExamDetails');
-    Route::get('/client/hr/applicant_exams/add_exam', 'ExamsController@addApplicantExam');
-    Route::get('/client/hr/applicant_exams/update_exam', 'ExamsController@updateApplicantExam');
-    Route::get('/client/hr/applicant_exams/delete_exam', 'ExamsController@deleteApplicantExam');
-    Route::post('/client/hr/applicant_exams/insturctions/update', 'ExamTypesController@editInstructions');
-    Route::post('/client/applicant_exams/add_question', 'QuestionsController@tabAddQuestion');
-    Route::post('/client/applicant_exams/update_question', 'QuestionsController@tabUpdateQuestion');
-    Route::post('/client/applicant_exams/delete_question', 'QuestionsController@tabDeleteQuestion');
+    Route::get('/module/hr/applicant_exams',[ExamsController::class, 'showApplicantExams']);
+    Route::get('/client/hr/applicant_exams/{id}', [ExamsController::class, 'showApplicantExamDetails']);
+    Route::get('/client/hr/applicant_exams/add_exam', [ExamsController::class, 'addApplicantExam']);
+    Route::get('/client/hr/applicant_exams/update_exam', [ExamsController::class, 'updateApplicantExam']);
+    Route::get('/client/hr/applicant_exams/delete_exam', [ExamsController::class, 'deleteApplicantExam']);
+    Route::post('/client/hr/applicant_exams/insturctions/update', [ExamTypesController::class, 'editInstructions']);
+    Route::post('/client/applicant_exams/add_question', [QuestionsController::class, 'tabAddQuestion']);
+    Route::post('/client/applicant_exams/update_question', [QuestionsController::class, 'tabUpdateQuestion']);
+    Route::post('/client/applicant_exams/delete_question', [QuestionsController::class, 'tabDeleteQuestion']);
     // END CLIENT APPLICANT EXAMS
 
     // CLIENT EXAM RESULTS
-    Route::get('/module/hr/exam_results','ExaminationReportsController@showApplicantExamResult');
-    Route::get('/client/exam_results/{examinee_id}/{exam_id}','ExaminationReportsController@showApplicantExamResults');
-    Route::get('/client/exam_results/answers/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@showApplicantExamAnswers');
-    Route::get('/client/exam_results/check_answers/{examinee_id}/{exam_id}/{exam_type_id}','ExaminationReportsController@showApplicantAnswersForChecking');
-    Route::post('/client/exam_results/check_answers/update_score/{examinee_id}/{exam_id}','ExaminationReportsController@updateApplicantScore');
+    Route::get('/module/hr/exam_results',[ExaminationReportsController::class, 'showApplicantExamResult']);
+    Route::get('/client/exam_results/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'showApplicantExamResults']);
+    Route::get('/client/exam_results/answers/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'showApplicantExamAnswers']);
+    Route::get('/client/exam_results/check_answers/{examinee_id}/{exam_id}/{exam_type_id}',[ExaminationReportsController::class, 'showApplicantAnswersForChecking']);
+    Route::post('/client/exam_results/check_answers/update_score/{examinee_id}/{exam_id}',[ExaminationReportsController::class, 'updateApplicantScore']);
     // END CLIENT EXAM RESULTS
 
     //  DEPARTMENT HEAD LIST
-    Route::get('/module/hr/department_head_list','DepartmentHeadListController@showlist');
-    Route::post('/client/modules/human_resource/department_head/create','DepartmentHeadListController@store');
-    Route::post('/client/modules/human_resource/department_head/update/{id}','DepartmentHeadListController@update');
-    Route::post('/client/modules/human_resource/department_head/delete/{id}','DepartmentHeadListController@delete');
+    Route::get('/module/hr/department_head_list',[DepartmentHeadListController::class, 'showlist']);
+    Route::post('/client/modules/human_resource/department_head/create',[DepartmentHeadListController::class, 'store']);
+    Route::post('/client/modules/human_resource/department_head/update/{id}',[DepartmentHeadListController::class, 'update']);
+    Route::post('/client/modules/human_resource/department_head/delete/{id}',[DepartmentHeadListController::class, 'delete']);
 
      // ATTENDANCE MODULE
-    Route::get('/module/attendance/analytics','AttendanceController@showAnalytics');
-    Route::get('/module/attendance/biometric_adjustments','AttendanceController@showAdjustmentMonitoring');
-    Route::get('/module/attendance/history','AttendanceController@showAttendanceHistory');
-    Route::get('/module/attendance/holiday_entry','HolidayController@indexholiday');//Holiday 
-    Route::post('/module/attendance/holiday/create', 'HolidayController@storeholiday');//Holiday 
-    Route::post('/module/attendance/holiday/update', 'HolidayController@updateholiday');//Holiday 
-    Route::post('/module/attendance/holiday/delete', 'HolidayController@deleteholiday');//Holiday 
-    Route::get('/module/attendance/late_employees','AttendanceController@showLateEmployees');
-    Route::get('/getAbsentEmployees','AttendanceController@getAbsentEmployees');
-    Route::get('/getPerfectAttendance','AttendanceController@getPerfectAttendance');
-    Route::get('/adj_monitoring', 'BiometricLogsController@attendanceAdjustmentMonitoring');
-    // Route::get('/adj_history', 'AttendanceController@attendanceAdjHistory');
-    Route::get('/attendance_history', 'BiometricLogsController@attendanceHistory');
-    Route::get('/lateEmployees', 'AttendanceController@getLateEmployees');
-    Route::get('/getBioAdjustments', 'AttendanceController@getBioAdjustments');
+    Route::get('/module/attendance/analytics',[AttendanceController::class, 'showAnalytics']);
+    Route::get('/module/attendance/biometric_adjustments',[AttendanceController::class, 'showAdjustmentMonitoring']);
+    Route::get('/module/attendance/history',[AttendanceController::class, 'showAttendanceHistory']);
+    Route::get('/module/attendance/holiday_entry',[HolidayController::class, 'indexholiday']);//Holiday 
+    Route::post('/module/attendance/holiday/create', [HolidayController::class, 'storeholiday']);//Holiday 
+    Route::post('/module/attendance/holiday/update', [HolidayController::class, 'updateholiday']);//Holiday 
+    Route::post('/module/attendance/holiday/delete', [HolidayController::class, 'deleteholiday']);//Holiday 
+    Route::get('/module/attendance/late_employees',[AttendanceController::class, 'showLateEmployees']);
+    Route::get('/getAbsentEmployees',[AttendanceController::class, 'getAbsentEmployees']);
+    Route::get('/getPerfectAttendance',[AttendanceController::class, 'getPerfectAttendance']);
+    Route::get('/adj_monitoring', [BiometricLogsController::class, 'attendanceAdjustmentMonitoring']);
+    // Route::get('/adj_history', [AttendanceController::class, 'attendanceAdjHistory']);
+    Route::get('/attendance_history', [BiometricLogsController::class, 'attendanceHistory']);
+    Route::get('/lateEmployees', [AttendanceController::class, 'getLateEmployees']);
+    Route::get('/getBioAdjustments', [AttendanceController::class, 'getBioAdjustments']);
     
-    Route::post('/deleteAdjustment', 'AttendanceController@deleteAdjustment');
+    Route::post('/deleteAdjustment', [AttendanceController::class, 'deleteAdjustment']);
     // CLIENT SHIFTS
-    Route::get('/module/attendance/employee_shifts','ShiftsController@showEmployeeShifts');
-    Route::get('/client/attendance/employee_shifts/details/{group_id}','ShiftsController@getEmployeeShiftDetails');
-    Route::post('/client/attendance/employee_shifts/create','ShiftsController@createShiftSchedule');
-    Route::post('/client/attendance/employee_shifts/update','ShiftsController@updateShiftSchedule');
-    Route::post('/client/attendance/employee_shifts/delete/{id}','ShiftsController@deleteShiftSchedule');
-    Route::post('/client/attendance/special_shift/create','ShiftsController@createSpecialShift');
-    Route::post('/client/attendance/special_shift/update/{id}','ShiftsController@updateSpecialShift');
-    Route::post('/client/attendance/special_shift/delete/{id}','ShiftsController@deleteSpecialShift');
+    Route::get('/module/attendance/employee_shifts',[ShiftsController::class, 'showEmployeeShifts']);
+    Route::get('/client/attendance/employee_shifts/details/{group_id}',[ShiftsController::class, 'getEmployeeShiftDetails']);
+    Route::post('/client/attendance/employee_shifts/create',[ShiftsController::class, 'createShiftSchedule']);
+    Route::post('/client/attendance/employee_shifts/update',[ShiftsController::class, 'updateShiftSchedule']);
+    Route::post('/client/attendance/employee_shifts/delete/{id}',[ShiftsController::class, 'deleteShiftSchedule']);
+    Route::post('/client/attendance/special_shift/create',[ShiftsController::class, 'createSpecialShift']);
+    Route::post('/client/attendance/special_shift/update/{id}',[ShiftsController::class, 'updateSpecialShift']);
+    Route::post('/client/attendance/special_shift/delete/{id}',[ShiftsController::class, 'deleteSpecialShift']);
     
     // GATEPASS MODULE
-    Route::get('/module/gatepass/analytics','GatepassesController@showAnalytics');
-    Route::get('/module/gatepass/gatepass_per_dept_chart','GatepassesController@gatepassPerDeptChart');
-    Route::get('/module/gatepass/purpose_rate_chart','GatepassesController@purposeRateChart');
-    Route::get('/module/gatepass/gatepass_per_dept_chart','GatepassesController@gatepassPerDeptChart');
-    Route::get('/getItemsIssuedtoEmployee/{user_id}','GatepassesController@getItemsIssuedtoEmployee');
+    Route::get('/module/gatepass/analytics',[GatepassesController::class, 'showAnalytics']);
+    Route::get('/module/gatepass/gatepass_per_dept_chart',[GatepassesController::class, 'gatepassPerDeptChart']);
+    Route::get('/module/gatepass/purpose_rate_chart',[GatepassesController::class, 'purposeRateChart']);
+    Route::get('/module/gatepass/gatepass_per_dept_chart',[GatepassesController::class, 'gatepassPerDeptChart']);
+    Route::get('/getItemsIssuedtoEmployee/{user_id}',[GatepassesController::class, 'getItemsIssuedtoEmployee']);
 
-    Route::get('/client/gatepass/history','GatepassesController@showGatepassHistory');
-    Route::get('/client/gatepass/unreturned_gatepass','GatepassesController@showUnreturnedItems');
-    Route::get('/client/gatepass/employee_accountability','GatepassesController@showEmployeeAccountability');
-    Route::get('/client/gatepass/company_asset','GatepassesController@showCompanyAsset');
-    Route::post('/addAsset', 'ItemAccountabilityController@storeAsset');
-    Route::get('/getupdateItemsIssuedtoEmployee/{user_id}','GatepassesController@getupdateItemsIssuedtoEmployee');
-    Route::post('/deleteAsset', 'GatepassesController@deleteAsset');
+    Route::get('/client/gatepass/history',[GatepassesController::class, 'showGatepassHistory']);
+    Route::get('/client/gatepass/unreturned_gatepass',[GatepassesController::class, 'showUnreturnedItems']);
+    Route::get('/client/gatepass/employee_accountability',[GatepassesController::class, 'showEmployeeAccountability']);
+    Route::get('/client/gatepass/company_asset',[GatepassesController::class, 'showCompanyAsset']);
+    Route::post('/addAsset', [ItemAccountabilityController::class, 'storeAsset']);
+    Route::get('/getupdateItemsIssuedtoEmployee/{user_id}',[GatepassesController::class, 'getupdateItemsIssuedtoEmployee']);
+    Route::post('/deleteAsset', [GatepassesController::class, 'deleteAsset']);
 
     // ANALYTICS
-    Route::get('/client/analytics/attendance','AnalyticsController@showAttendanceAnalytics');
-    Route::get('/client/analytics/hr','AnalyticsController@showHrAnalytics');
-    Route::get('/client/analytics/notice_slip','AnalyticsController@showNoticesAnalytics');
-    Route::get('/client/analytics/gatepass','AnalyticsController@showGatepassAnalytics');
-    Route::get('/client/analytics/exam','ExamsController@showExamAnalytics');
+    Route::get('/client/analytics/attendance',[AnalyticsController::class, 'showAttendanceAnalytics']);
+    Route::get('/client/analytics/hr',[AnalyticsController::class, 'showHrAnalytics']);
+    Route::get('/client/analytics/notice_slip',[AnalyticsController::class, 'showNoticesAnalytics']);
+    Route::get('/client/analytics/gatepass',[AnalyticsController::class, 'showGatepassAnalytics']);
+    Route::get('/client/analytics/exam',[ExamsController::class, 'showExamAnalytics']);
 
     // ITEM ACCOUNTABILITY
-    Route::get('/itemAccountability/{id}', 'ItemAccountabilityController@index');
-    Route::post('/addItem', 'ItemAccountabilityController@store');
-    Route::post('/editItem/{id}', 'ItemAccountabilityController@updateAsset');
-    Route::post('/deleteItem', 'ItemAccountabilityController@delete');
-    Route::get('/printItem/{id}', 'ItemAccountabilityController@print');
-    Route::get('/getinfoeditmodal/{id}', 'ItemAccountabilityController@getinfoeditmodal');
-    Route::get('/getInfo', 'GatepassesController@showAccountability');
-    Route::get('/getCateg', 'GatepassesController@showCateg');
+    Route::get('/itemAccountability/{id}', [ItemAccountabilityController::class, 'index']);
+    Route::post('/addItem', [ItemAccountabilityController::class, 'store']);
+    Route::post('/editItem/{id}', [ItemAccountabilityController::class, 'updateAsset']);
+    Route::post('/deleteItem', [ItemAccountabilityController::class, 'delete']);
+    Route::get('/printItem/{id}', [ItemAccountabilityController::class, 'print']);
+    Route::get('/getinfoeditmodal/{id}', [ItemAccountabilityController::class, 'getinfoeditmodal']);
+    Route::get('/getInfo', [GatepassesController::class, 'showAccountability']);
+    Route::get('/getCateg', [GatepassesController::class, 'showCateg']);
 
     // EVALUATION MODULE
-    Route::get('/evaluation/department', 'EvaluationController@kpiPerDept');
-    Route::get('/evaluation/employee_inputs', 'EvaluationController@showEmployeeInputsDept');
-    Route::get('/evaluation/employee_inputs/form/{department_id}', 'EvaluationController@showEmployeeInputsForm');
-    Route::get('/evaluation/employee_inputs/view/{department_id}', 'EvaluationController@viewEmployeeInputs');
-    Route::get('/evaluation/setup/{department_id}', 'EvaluationController@setupKPI');
-    Route::get('/evaluation/objectives', 'EvaluationController@showObjectives');
-    Route::get('/evaluation/objective/view/{objective_id}', 'EvaluationController@viewObjectiveTree');
-    Route::get('/evaluation/kpi', 'EvaluationController@showKPI');
-    Route::get('/evaluation/appraisal', 'EvaluationController@showAppraisal');
-    Route::get('/evaluation/appraisal/form/{user_id}/{from_month}/{from_year}/{to_month}/{to_year}/{purpose}', 'EvaluationController@showAppraisalForm');
-    Route::get('/evaluation/appraisal/view/{id}', 'EvaluationController@viewAppraisal');
-    Route::get('/evaluation/appraisal/print/{id}', 'EvaluationController@printAppraisal');
+    Route::get('/evaluation/department', [EvaluationController::class, 'kpiPerDept']);
+    Route::get('/evaluation/employee_inputs', [EvaluationController::class, 'showEmployeeInputsDept']);
+    Route::get('/evaluation/employee_inputs/form/{department_id}', [EvaluationController::class, 'showEmployeeInputsForm']);
+    Route::get('/evaluation/employee_inputs/view/{department_id}', [EvaluationController::class, 'viewEmployeeInputs']);
+    Route::get('/evaluation/setup/{department_id}', [EvaluationController::class, 'setupKPI']);
+    Route::get('/evaluation/objectives', [EvaluationController::class, 'showObjectives']);
+    Route::get('/evaluation/objective/view/{objective_id}', [EvaluationController::class, 'viewObjectiveTree']);
+    Route::get('/evaluation/kpi', [EvaluationController::class, 'showKPI']);
+    Route::get('/evaluation/appraisal', [EvaluationController::class, 'showAppraisal']);
+    Route::get('/evaluation/appraisal/form/{user_id}/{from_month}/{from_year}/{to_month}/{to_year}/{purpose}', [EvaluationController::class, 'showAppraisalForm']);
+    Route::get('/evaluation/appraisal/view/{id}', [EvaluationController::class, 'viewAppraisal']);
+    Route::get('/evaluation/appraisal/print/{id}', [EvaluationController::class, 'printAppraisal']);
 
-    Route::get('/getEmployees', 'EvaluationController@getEmployees');
+    Route::get('/getEmployees', [EvaluationController::class, 'getEmployees']);
 
-    // Route::get('/evaluationTree/{department_id}', 'EvaluationController@evaluationTree');
-    Route::get('/kpiTree/{department}', 'EvaluationController@kpiTree');
-    Route::get('/getObjectives', 'EvaluationController@getObjectives');
-    Route::get('/getKPI', 'EvaluationController@getKPI');
-    Route::get('/qualitativeKpi', 'EvaluationController@qualitativeKpi');
+    // Route::get('/evaluationTree/{department_id}', [EvaluationController::class, 'evaluationTree']);
+    Route::get('/kpiTree/{department}', [EvaluationController::class, 'kpiTree']);
+    Route::get('/getObjectives', [EvaluationController::class, 'getObjectives']);
+    Route::get('/getKPI', [EvaluationController::class, 'getKPI']);
+    Route::get('/qualitativeKpi', [EvaluationController::class, 'qualitativeKpi']);
 
-    Route::get('/getObjectiveDetails/{id}', 'EvaluationController@getObjectiveDetails');
-    Route::get('/getKpiDetails/{id}', 'EvaluationController@getKpiDetails');
-    Route::get('/getMetricDetails/{id}', 'EvaluationController@getMetricDetails');
+    Route::get('/getObjectiveDetails/{id}', [EvaluationController::class, 'getObjectiveDetails']);
+    Route::get('/getKpiDetails/{id}', [EvaluationController::class, 'getKpiDetails']);
+    Route::get('/getMetricDetails/{id}', [EvaluationController::class, 'getMetricDetails']);
 
-    Route::get('/getDesignations', 'EvaluationController@getDesignations');
+    Route::get('/getDesignations', [EvaluationController::class, 'getDesignations']);
 
-    Route::post('/createObjective', 'EvaluationController@createObjective');
-    Route::post('/updateObjective', 'EvaluationController@updateObjective');
-    Route::post('/deleteObjective', 'EvaluationController@deleteObjective');
+    Route::post('/createObjective', [EvaluationController::class, 'createObjective']);
+    Route::post('/updateObjective', [EvaluationController::class, 'updateObjective']);
+    Route::post('/deleteObjective', [EvaluationController::class, 'deleteObjective']);
 
-    Route::post('/createKPI', 'EvaluationController@createKPI');
-    Route::post('/updateKPI', 'EvaluationController@updateKPI');
-    Route::post('/deleteKPI', 'EvaluationController@deleteKPI');
+    Route::post('/createKPI', [EvaluationController::class, 'createKPI']);
+    Route::post('/updateKPI', [EvaluationController::class, 'updateKPI']);
+    Route::post('/deleteKPI', [EvaluationController::class, 'deleteKPI']);
 
-    Route::post('/createMetrics', 'EvaluationController@createMetrics');
-    Route::post('/updateMetric', 'EvaluationController@updateMetric');
-    Route::post('/deleteMetric', 'EvaluationController@deleteMetric');
+    Route::post('/createMetrics', [EvaluationController::class, 'createMetrics']);
+    Route::post('/updateMetric', [EvaluationController::class, 'updateMetric']);
+    Route::post('/deleteMetric', [EvaluationController::class, 'deleteMetric']);
 
-    Route::post('/createAppraisal', 'EvaluationController@createAppraisal');
-    Route::post('/saveAppraisal', 'EvaluationController@saveAppraisal');
-    Route::post('/updateAppraisal', 'EvaluationController@updateAppraisal');
-    Route::post('/deleteAppraisal/{id}', 'EvaluationController@deleteAppraisal');
+    Route::post('/createAppraisal', [EvaluationController::class, 'createAppraisal']);
+    Route::post('/saveAppraisal', [EvaluationController::class, 'saveAppraisal']);
+    Route::post('/updateAppraisal', [EvaluationController::class, 'updateAppraisal']);
+    Route::post('/deleteAppraisal/{id}', [EvaluationController::class, 'deleteAppraisal']);
 
-    Route::post('/updateEmpInputs', 'EvaluationController@updateEmpInputs');
+    Route::post('/updateEmpInputs', [EvaluationController::class, 'updateEmpInputs']);
 
-    Route::get('/getEmpAppraisal/{user}', 'EvaluationController@getEmpAppraisal');
-    Route::get('/getEmpKpiResult/{user}', 'EvaluationController@getEmpKpiResult');
-    Route::get('/appraisal_result/{id}/view', 'EvaluationController@viewEmpAppraisalResult');
+    Route::get('/getEmpAppraisal/{user}', [EvaluationController::class, 'getEmpAppraisal']);
+    Route::get('/getEmpKpiResult/{user}', [EvaluationController::class, 'getEmpKpiResult']);
+    Route::get('/appraisal_result/{id}/view', [EvaluationController::class, 'viewEmpAppraisalResult']);
 
-    Route::get('/getdatainput', 'EvaluationController@dataInput');
-    Route::get('/tblDatainput', 'EvaluationController@tbldatainput');
-    Route::post('/savedatainput', 'EvaluationController@savedataInput');
+    Route::get('/getdatainput', [EvaluationController::class, 'dataInput']);
+    Route::get('/tblDatainput', [EvaluationController::class, 'tbldatainput']);
+    Route::post('/savedatainput', [EvaluationController::class, 'savedataInput']);
 
-    Route::get('/evaluation/schedules', 'EvaluationController@showEvalSchedules');
-    Route::get('/evaluation/schedule/{id}/view', 'EvaluationController@viewEvalSchedule');
-    Route::post('/evaluation/schedule/new', 'EvaluationController@addEvalSchedule');
-    Route::post('/evaluation/schedule/{id}/update', 'EvaluationController@updateEvalSchedule');
-    Route::post('/evaluation/schedule/{id}/delete', 'EvaluationController@deleteEvalSchedule');
+    Route::get('/evaluation/schedules', [EvaluationController::class, 'showEvalSchedules']);
+    Route::get('/evaluation/schedule/{id}/view', [EvaluationController::class, 'viewEvalSchedule']);
+    Route::post('/evaluation/schedule/new', [EvaluationController::class, 'addEvalSchedule']);
+    Route::post('/evaluation/schedule/{id}/update', [EvaluationController::class, 'updateEvalSchedule']);
+    Route::post('/evaluation/schedule/{id}/delete', [EvaluationController::class, 'deleteEvalSchedule']);
 
-    Route::post('/createDataInputs', 'EvaluationController@createDataInputs');
-    Route::post('/updateDataInput', 'EvaluationController@updateDataInput');
-    Route::post('/deleteDataInput', 'EvaluationController@deleteDataInput');
+    Route::post('/createDataInputs', [EvaluationController::class, 'createDataInputs']);
+    Route::post('/updateDataInput', [EvaluationController::class, 'updateDataInput']);
+    Route::post('/deleteDataInput', [EvaluationController::class, 'deleteDataInput']);
     
 
-    Route::get('/evaluation/kpi_result', 'EvaluationController@showKpiResult');
-    Route::get('/getKpiResult', 'EvaluationController@getKpiResult');
-    Route::post('/updateDataInputResult', 'EvaluationController@updateDataInputResult');
+    Route::get('/evaluation/kpi_result', [EvaluationController::class, 'showKpiResult']);
+    Route::get('/getKpiResult', [EvaluationController::class, 'getKpiResult']);
+    Route::post('/updateDataInputResult', [EvaluationController::class, 'updateDataInputResult']);
 
-    Route::get('/kpiTree/{department}', 'EvaluationController@kpiTree');
-    Route::get('/getemployeeperdept', 'EvaluationController@getemployeeperdept');
+    Route::get('/kpiTree/{department}', [EvaluationController::class, 'kpiTree']);
+    Route::get('/getemployeeperdept', [EvaluationController::class, 'getemployeeperdept']);
 
 
     //Overview per Department
-    Route::get('/kpi_stats/accounting/index', 'EvaluationController@accounting_index');
-    Route::get('/kpi_stats/accounting/index2', 'EvaluationController@accounting_index2');
-    Route::get('/kpi_stats/engineering/index', 'EvaluationController@engineering_index');
-    Route::get('/kpi_stats/it/index', 'EvaluationController@information_technology_index');
-    Route::get('/kpi_stats/sales/index', 'EvaluationController@sales_index');
-    Route::get('/kpi_stats/customer_service/index', 'EvaluationController@customer_service_index');
-    Route::get('/kpi_stats/qa/index', 'EvaluationController@quality_assurance_index');
-    Route::get('/kpi_stats/hr/index', 'EvaluationController@human_resource_index');
-    Route::get('/kpi_stats/plant_services/index', 'EvaluationController@plant_services_index');
-    Route::get('/kpi_stats/production/index', 'EvaluationController@production_index');
-    Route::get('/kpi_stats/material_management/index', 'EvaluationController@materials_management_index');
-    Route::get('/kpi_stats/material_management/index2', 'EvaluationController@purchasing_index');
-    Route::get('/kpi_stats/management/index', 'EvaluationController@management_index');
-    Route::get('/kpi_stats/marketing/index', 'EvaluationController@marketing_index');
-    Route::get('/kpi_stats/assembly/index', 'EvaluationController@assembly_index');
-    Route::get('/kpi_stats/fabrication/index', 'EvaluationController@fabrication_index');
-    Route::get('/kpi_stats/traffic_and_distribution/index', 'EvaluationController@traffic_and_distribution_index');
-    Route::get('/kpi_stats/painting/index', 'EvaluationController@painting_index');
-    Route::get('/kpi_stats/filunited/index', 'EvaluationController@filunited_index');
-    Route::get('/kpi_stats/production_planning/index', 'EvaluationController@production_planning_index');
+    Route::get('/kpi_stats/accounting/index', [EvaluationController::class, 'accounting_index']);
+    Route::get('/kpi_stats/accounting/index2', [EvaluationController::class, 'accounting_index2']);
+    Route::get('/kpi_stats/engineering/index', [EvaluationController::class, 'engineering_index']);
+    Route::get('/kpi_stats/it/index', [EvaluationController::class, 'information_technology_index']);
+    Route::get('/kpi_stats/sales/index', [EvaluationController::class, 'sales_index']);
+    Route::get('/kpi_stats/customer_service/index', [EvaluationController::class, 'customer_service_index']);
+    Route::get('/kpi_stats/qa/index', [EvaluationController::class, 'quality_assurance_index']);
+    Route::get('/kpi_stats/hr/index', [EvaluationController::class, 'human_resource_index']);
+    Route::get('/kpi_stats/plant_services/index', [EvaluationController::class, 'plant_services_index']);
+    Route::get('/kpi_stats/production/index', [EvaluationController::class, 'production_index']);
+    Route::get('/kpi_stats/material_management/index', [EvaluationController::class, 'materials_management_index']);
+    Route::get('/kpi_stats/material_management/index2', [EvaluationController::class, 'purchasing_index']);
+    Route::get('/kpi_stats/management/index', [EvaluationController::class, 'management_index']);
+    Route::get('/kpi_stats/marketing/index', [EvaluationController::class, 'marketing_index']);
+    Route::get('/kpi_stats/assembly/index', [EvaluationController::class, 'assembly_index']);
+    Route::get('/kpi_stats/fabrication/index', [EvaluationController::class, 'fabrication_index']);
+    Route::get('/kpi_stats/traffic_and_distribution/index', [EvaluationController::class, 'traffic_and_distribution_index']);
+    Route::get('/kpi_stats/painting/index', [EvaluationController::class, 'painting_index']);
+    Route::get('/kpi_stats/filunited/index', [EvaluationController::class, 'filunited_index']);
+    Route::get('/kpi_stats/production_planning/index', [EvaluationController::class, 'production_planning_index']);
 
-    Route::get('/kpi_stats/getdata_it/kpi1', 'EvaluationController@kpi1_stats');
-    Route::get('/kpi_stats/getdata_it/kpi2', 'EvaluationController@kpi2_stats');
-    Route::get('/kpi_stats/getdata_it/kpi3', 'EvaluationController@kpi3_stats');
-    Route::get('/kpi_stats/technicalLevel', 'EvaluationController@technicalLevel_stats');
-    Route::get('/kpi/result/InformationTechnologydepartment', 'EvaluationController@viewKPIresult_IT');
-    Route::get('/ITKpiResult/{department}', 'EvaluationController@IT_departmentKpiResult');
+    Route::get('/kpi_stats/getdata_it/kpi1', [EvaluationController::class, 'kpi1_stats']);
+    Route::get('/kpi_stats/getdata_it/kpi2', [EvaluationController::class, 'kpi2_stats']);
+    Route::get('/kpi_stats/getdata_it/kpi3', [EvaluationController::class, 'kpi3_stats']);
+    Route::get('/kpi_stats/technicalLevel', [EvaluationController::class, 'technicalLevel_stats']);
+    Route::get('/kpi/result/InformationTechnologydepartment', [EvaluationController::class, 'viewKPIresult_IT']);
+    Route::get('/ITKpiResult/{department}', [EvaluationController::class, 'IT_departmentKpiResult']);
 
-    Route::get('/AttandanceAdjUpdateall', 'AttendanceController@AttendanceAdjUpdateall');
+    Route::get('/AttandanceAdjUpdateall', [AttendanceController::class, 'AttendanceAdjUpdateall']);
 
-    Route::get('/departmentKpiResult/{department}', 'EvaluationController@departmentKpiResult');
+    Route::get('/departmentKpiResult/{department}', [EvaluationController::class, 'departmentKpiResult']);
 
 
 
-    Route::get('/AttendanceAdjUpdateall', 'AttendanceController@AttendanceAdjUpdateall');
-    Route::post('/addAdjustment', 'AttendanceController@addAdjustment');
-    Route::get('/adj_history', 'AttendanceController@attendanceAdjHistory');
-    Route::get('/adj_monitoring', 'BiometricLogsController@attendanceAdjustmentMonitoring');
+    Route::get('/AttendanceAdjUpdateall', [AttendanceController::class, 'AttendanceAdjUpdateall']);
+    Route::post('/addAdjustment', [AttendanceController::class, 'addAdjustment']);
+    Route::get('/adj_history', [AttendanceController::class, 'attendanceAdjHistory']);
+    Route::get('/adj_monitoring', [BiometricLogsController::class, 'attendanceAdjustmentMonitoring']);
 
-    Route::get('/employeeStats/{employee_id}', 'EvaluationController@empStats');
-    Route::get('/employee_erp_data_inputs/{employee_id}', 'EvaluationController@empDataInputsERP');
-    Route::get('/employee_manual_data_inputs/{employee_id}', 'EvaluationController@empDataInputsManualEntry');
+    Route::get('/employeeStats/{employee_id}', [EvaluationController::class, 'empStats']);
+    Route::get('/employee_erp_data_inputs/{employee_id}', [EvaluationController::class, 'empDataInputsERP']);
+    Route::get('/employee_manual_data_inputs/{employee_id}', [EvaluationController::class, 'empDataInputsManualEntry']);
 });
 
 // Engineering Department
-Route::group(['prefix' => 'kpi_overview/engineering', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/engineering')->middleware('auth')->group(function () {
     // charts
-    Route::get('/rfd_per_month/{year}', 'EvaluationController@rfdPerMonthChart');
-    Route::get('/rfd_distribution/{year}', 'EvaluationController@rfdDistributionChart');
-    Route::get('/rfd_timeliness/{year}', 'EvaluationController@rfdTimeliness');
-    Route::get('/rfd_completion/{year}', 'EvaluationController@rfdCompletion');
-    Route::get('/rfd_quality/{year}', 'EvaluationController@rfdQuality');
-    Route::get('/rfd_success_rate/{year}', 'EvaluationController@rfdSuccessRate');
-    Route::get('/rfd_totals', 'EvaluationController@rfdTotals');
+    Route::get('/rfd_per_month/{year}', [EvaluationController::class, 'rfdPerMonthChart']);
+    Route::get('/rfd_distribution/{year}', [EvaluationController::class, 'rfdDistributionChart']);
+    Route::get('/rfd_timeliness/{year}', [EvaluationController::class, 'rfdTimeliness']);
+    Route::get('/rfd_completion/{year}', [EvaluationController::class, 'rfdCompletion']);
+    Route::get('/rfd_quality/{year}', [EvaluationController::class, 'rfdQuality']);
+    Route::get('/rfd_success_rate/{year}', [EvaluationController::class, 'rfdSuccessRate']);
+    Route::get('/rfd_totals', [EvaluationController::class, 'rfdTotals']);
 
-    Route::get('/emp_data_inputs', 'EvaluationController@engineeringDataInputsERP');
+    Route::get('/emp_data_inputs', [EvaluationController::class, 'engineeringDataInputsERP']);
 
     // page
-    Route::get('/kpi_result', 'EvaluationController@engineeringKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'engineeringKpiResult']);
 });
 
 // Attendance
-Route::group(['prefix' => 'attendance', 'middleware' => 'auth'], function(){
-    Route::post('/update/{employee}', 'AttendanceController@updateAttendanceLogs');
-    Route::get('/history/{employee}', 'AttendanceController@employeeAttendanceHistory');
-    Route::get('/dashboard/{employee}', 'AttendanceController@employeeAttendanceDashboard');
-    Route::get('/deductions/{employee}', 'AttendanceController@employeeLateDeductions');
+Route::prefix('attendance')->middleware('auth')->group(function () {
+    Route::post('/update/{employee}', [AttendanceController::class, 'updateAttendanceLogs']);
+    Route::post('/clock-in', [AttendanceController::class, 'clockIn']);
+    Route::post('/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::get('/history/{employee}', [AttendanceController::class, 'employeeAttendanceHistory']);
+    Route::get('/dashboard/{employee}', [AttendanceController::class, 'employeeAttendanceDashboard']);
+    Route::get('/deductions/{employee}', [AttendanceController::class, 'employeeLateDeductions']);
 });
 
 
-Route::get('/kiosk/login', 'KioskController@loginForm');
-Route::post('/kiosk/loguser', 'KioskController@kioskLogin');
-Route::get('/kiosk/logoutuser', 'KioskController@kioskLogout');
+Route::get('/kiosk/login', [KioskController::class, 'loginForm']);
+Route::post('/kiosk/loguser', [KioskController::class, 'kioskLogin']);
+Route::get('/kiosk/logoutuser', [KioskController::class, 'kioskLogout']);
 
-Route::get('/kiosk/leave_calendar', 'KioskController@leaveCalendar');
+Route::get('/kiosk/leave_calendar', [KioskController::class, 'leaveCalendar']);
 
-Route::get('/kiosk/home', 'KioskController@index');
-Route::get('/kiosk/notice', 'KioskController@noticeTransactSel');
-Route::get('/kiosk/notice/leave_balance', 'KioskController@leaveBalance');
-Route::get('/kiosk/notice/form', 'KioskController@noticeForm');
-Route::get('/kiosk/notice/getnotice_table', 'KioskController@getnotice_history');
-Route::get('/kiosk/notice/load_view_table', 'KioskController@notice_view_table');
-Route::get('/kiosk/notice/cancel_slip', 'KioskController@cancel_notice');
-Route::post('/kiosk/notice/form/insert', 'KioskController@storenotice');
-Route::get('/kiosk/notice/view', 'KioskController@noticeView');
-Route::get('/kiosk/notice/history', 'KioskController@noticeHistory');
-Route::get('/kiosk/notice/getusershift', 'KioskController@user_shift');
+Route::get('/kiosk/home', [KioskController::class, 'index']);
+Route::get('/kiosk/notice', [KioskController::class, 'noticeTransactSel']);
+Route::get('/kiosk/notice/leave_balance', [KioskController::class, 'leaveBalance']);
+Route::get('/kiosk/notice/form', [KioskController::class, 'noticeForm']);
+Route::get('/kiosk/notice/getnotice_table', [KioskController::class, 'getnotice_history']);
+Route::get('/kiosk/notice/load_view_table', [KioskController::class, 'notice_view_table']);
+Route::get('/kiosk/notice/cancel_slip', [KioskController::class, 'cancel_notice']);
+Route::post('/kiosk/notice/form/insert', [KioskController::class, 'storenotice']);
+Route::get('/kiosk/notice/view', [KioskController::class, 'noticeView']);
+Route::get('/kiosk/notice/history', [KioskController::class, 'noticeHistory']);
+Route::get('/kiosk/notice/getusershift', [KioskController::class, 'user_shift']);
 
-Route::post('/kiosk/gatepass/form/insert', 'KioskController@storegatepass');
-Route::get('/kiosk/gatepass', 'KioskController@gatepassTransactSel');
-Route::get('/kiosk/gatepass/form', 'KioskController@gatepassForm');
-Route::get('/kiosk/gatepass/view', 'KioskController@gatepassView');
-Route::get('/kiosk/gatepass/history', 'KioskController@gatepassHistory');
-Route::get('/kiosk/gatepass/load_view_table', 'KioskController@gatepass_view_table');
-Route::get('/kiosk/gatepass/getgatepass_table', 'KioskController@getgatepass_history');
-Route::get('/kiosk/gatepass/cancel_slip', 'KioskController@cancel_gatepass');
-Route::get('/kiosk/gatepass/getUnreturned_gatepass_table', 'KioskController@getunreturned_history');
-Route::get('/kiosk/gatepass/for_return', 'KioskController@gatepassUnreturned');
+Route::post('/kiosk/gatepass/form/insert', [KioskController::class, 'storegatepass']);
+Route::get('/kiosk/gatepass', [KioskController::class, 'gatepassTransactSel']);
+Route::get('/kiosk/gatepass/form', [KioskController::class, 'gatepassForm']);
+Route::get('/kiosk/gatepass/view', [KioskController::class, 'gatepassView']);
+Route::get('/kiosk/gatepass/history', [KioskController::class, 'gatepassHistory']);
+Route::get('/kiosk/gatepass/load_view_table', [KioskController::class, 'gatepass_view_table']);
+Route::get('/kiosk/gatepass/getgatepass_table', [KioskController::class, 'getgatepass_history']);
+Route::get('/kiosk/gatepass/cancel_slip', [KioskController::class, 'cancel_gatepass']);
+Route::get('/kiosk/gatepass/getUnreturned_gatepass_table', [KioskController::class, 'getunreturned_history']);
+Route::get('/kiosk/gatepass/for_return', [KioskController::class, 'gatepassUnreturned']);
 
-Route::get('/kiosk/attendance', 'KioskController@attendanceTransactSel');
-Route::get('/kiosk/attendance/view', 'KioskController@attendanceView');
-Route::get('/kiosk/attendance/summary', 'KioskController@attendanceSummary');
+Route::get('/kiosk/attendance', [KioskController::class, 'attendanceTransactSel']);
+Route::get('/kiosk/attendance/view', [KioskController::class, 'attendanceView']);
+Route::get('/kiosk/attendance/summary', [KioskController::class, 'attendanceSummary']);
 
 //ItineraryKiosk
-Route::get('/kiosk/itinerary', 'KioskController@itineraryTransactSel');
-Route::get('/kiosk/itinerary/form', 'KioskController@itineraryForm');
-Route::get('/kiosk/itinerary/view/{id}', 'KioskController@itineraryView');
-Route::get('/kiosk/itinerary/result/{id}', 'KioskController@itineraryResult');
-Route::post('/kiosk/itinerary/cancel/{id}', 'KioskController@cancelItinerary');
+Route::get('/kiosk/itinerary', [KioskController::class, 'itineraryTransactSel']);
+Route::get('/kiosk/itinerary/form', [KioskController::class, 'itineraryForm']);
+Route::get('/kiosk/itinerary/view/{id}', [KioskController::class, 'itineraryView']);
+Route::get('/kiosk/itinerary/result/{id}', [KioskController::class, 'itineraryResult']);
+Route::post('/kiosk/itinerary/cancel/{id}', [KioskController::class, 'cancelItinerary']);
 
-Route::get('/kiosk/itinerary/history', 'KioskController@itineraryHistory');
-Route::get('/kiosk/notice/get_Itinerary_table', 'KioskController@get_itineraryHistory');
-Route::get('/kiosk/itinerary/result_table/{id}', 'KioskController@itineraryResult_table');
+Route::get('/kiosk/itinerary/history', [KioskController::class, 'itineraryHistory']);
+Route::get('/kiosk/notice/get_Itinerary_table', [KioskController::class, 'get_itineraryHistory']);
+Route::get('/kiosk/itinerary/result_table/{id}', [KioskController::class, 'itineraryResult_table']);
 
 //ItineraryEssex
-Route::get('/itinerary/fetch', 'ItineraryController@fetchItineraries');
-Route::get('/itinerary/fetch/companion', 'ItineraryController@fetchItineraries_companion');
+Route::get('/itinerary/fetch', [ItineraryController::class, 'fetchItineraries']);
+Route::get('/itinerary/fetch/companion', [ItineraryController::class, 'fetchItineraries_companion']);
 
 // AJAX
-Route::get('/kiosk/attendance_logs/{employee}', 'KioskController@biometricLogs');
-Route::get('/kiosk/employees/erp', 'KioskController@getEmployees');
-Route::get('/kiosk/destinations/{doctype}', 'KioskController@getDocList');
-Route::post('/kiosk/itinerary/save', 'KioskController@saveItinerary');
+Route::get('/kiosk/attendance_logs/{employee}', [KioskController::class, 'biometricLogs']);
+Route::get('/kiosk/employees/erp', [KioskController::class, 'getEmployees']);
+Route::get('/kiosk/destinations/{doctype}', [KioskController::class, 'getDocList']);
+Route::post('/kiosk/itinerary/save', [KioskController::class, 'saveItinerary']);
 
 //Additional Cancel code per employee
-Route::post('/notice_slip/cancelNotice_per_employee', 'AbsentNoticesController@cancelNotice_per_employee');
+Route::post('/notice_slip/cancelNotice_per_employee', [AbsentNoticesController::class, 'cancelNotice_per_employee']);
 
 ///Stepper
-Route::get('/kiosk/stepper', 'KioskController@stepper_index');
-Route::get('/stepper/notice', 'KioskController@stepper_notice');
-Route::get('/stepper/gatepass', 'KioskController@stepper_gatepass');
-Route::get('/stepper/itinerary', 'KioskController@stepper_itinerary');
+Route::get('/kiosk/stepper', [KioskController::class, 'stepper_index']);
+Route::get('/stepper/notice', [KioskController::class, 'stepper_notice']);
+Route::get('/stepper/gatepass', [KioskController::class, 'stepper_gatepass']);
+Route::get('/stepper/itinerary', [KioskController::class, 'stepper_itinerary']);
 
-Route::post('/kiosk/notice_employee/fetch', 'KioskController@fetch_employee_name');
-
-// KPI DASHBOARD PER DEPARTMENT
-// Engineering Department
-Route::group(['prefix' => 'kpi_overview/engineering', 'middleware' => 'auth'], function(){
-    // charts
-    Route::get('/rfd_per_month/{year}', 'EvaluationController@rfdPerMonthChart');
-    Route::get('/rfd_distribution/{year}', 'EvaluationController@rfdDistributionChart');
-    Route::get('/rfd_timeliness/{year}', 'EvaluationController@rfdTimeliness');
-    Route::get('/rfd_completion/{year}', 'EvaluationController@rfdCompletion');
-    Route::get('/rfd_quality/{year}', 'EvaluationController@rfdQuality');
-    Route::get('/rfd_success_rate/{year}', 'EvaluationController@rfdSuccessRate');
-    Route::get('/rfd_totals', 'EvaluationController@rfdTotals');
-
-    Route::get('/emp_data_inputs', 'EvaluationController@engineeringDataInputsERP');
-
-    // page
-    Route::get('/kpi_result', 'EvaluationController@engineeringKpiResult');
-});
+Route::post('/kiosk/notice_employee/fetch', [KioskController::class, 'fetch_employee_name']);
 
 // Accounting Department
-Route::group(['prefix' => 'kpi_overview/accounting', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/accounting')->middleware('auth')->group(function () {
     // chart
-    Route::get('/sinv_per_month/{year}', 'EvaluationController@sinvPerMonthChart');
-    Route::get('/pinv_per_month/{year}', 'EvaluationController@pinvPerMonthChart');
-    Route::get('/top_expenses/{year}', 'EvaluationController@topExpenses');
-    Route::get('/sinv_analysis/{year}', 'EvaluationController@salesInvAnalysis');
-    Route::get('/pinv_analysis/{year}', 'EvaluationController@purchaseInvAnalysis');
-    Route::get('/cash_receipt/{year}', 'EvaluationController@cashReceiptChart');
-    Route::get('/cash_disbursement/{year}', 'EvaluationController@cashDisbursementChart');
-    Route::get('/sinv_analysis_ctx/{year}', 'EvaluationController@salesInvAnalysisCtx');
-    Route::get('/pinv_analysis_ctx/{year}', 'EvaluationController@purchaseInvAnalysisCtx');
+    Route::get('/sinv_per_month/{year}', [EvaluationController::class, 'sinvPerMonthChart']);
+    Route::get('/pinv_per_month/{year}', [EvaluationController::class, 'pinvPerMonthChart']);
+    Route::get('/top_expenses/{year}', [EvaluationController::class, 'topExpenses']);
+    Route::get('/sinv_analysis/{year}', [EvaluationController::class, 'salesInvAnalysis']);
+    Route::get('/pinv_analysis/{year}', [EvaluationController::class, 'purchaseInvAnalysis']);
+    Route::get('/cash_receipt/{year}', [EvaluationController::class, 'cashReceiptChart']);
+    Route::get('/cash_disbursement/{year}', [EvaluationController::class, 'cashDisbursementChart']);
+    Route::get('/sinv_analysis_ctx/{year}', [EvaluationController::class, 'salesInvAnalysisCtx']);
+    Route::get('/pinv_analysis_ctx/{year}', [EvaluationController::class, 'purchaseInvAnalysisCtx']);
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@accountingKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'accountingKpiResult']);
 });
 
 // Sales Department
-Route::group(['prefix' => 'kpi_overview/sales', 'middleware' => 'auth'], function(){
-    Route::get('/totals', 'EvaluationController@sales_totals');
-    Route::get('/opty_stats/{year}', 'EvaluationController@opportunityStats');
-    Route::get('/sales_chart/{year}', 'EvaluationController@salesChart');
+Route::prefix('kpi_overview/sales')->middleware('auth')->group(function () {
+    Route::get('/totals', [EvaluationController::class, 'sales_totals']);
+    Route::get('/opty_stats/{year}', [EvaluationController::class, 'opportunityStats']);
+    Route::get('/sales_chart/{year}', [EvaluationController::class, 'salesChart']);
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@salesKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'salesKpiResult']);
 });
 
 // Traffic and Distribution Department
-Route::group(['prefix' => 'kpi_overview/traffic_and_distribution', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/traffic_and_distribution')->middleware('auth')->group(function () {
     // chart
-    Route::get('/delivery_completion/{year}', 'EvaluationController@deliveryCompletionChart');
-    Route::get('/delivery_good_condition/{year}', 'EvaluationController@deliveryGoodConditionChart');
-    Route::get('/non_delivery_dept_cause/{year}', 'EvaluationController@nonDeliveryDeptCausesChart');
-    Route::get('/non_delivery_cust_cause/{year}', 'EvaluationController@nonDeliveryCustCausesChart');
+    Route::get('/delivery_completion/{year}', [EvaluationController::class, 'deliveryCompletionChart']);
+    Route::get('/delivery_good_condition/{year}', [EvaluationController::class, 'deliveryGoodConditionChart']);
+    Route::get('/non_delivery_dept_cause/{year}', [EvaluationController::class, 'nonDeliveryDeptCausesChart']);
+    Route::get('/non_delivery_cust_cause/{year}', [EvaluationController::class, 'nonDeliveryCustCausesChart']);
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@trafficDistributionKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'trafficDistributionKpiResult']);
 });
 
 // Customer Service Department
-Route::group(['prefix' => 'kpi_overview/customer_service', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/customer_service')->middleware('auth')->group(function () {
     // page
-    Route::get('/kpi_result', 'EvaluationController@csKpiResult');
-    Route::get('/get_kpi_CsStat1', 'EvaluationController@cskpi1_stat');
-    Route::get('/get_kpi_CsStat2', 'EvaluationController@cskpi2_stat');
-    Route::get('/within_department_fault_chart/{year}', 'EvaluationController@within_departmentfaultPie');
-    Route::get('/not_within_department_fault_chart/{year}', 'EvaluationController@not_within_departmentfaultPie');
+    Route::get('/kpi_result', [EvaluationController::class, 'csKpiResult']);
+    Route::get('/get_kpi_CsStat1', [EvaluationController::class, 'cskpi1_stat']);
+    Route::get('/get_kpi_CsStat2', [EvaluationController::class, 'cskpi2_stat']);
+    Route::get('/within_department_fault_chart/{year}', [EvaluationController::class, 'within_departmentfaultPie']);
+    Route::get('/not_within_department_fault_chart/{year}', [EvaluationController::class, 'not_within_departmentfaultPie']);
 
-    Route::get('/cs_performace_chart/{year}', 'EvaluationController@csperformance_chart');
-    Route::get('/get_total_sales', 'EvaluationController@salesTotal');
-    Route::get('/get_csTimeliness/{year}', 'EvaluationController@salesOrder_timeliness');
+    Route::get('/cs_performace_chart/{year}', [EvaluationController::class, 'csperformance_chart']);
+    Route::get('/get_total_sales', [EvaluationController::class, 'salesTotal']);
+    Route::get('/get_csTimeliness/{year}', [EvaluationController::class, 'salesOrder_timeliness']);
 });
 
 // Quality Assurance Department
-Route::group(['prefix' => 'kpi_overview/qa', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/qa')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@qaKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'qaKpiResult']);
 });
 
 // Plant Services Department
-Route::group(['prefix' => 'kpi_overview/plant_services', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/plant_services')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@plantServicesKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'plantServicesKpiResult']);
 });
 
 // Production Department
-Route::group(['prefix' => 'kpi_overview/production', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/production')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@productionKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'productionKpiResult']);
 });
 
 // Material Management Department
-Route::group(['prefix' => 'kpi_overview/material_management', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/material_management')->middleware('auth')->group(function () {
     // Inventory
-    Route::get('/inventory/totals', 'EvaluationController@materials_management_totals');
-    Route::get('/inv_accuracy/{year}', 'EvaluationController@invAccuracyChart');
-    Route::get('/item_movements/{year}', 'EvaluationController@itemMovements');
-    Route::get('/item_class_movements/{year}', 'EvaluationController@itemClassMovements');    
+    Route::get('/inventory/totals', [EvaluationController::class, 'materials_management_totals']);
+    Route::get('/inv_accuracy/{year}', [EvaluationController::class, 'invAccuracyChart']);
+    Route::get('/item_movements/{year}', [EvaluationController::class, 'itemMovements']);
+    Route::get('/item_class_movements/{year}', [EvaluationController::class, 'itemClassMovements']);    
 
     // Purchasing
-    Route::get('/purchase_timeliness/{year}/{supplier_group}', 'EvaluationController@purchasesTimeliness');
-    Route::get('/purchasing/totals', 'EvaluationController@purchasing_totals');
+    Route::get('/purchase_timeliness/{year}/{supplier_group}', [EvaluationController::class, 'purchasesTimeliness']);
+    Route::get('/purchasing/totals', [EvaluationController::class, 'purchasing_totals']);
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@materialsManagementKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'materialsManagementKpiResult']);
 });
 
 // Management Department
 Route::group(['prefix' => 'kpi_overview/management', 'middleware' => 'auth'], function(){
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@managementKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'managementKpiResult']);
 });
 
 // Marketing Department
-Route::group(['prefix' => 'kpi_overview/marketing', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/marketing')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@marketingKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'marketingKpiResult']);
 });
 
 // Assembly Department
-Route::group(['prefix' => 'kpi_overview/assembly', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/assembly')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@assemblyKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'assemblyKpiResult']);
 });
 
 // Fabrication Department
 Route::group(['prefix' => 'kpi_overview/fabrication', 'middleware' => 'auth'], function(){
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@fabricationKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'fabricationKpiResult']);
 });
 
 // Painting Department
-Route::group(['prefix' => 'kpi_overview/painting', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/painting')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@paintingKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'paintingKpiResult']);
 });
 
 // Filunited Department
-Route::group(['prefix' => 'kpi_overview/filunited', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/filunited')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@filunitedKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'filunitedKpiResult']);
 });
 
 // Production Planning Department
-Route::group(['prefix' => 'kpi_overview/production_planning', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/production_planning')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@productionPlanningKpiResult');
+    Route::get('/kpi_result', [EvaluationController::class, 'productionPlanningKpiResult']);
 });
 
 // Human Resource Department
-Route::group(['prefix' => 'kpi_overview/hr', 'middleware' => 'auth'], function(){
+Route::prefix('kpi_overview/hr')->middleware('auth')->group(function () {
     
     // page
-    Route::get('/kpi_result', 'EvaluationController@hrKpiResult');
-    Route::get('/get_kpiStat1', 'EvaluationController@hrkpi1_stat');
+    Route::get('/kpi_result', [EvaluationController::class, 'hrKpiResult']);
+    Route::get('/get_kpiStat1', [EvaluationController::class, 'hrkpi1_stat']);
 });
 
 // ONLINE EXAM - APPLICANT
-Route::get('/applicant', 'ApplicantExaminationsController@enterExamCode');
-Route::get('/oem/index/{examineeid}', 'ApplicantExaminationsController@applicantExamIndex');
-Route::post('/oem/validate_exam_code', 'ApplicantExaminationsController@validateExamCode');
-Route::post('/oem/update_answer', 'ApplicantExaminationsController@updateAnswer');
-Route::post('/oem/update_examinee_status', 'ApplicantExaminationsController@updateExamineeStatus');
-Route::get('/oem/preview_examinee_answer', 'ApplicantExaminationsController@preview_answers');
-Route::get('/oem/save_exam_result/{examineeid}', 'ApplicantExaminationsController@save_examresult');
-Route::get('/oem/examSubmitted/{id}','ApplicantExaminationsController@examSuccess');
-Route::get('/oem/update_no_answer/{examineeid}', 'ApplicantExaminationsController@update_no_answer');
+Route::get('/applicant', [ApplicantExaminationsController::class, 'enterExamCode']);
+Route::get('/oem/index/{examineeid}', [ApplicantExaminationsController::class, 'applicantExamIndex']);
+Route::post('/oem/validate_exam_code', [ApplicantExaminationsController::class, 'validateExamCode']);
+Route::post('/oem/update_answer', [ApplicantExaminationsController::class, 'updateAnswer']);
+Route::post('/oem/update_examinee_status', [ApplicantExaminationsController::class, 'updateExamineeStatus']);
+Route::get('/oem/preview_examinee_answer', [ApplicantExaminationsController::class, 'preview_answers']);
+Route::get('/oem/save_exam_result/{examineeid}', [ApplicantExaminationsController::class, 'save_examresult']);
+Route::get('/oem/examSubmitted/{id}',[ApplicantExaminationsController::class, 'examSuccess']);
+Route::get('/oem/update_no_answer/{examineeid}', [ApplicantExaminationsController::class, 'update_no_answer']);
 
 // ONLINE EXAM - EMPLOYEE
-Route::post('/oem/employee/validateExamCode','ClientExamsController@validateExamCode');
-Route::get('/oem/employee/index/{id}','ClientExamsController@takeexam');
-Route::get('/check_ongoing_exam/{id}', 'ClientExamsController@checkOngoingStatus');
-Route::post('/oem/employee/update_answer', 'ClientExamsController@updateAnswer');
-Route::post('/oem/employee/update_examinee_status', 'ClientExamsController@updateExamineeStatus');
-Route::get('/oem/employee/preview_examinee_answer', 'ClientExamsController@preview_answers');
-Route::get('/oem/employee/save_exam_result/{examineeid}', 'ClientExamsController@save_examresult');
-Route::get('/oem/employee/examSubmitted/{id}','ClientExamsController@examSuccess');
-Route::get('/oem/employee/update_no_answer/{examineeid}', 'ClientExamsController@update_no_answer');
+Route::post('/oem/employee/validateExamCode',[ClientExamsController::class, 'validateExamCode']);
+Route::get('/oem/employee/index/{id}',[ClientExamsController::class, 'takeexam']);
+Route::get('/check_ongoing_exam/{id}', [ClientExamsController::class, 'checkOngoingStatus']);
+Route::post('/oem/employee/update_answer', [ClientExamsController::class, 'updateAnswer']);
+Route::post('/oem/employee/update_examinee_status', [ClientExamsController::class, 'updateExamineeStatus']);
+Route::get('/oem/employee/preview_examinee_answer', [ClientExamsController::class, 'preview_answers']);
+Route::get('/oem/employee/save_exam_result/{examineeid}', [ClientExamsController::class, 'save_examresult']);
+Route::get('/oem/employee/examSubmitted/{id}',[ClientExamsController::class, 'examSuccess']);
+Route::get('/oem/employee/update_no_answer/{examineeid}', [ClientExamsController::class, 'update_no_answer']);
 
 // HR Training
-Route::get('/module/hr/training','HumanResourcesController@show_HR_training');
-Route::get('/module/hr/training_profile/{id}','HumanResourcesController@training_profile');
-Route::post('/module/hr/add_training','HumanResourcesController@add_HR_training');
-Route::post('/module/hr/edit_training','HumanResourcesController@edit_HR_training');
-Route::post('/module/hr/delete_training','HumanResourcesController@delete_HR_training');
-Route::get('/module/hr/training/employee_list','HumanResourcesController@Employee_list');
-Route::get('/module/hr/training/employee_list_edit','HumanResourcesController@Employee_list_edit');
-Route::get('/module/hr/training_details/{id}','HumanResourcesController@edit_training_details');
+Route::get('/module/hr/training',[HumanResourcesController::class, 'show_HR_training']);
+Route::get('/module/hr/training_profile/{id}',[HumanResourcesController::class, 'training_profile']);
+Route::post('/module/hr/add_training',[HumanResourcesController::class, 'add_HR_training']);
+Route::post('/module/hr/edit_training',[HumanResourcesController::class, 'edit_HR_training']);
+Route::post('/module/hr/delete_training',[HumanResourcesController::class, 'delete_HR_training']);
+Route::get('/module/hr/training/employee_list',[HumanResourcesController::class, 'Employee_list']);
+Route::get('/module/hr/training/employee_list_edit',[HumanResourcesController::class, 'Employee_list_edit']);
+Route::get('/module/hr/training_details/{id}',[HumanResourcesController::class, 'edit_training_details']);
 
-Route::get('/notice_slip/updateStatus', 'AbsentNoticesController@updateStatus');
+Route::get('/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
