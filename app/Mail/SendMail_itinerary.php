@@ -2,14 +2,15 @@
 
 namespace App\Mail;
 
+use Auth;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Auth;
+
 class SendMail_itinerary extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $data;
 
     /**
@@ -30,5 +31,7 @@ class SendMail_itinerary extends Mailable
     public function build()
     {
         $username = Auth::user()->employee_name;
-        return $this->from(env('MAIL_FROM_ADDRESS'))->subject(''.$username.' filed absent notice slip')->view('kiosk.Mail.template.itinerary_template')->with('data', $this->data);    }
+
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject(''.$username.' filed absent notice slip')->view('kiosk.Mail.template.itinerary_template')->with('data', $this->data);
+    }
 }

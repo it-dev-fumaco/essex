@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateLeaveTypesTable extends Migration
 {
@@ -15,9 +15,9 @@ class CreateLeaveTypesTable extends Migration
     {
         Schema::create('leave_types', function (Blueprint $table) {
             $table->increments('leave_type_id');
-            $table->string('leave_type');  
+            $table->string('leave_type');
             $table->string('color_legend');
-            $table->string('description');  
+            $table->string('description');
             $table->timestamps();
         });
     }

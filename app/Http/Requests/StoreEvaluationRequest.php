@@ -29,7 +29,7 @@ class StoreEvaluationRequest extends FormRequest
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([
-            'message'   => $validator->errors()->all(),
+            'message' => $validator->errors()->all(),
             'class_name' => 'danger',
             'icon' => 'fa-times-circle-o',
         ], 422));

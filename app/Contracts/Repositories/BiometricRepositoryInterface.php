@@ -18,7 +18,7 @@ interface BiometricRepositoryInterface
     /**
      * Insert raw biometric rows.
      *
-     * @param array<int, array<string, mixed>> $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     public function insertRawBiometrics(array $rows): void;
 

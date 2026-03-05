@@ -12,8 +12,7 @@ class StoreCompanyAssetPipeline
 {
     public function __construct(
         private readonly Pipeline $pipeline,
-    ) {
-    }
+    ) {}
 
     public function run(StoreCompanyAssetPayload $payload): StoreCompanyAssetPayload
     {

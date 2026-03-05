@@ -30,6 +30,7 @@ final class GatepassRepository implements GatepassRepositoryInterface
             $item->$key = $value;
         }
         $item->save();
+
         return $item;
     }
 
@@ -142,6 +143,7 @@ final class GatepassRepository implements GatepassRepositoryInterface
         if ($year !== null) {
             $query->whereYear(DB::raw('COALESCE(date_filed_converted, date_filed)'), $year);
         }
+
         return $query->get();
     }
 

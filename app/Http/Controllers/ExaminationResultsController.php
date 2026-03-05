@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class ExaminationResultsController extends Controller
 {
     /**
@@ -11,11 +9,10 @@ class ExaminationResultsController extends Controller
      *
      * @return void
      */
-     public function __construct()
+    public function __construct()
     {
         $this->middleware('auth');
     }
 
-
-    public function save(){}
+    public function save() {}
 }

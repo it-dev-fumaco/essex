@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateShiftsTable extends Migration
 {
@@ -20,7 +20,7 @@ class CreateShiftsTable extends Migration
             $table->time('time_out');
             $table->integer('breaktime_by_hour');
             $table->float('grace_period_in_mins');
-            $table->string('remarks'); 
+            $table->string('remarks');
             $table->timestamps();
         });
     }

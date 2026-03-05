@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\URL;
 class ForceHttps
 {
     /**
-     * @param  \Illuminate\Http\Request  $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function handle(Request $request, Closure $next)

@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Training;
 use Auth;
 use DB;
-use App\Models\Training;
+use Illuminate\Http\Request;
 
 class HumanResourcesController extends Controller
 {
-    public function sessionDetails($column){
+    public function sessionDetails($column)
+    {
         $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('departments', 'users.department_id', '=', 'departments.department_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
 
         return $detail->$column;
-    }     
+    }
 
-    public function showAnalytics(){
+    public function showAnalytics()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -57,7 +59,8 @@ class HumanResourcesController extends Controller
         return view('client.modules.human_resource.analytics', compact('designation', 'department', 'totals'));
     }
 
-    public function hiringRate(){
+    public function hiringRate()
+    {
         $row = DB::table('users')
             ->where('user_type', 'Applicant')
             ->selectRaw("
@@ -80,7 +83,8 @@ class HumanResourcesController extends Controller
         return response()->json($data);
     }
 
-    public function applicantsChart(Request $request){
+    public function applicantsChart(Request $request)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         $countsByMonth = DB::table('users')
@@ -103,11 +107,13 @@ class HumanResourcesController extends Controller
         return response()->json($data);
     }
 
-    public function employeesPerDeptChart(){
+    public function employeesPerDeptChart()
+    {
         return DB::table('users')->join('departments', 'departments.department_id', 'users.department_id')->select('department', DB::raw('COUNT(users.department_id) as total'))->where('user_type', 'Employee')->groupBy('users.department_id', 'department')->get();
     }
 
-    public function jobSourceChart(){
+    public function jobSourceChart()
+    {
         $counts = DB::table('users')
             ->whereNotNull('job_source')
             ->selectRaw('job_source, count(*) as total')
@@ -127,32 +133,37 @@ class HumanResourcesController extends Controller
         return $data;
     }
 
-        public function show_HR_training(){
+    public function show_HR_training()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        $departments = DB::table('departments')->get(); 
+        $departments = DB::table('departments')->get();
         $training = DB::table('training')
-                    ->select('training.training_title','training.training_desc','training.training_date','training.date_submitted', 'training.proposed_by','training.status','training.training_id', 'training.remarks','training.department_name','training.department')->get(); 
+            ->select('training.training_title', 'training.training_desc', 'training.training_date', 'training.date_submitted', 'training.proposed_by', 'training.status', 'training.training_id', 'training.remarks', 'training.department_name', 'training.department')->get();
 
-        return view('client.modules.human_resource.training.index', compact('designation', 'department','departments','training'));
+        return view('client.modules.human_resource.training.index', compact('designation', 'department', 'departments', 'training'));
     }
-        public function training_profile($id){
+
+    public function training_profile($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        $departments = DB::table('departments')->get(); 
+        $departments = DB::table('departments')->get();
         $training = DB::table('training')
-                    ->select('training.training_title','training.training_desc','training.training_date','training.date_submitted', 'training.proposed_by','training.status','training.training_id', 'training.remarks','training.department_name')
-                    ->where('training.training_id', $id)
-                    ->first(); 
-                    
+            ->select('training.training_title', 'training.training_desc', 'training.training_date', 'training.date_submitted', 'training.proposed_by', 'training.status', 'training.training_id', 'training.remarks', 'training.department_name')
+            ->where('training.training_id', $id)
+            ->first();
+
         $attendees = DB::table('training_attendees')
-        ->join('users', 'users.user_id','=','training_attendees.user_id')
-        ->where('training_id', $id)
-        ->get();
+            ->join('users', 'users.user_id', '=', 'training_attendees.user_id')
+            ->where('training_id', $id)
+            ->get();
 
-        return view('client.modules.human_resource.training.training_profile', compact('designation', 'department','departments','training', 'attendees'));
+        return view('client.modules.human_resource.training.training_profile', compact('designation', 'department', 'departments', 'training', 'attendees'));
     }
-        public function add_HR_training(Request $request){
+
+    public function add_HR_training(Request $request)
+    {
         $date = date('Y-m-d');
         $training = new Training;
         $training->training_title = $request->training_title;
@@ -167,24 +178,26 @@ class HumanResourcesController extends Controller
         $training->department_name = $request->department_name;
 
         $training->save();
-        $get_id= DB::table('training')
-        ->where('training_title', $request->training_title)
-        ->where('training_date', $request->training_date)
-        ->where('department', $request->department)
-        ->first();
+        $get_id = DB::table('training')
+            ->where('training_title', $request->training_title)
+            ->where('training_date', $request->training_date)
+            ->where('department', $request->department)
+            ->first();
 
         if ($request->kpi_designation_new) {
-                foreach($request->kpi_designation_new as $i => $row){
-                      $kpi_designation[] = [
-                        'user_id' => $request->kpi_designation_new[$i],
-                        'training_id' => $get_id->training_id                    ];
-                } 
-                DB::table('training_attendees')->insert($kpi_designation);
+            foreach ($request->kpi_designation_new as $i => $row) {
+                $kpi_designation[] = [
+                    'user_id' => $request->kpi_designation_new[$i],
+                    'training_id' => $get_id->training_id];
             }
+            DB::table('training_attendees')->insert($kpi_designation);
+        }
 
         return redirect()->back()->with(['message' => ''.$request->training_title.' has been successfully added!']);
     }
-    public function edit_HR_training(Request $request){
+
+    public function edit_HR_training(Request $request)
+    {
         $training = Training::find($request->training_id);
         $training->training_title = $request->training_title;
         $training->training_desc = $request->training_desc;
@@ -199,13 +212,12 @@ class HumanResourcesController extends Controller
 
         $kpi_designation_id = collect($request->kpi_designation_id);
 
-
         // for insert
         if ($request->kpi_designation_new) {
-            foreach($request->kpi_designation_new as $i => $row){
+            foreach ($request->kpi_designation_new as $i => $row) {
                 $kpi_designation_new[] = [
-                        'user_id' => $request->kpi_designation_new[$i],
-                        'training_id' => $request->training_id 
+                    'user_id' => $request->kpi_designation_new[$i],
+                    'training_id' => $request->training_id,
                 ];
             }
 
@@ -221,67 +233,72 @@ class HumanResourcesController extends Controller
                 ->delete();
         }
 
-        
         // for update
         if ($request->kpi_designation_id) {
-            foreach($request->kpi_designation_id as $i => $row){
+            foreach ($request->kpi_designation_id as $i => $row) {
                 $kpi_designation_update = [
                     'user_id' => $request->kpi_designation_old[$i],
-                    'last_modified_by' => Auth::user()->employee_name
+                    'last_modified_by' => Auth::user()->employee_name,
                 ];
 
                 DB::table('training_attendees')->where('attendies_id', $request->kpi_designation_id[$i])->update($kpi_designation_update);
             }
         }
 
-
         if ($request->ajax()) {
-            return response()->json(['message' => '' . $request->training_title. ' has been successfully updated!', 'id' => $request->training_id]);
+            return response()->json(['message' => ''.$request->training_title.' has been successfully updated!', 'id' => $request->training_id]);
         }
+
         return redirect()->back()->with(['message' => ''.$request->training_title.'  has been successfully updated!']);
     }
-    
-    public function delete_HR_training(Request $request){
+
+    public function delete_HR_training(Request $request)
+    {
         $training = Training::find($request->training_id);
         $training->delete();
-        
+
         return redirect()->back()->with(['message' => ' Training has been Successfully deleted!']);
     }
-    public function Employee_list_edit(Request $request){
-        $employee_list = DB::table('users')
-        ->where('user_type', 'Employee')
-        ->where('status', 'Active')
-        ->orderBy('employee_name', 'asc')->get();
 
-        return response()->json($employee_list);
-
-    }
-    public function Employee_list(Request $request){
+    public function Employee_list_edit(Request $request)
+    {
         $employee_list = DB::table('users')
-        ->where('department_id', $request->department)
-        ->where('user_type', 'Employee')
-        ->where('status', 'Active')
-        ->orderBy('employee_name', 'asc')->get();
+            ->where('user_type', 'Employee')
+            ->where('status', 'Active')
+            ->orderBy('employee_name', 'asc')->get();
 
         return response()->json($employee_list);
 
     }
 
-    public function edit_training_details($id){
+    public function Employee_list(Request $request)
+    {
+        $employee_list = DB::table('users')
+            ->where('department_id', $request->department)
+            ->where('user_type', 'Employee')
+            ->where('status', 'Active')
+            ->orderBy('employee_name', 'asc')->get();
+
+        return response()->json($employee_list);
+
+    }
+
+    public function edit_training_details($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        $departments = DB::table('departments')->get(); 
+        $departments = DB::table('departments')->get();
         $training = DB::table('training')
-                    ->select('training.training_title','training.training_desc','training.training_date','training.date_submitted', 'training.proposed_by','training.status','training.department','training.training_id','training.remarks','training.department_name')
-                    ->where('training.training_id', $id)
-                    ->first(); 
-        $training_attendees =  DB::table('training_attendees')
-        ->join('users', 'users.user_id','=','training_attendees.user_id')
-        ->where('training_id', $training->training_id)->get();
+            ->select('training.training_title', 'training.training_desc', 'training.training_date', 'training.date_submitted', 'training.proposed_by', 'training.status', 'training.department', 'training.training_id', 'training.remarks', 'training.department_name')
+            ->where('training.training_id', $id)
+            ->first();
+        $training_attendees = DB::table('training_attendees')
+            ->join('users', 'users.user_id', '=', 'training_attendees.user_id')
+            ->where('training_id', $training->training_id)->get();
 
         $data = [
             'training_attendees' => $training_attendees,
-            'training' => $training
+            'training' => $training,
         ];
 
         return response()->json($data);

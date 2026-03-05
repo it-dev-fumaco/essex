@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        commands: __DIR__ . '/../routes/console.php',
+        commands: __DIR__.'/../routes/console.php',
         then: function (): void {
             Route::middleware('web')
                 ->namespace('App\Http\Controllers')
@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             $guard = \Illuminate\Support\Arr::get($e->guards(), 0);
             $login = $guard === 'admin' ? 'admin.login' : 'portal';
+
             return redirect()->guest(route($login));
         });
     })

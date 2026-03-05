@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateEmployeeLeavesTable extends Migration
 {
@@ -17,9 +17,9 @@ class CreateEmployeeLeavesTable extends Migration
             $table->increments('leave_id');
             $table->integer('employee_id');
             $table->integer('leave_type_id');
-            $table->integer('total');  
+            $table->integer('total');
             $table->integer('remaining');
-            $table->integer('year');  
+            $table->integer('year');
             $table->timestamps();
         });
     }

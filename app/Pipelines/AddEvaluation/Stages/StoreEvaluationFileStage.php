@@ -19,8 +19,8 @@ class StoreEvaluationFileStage
             $filenamewithextension = $file->getClientOriginalName();
             $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
-            $filenametostore = $filename . '_' . uniqid() . '.' . $extension;
-            Storage::put('public/uploads/evaluations/' . $filenametostore, $file->get());
+            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            Storage::put('public/uploads/evaluations/'.$filenametostore, $file->get());
         }
 
         $payload->evaluationFileStored = $filenametostore;

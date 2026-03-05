@@ -17,6 +17,5 @@ class StoreCompanyAssetPayload
 
     public function __construct(
         public readonly Request $request,
-    ) {
-    }
+    ) {}
 }

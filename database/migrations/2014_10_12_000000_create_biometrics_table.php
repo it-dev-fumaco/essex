@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateBiometricsTable extends Migration
 {
@@ -14,7 +14,7 @@ class CreateBiometricsTable extends Migration
     public function up()
     {
         Schema::create('biometrics', function (Blueprint $table) {
-           $table->increments('id');
+            $table->increments('id');
             $table->integer('biometric_id');
             $table->integer('employee_id');
             $table->date('bio_date');
@@ -23,7 +23,7 @@ class CreateBiometricsTable extends Migration
             $table->string('serial_no');
             $table->date('received_date');
             $table->time('received_time');
-            $table->string('unit_name');           
+            $table->string('unit_name');
         });
     }
 

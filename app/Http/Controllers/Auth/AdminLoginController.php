@@ -2,33 +2,36 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Requests\AdminLoginRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminLoginRequest;
 use Auth;
-use Illuminate\Http\Request;
 
 class AdminLoginController extends Controller
 {
-	public function __construct(){
-		$this->middleware('guest:admin', ['except' => ['adminLogout']]);
-	}
-
-    public function showLoginForm(){
-    	return view('auth.admin-login');
+    public function __construct()
+    {
+        $this->middleware('guest:admin', ['except' => ['adminLogout']]);
     }
 
-    public function login(AdminLoginRequest $request){
+    public function showLoginForm()
+    {
+        return view('auth.admin-login');
+    }
 
-    	if (Auth::guard('admin')->attempt(['access_id' => $request->access_id,'password' => $request->password], $request->remember)) {
-    		return redirect()->intended(route('admin.dashboard'));
-    	}
+    public function login(AdminLoginRequest $request)
+    {
 
-    	return redirect()->back()->withInput($request->only('email', 'remember'));
+        if (Auth::guard('admin')->attempt(['access_id' => $request->access_id, 'password' => $request->password], $request->remember)) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->back()->withInput($request->only('email', 'remember'));
     }
 
     public function adminLogout()
     {
         Auth::guard('admin')->logout();
+
         return redirect('/');
     }
 }

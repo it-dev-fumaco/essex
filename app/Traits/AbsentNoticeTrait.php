@@ -1,9 +1,11 @@
-<?php namespace App\Traits;
+<?php
 
-use DB;
-use DateTime;
-use DatePeriod;
+namespace App\Traits;
+
 use DateInterval;
+use DatePeriod;
+use DateTime;
+use DB;
 
 trait AbsentNoticeTrait
 {
@@ -60,32 +62,33 @@ trait AbsentNoticeTrait
     //     return $days;
     // }
 
-    public function getUnfiledAbsences($user_id, $date_from, $date_to){
+    public function getUnfiledAbsences($user_id, $date_from, $date_to)
+    {
         $format = 'Y-m-d';
         $start = new DateTime($date_from);
         $end = new DateTime($date_to);
         $end->modify('+1 day');
 
-        $period = new DatePeriod( $start, new DateInterval( 'P1D' ), $end );
+        $period = new DatePeriod($start, new DateInterval('P1D'), $end);
 
         $data = [];
         $days = 0;
-        foreach($period as $date_period ){
+        foreach ($period as $date_period) {
             $biometric_count = DB::table('biometrics')
-                    ->whereDate('bio_date', $date_period->format($format))
-                    ->where('employee_id', $user_id)
-                    ->count();
+                ->whereDate('bio_date', $date_period->format($format))
+                ->where('employee_id', $user_id)
+                ->count();
 
             $absent_count = $this->getTotalAbsences($user_id, $date_period->format($format), $date_period->format($format));
 
             if ($date_period->format($format) < date($format) && $date_period->format('N') < 7) {
                 if ($biometric_count == 0 && $absent_count == 0) {
-                	$days++;
+                    $days++;
                     $data[] = [
                         'date' => $date_period->format($format),
                         'biometrics' => $biometric_count,
                         'notices' => $absent_count,
-                        'status' => 'Unfiled Absence'
+                        'status' => 'Unfiled Absence',
                     ];
                 }
             }

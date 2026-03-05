@@ -2,17 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\SendMail_General;
+use App\Traits\EmailsTrait;
 use Carbon\Carbon;
 use DB;
-use App\Traits\EmailsTrait;
+use Illuminate\Console\Command;
 
 class WorksaryEmailCommand extends Command
 {
     use EmailsTrait;
+
     /**
      * The name and signature of the console command.
      *
@@ -48,7 +47,7 @@ class WorksaryEmailCommand extends Command
         $users = $users->whereMonth('date_joined', Carbon::now()->format('m'));
         $users = $users->whereDay('date_joined', Carbon::now()->format('d'));
         $users = $users->whereYear('date_joined', '<', Carbon::now()->format('Y'));
-        $users = $users->when($this->option('id'), function ($q){
+        $users = $users->when($this->option('id'), function ($q) {
             $q->where('id', $this->option('id'));
         });
         $users = $users->where('user_type', 'Employee');
@@ -56,7 +55,7 @@ class WorksaryEmailCommand extends Command
         $users = $users->get();
 
         $sent_notifications = DB::table('email_notifications')->where('type', 'Work Anniversary Email')->whereDate('created_at', Carbon::now()->startOfDay())->where('email_sent', 1)
-            ->when($this->option('id'), function ($q){
+            ->when($this->option('id'), function ($q) {
                 $q->where('user_id', $this->option('id'));
             })
             ->get();
@@ -68,15 +67,15 @@ class WorksaryEmailCommand extends Command
 
             $data = [
                 'name' => $name,
-                'no_of_years' => $no_of_years
+                'no_of_years' => $no_of_years,
             ];
-    
+
             $log = [
                 'type' => 'Work Anniversary Email',
                 'recipient' => $user->email,
                 'subject' => $subject,
                 'template' => 'admin.email_template.work_anniv',
-                'template_data' => json_encode($data)
+                'template_data' => json_encode($data),
             ];
             $mail = $this->send_mail($subject, 'admin.email_template.work_anniv', $user->email, $data, $log);
         }

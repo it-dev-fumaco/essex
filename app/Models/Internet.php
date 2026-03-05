@@ -8,10 +8,11 @@ use Spatie\Searchable\SearchResult;
 
 class Internet extends Model implements Searchable
 {
-	protected $table= 'posts';
-    protected $fillable = ['title','content','category'];
-    public $searchableType = 'Manual and Procedure';
+    protected $table = 'posts';
 
+    protected $fillable = ['title', 'content', 'category'];
+
+    public $searchableType = 'Manual and Procedure';
 
     // public function operational()
     // {
@@ -19,7 +20,7 @@ class Internet extends Model implements Searchable
     // }
 
     public function getSearchResult(): SearchResult
-    {   
+    {
 
         // $url = route('poste.show', $this->category);
         $url = '/services/internet';
@@ -34,5 +35,4 @@ class Internet extends Model implements Searchable
             $url
         );
     }
-
 }

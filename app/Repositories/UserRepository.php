@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
-use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +63,7 @@ final class UserRepository implements UserRepositoryInterface
             $query = $query->whereIn('users.department_id', $departmentIds);
         }
         if ($q !== null && $q !== '') {
-            $query = $query->where('employee_name', 'like', '%' . $q . '%');
+            $query = $query->where('employee_name', 'like', '%'.$q.'%');
         }
 
         return $query->select('users.*', 'departments.department', 'designation.designation')

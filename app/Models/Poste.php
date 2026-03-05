@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Searchable\Searchable;
 use Spatie\Searchable\SearchResult;
-use DB;
 
 class Poste extends Model implements Searchable
 {
-	protected $table= 'knowledgebase.articles';
-    protected $fillable = ['title','short_text','full_text'];
-    public $searchableType = 'Knowledgebase';
+    protected $table = 'knowledgebase.articles';
 
+    protected $fillable = ['title', 'short_text', 'full_text'];
+
+    public $searchableType = 'Knowledgebase';
 
     // public function operational()
     // {
@@ -20,7 +21,7 @@ class Poste extends Model implements Searchable
     // }
 
     public function getSearchResult(): SearchResult
-    {   
+    {
 
         // $url = route('poste.show', $this->category);
         $url = '/article/'.$this->slug;
@@ -40,5 +41,4 @@ class Poste extends Model implements Searchable
             $url
         );
     }
-
 }

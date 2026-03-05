@@ -72,13 +72,13 @@ return new class extends Migration
             'employee_leaves' => ['employee_id', 'year'],
         ];
         foreach ($drops as $table => $cols) {
-            if (!Schema::hasTable($table)) {
+            if (! Schema::hasTable($table)) {
                 continue;
             }
             foreach ($cols as $col) {
-                $name = $table . '_' . $col . '_index';
+                $name = $table.'_'.$col.'_index';
                 try {
-                    Schema::table($table, fn(Blueprint $t) => $t->dropIndex($name));
+                    Schema::table($table, fn (Blueprint $t) => $t->dropIndex($name));
                 } catch (\Throwable $e) {
                     // skip if index name differs or missing
                 }
@@ -88,12 +88,12 @@ return new class extends Migration
 
     private function addColumnIndex(string $table, string|array $columns): void
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return;
         }
         $cols = is_array($columns) ? $columns : [$columns];
         foreach ($cols as $c) {
-            if (!Schema::hasColumn($table, $c)) {
+            if (! Schema::hasColumn($table, $c)) {
                 return;
             }
         }

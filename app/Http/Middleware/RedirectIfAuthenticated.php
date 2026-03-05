@@ -11,7 +11,6 @@ class RedirectIfAuthenticated
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @param  string|null  $guard
      * @return mixed
      */
@@ -24,7 +23,7 @@ class RedirectIfAuthenticated
                     return redirect('admin.dashboard');
                 }
                 break;
-            
+
             default:
                 if (Auth::guard($guard)->check()) {
                     return redirect('/home');

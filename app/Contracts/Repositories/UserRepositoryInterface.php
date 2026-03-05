@@ -37,8 +37,6 @@ interface UserRepositoryInterface
 
     /**
      * Get single user with department and designation by user_id.
-     *
-     * @return object|null
      */
     public function getWithDepartmentDesignation(string $userId): ?object;
 
@@ -46,8 +44,7 @@ interface UserRepositoryInterface
      * Get employee profiles paginated (users join departments, designation).
      * When $departmentIds is null, no department filter; else whereIn users.department_id.
      *
-     * @param array<int, mixed>|null $departmentIds
-     * @return LengthAwarePaginator
+     * @param  array<int, mixed>|null  $departmentIds
      */
     public function getEmployeeProfilesPaginated(?array $departmentIds, ?string $q, int $perPage = 10): LengthAwarePaginator;
 }

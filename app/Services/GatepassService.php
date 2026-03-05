@@ -18,8 +18,7 @@ final class GatepassService
         private readonly GatepassRepositoryInterface $gatepassRepository,
         private readonly SessionDetailRepositoryInterface $sessionDetailRepository,
         private readonly UserRepositoryInterface $userRepository
-    ) {
-    }
+    ) {}
 
     public function getAllGatepasses(): Collection
     {
@@ -42,13 +41,14 @@ final class GatepassService
             'remarks' => $request->remarks,
             'status' => 'FOR APPROVAL',
         ]);
-        return 'Gatepass no. <b>' . $item->gatepass_id . '</b>';
+
+        return 'Gatepass no. <b>'.$item->gatepass_id.'</b>';
     }
 
     public function updateStatus(Request $request): string
     {
         $item = $this->gatepassRepository->find((int) $request->gatepass_id);
-        if (!$item) {
+        if (! $item) {
             return '';
         }
         $attrs = [
@@ -60,7 +60,8 @@ final class GatepassService
             $attrs['item_status'] = 'Unreturned';
         }
         $this->gatepassRepository->update($item, $attrs);
-        return 'Gatepass no. <b>' . $item->gatepass_id . '</b> has been <b>' . $request->status . '</b>.';
+
+        return 'Gatepass no. <b>'.$item->gatepass_id.'</b> has been <b>'.$request->status.'</b>.';
     }
 
     public function destroy(int $id): void
@@ -91,7 +92,7 @@ final class GatepassService
     public function updateGatepassDetails(Request $request): string
     {
         $gatepass = $this->gatepassRepository->find((int) $request->gatepass_id);
-        if (!$gatepass) {
+        if (! $gatepass) {
             return '';
         }
         $this->gatepassRepository->update($gatepass, [
@@ -107,20 +108,22 @@ final class GatepassService
             'remarks' => $request->remarks,
             'last_modified_by' => Auth::user()->employee_name,
         ]);
-        return 'Gatepass no.<b>' . $gatepass->gatepass_id . '</b> has been updated.';
+
+        return 'Gatepass no.<b>'.$gatepass->gatepass_id.'</b> has been updated.';
     }
 
     public function cancelGatepass(Request $request): string
     {
         $gatepass = $this->gatepassRepository->find((int) $request->id);
-        if (!$gatepass) {
+        if (! $gatepass) {
             return '';
         }
         $this->gatepassRepository->update($gatepass, [
             'status' => 'CANCELLED',
             'last_modified_by' => Auth::user()->employee_name,
         ]);
-        return 'Gatepass no. <b>' . $gatepass->gatepass_id . '</b> has been cancelled.';
+
+        return 'Gatepass no. <b>'.$gatepass->gatepass_id.'</b> has been cancelled.';
     }
 
     public function getGatepassesFilteredPaginated(Request $request, int $perPage = 7): LengthAwarePaginator
@@ -141,14 +144,15 @@ final class GatepassService
     public function updateUnreturnedGatepass(Request $request): string
     {
         $gatepass = $this->gatepassRepository->find((int) $request->gatepass_id);
-        if (!$gatepass) {
+        if (! $gatepass) {
             return '';
         }
         $this->gatepassRepository->update($gatepass, [
             'item_status' => 'Returned',
             'last_modified_by' => Auth::user()->employee_name,
         ]);
-        return 'Gatepass no. <b>' . $gatepass->gatepass_id . '</b> has been returned.';
+
+        return 'Gatepass no. <b>'.$gatepass->gatepass_id.'</b> has been returned.';
     }
 
     public function countPendingGatepass(): int
@@ -160,6 +164,7 @@ final class GatepassService
     {
         $userId = Auth::user()->user_id ?? '';
         $detail = $this->sessionDetailRepository->getByUserId($userId);
+
         return $detail->$column ?? null;
     }
 
@@ -169,6 +174,7 @@ final class GatepassService
         $total_gatepass = $gatepass->count();
         $total_unreturned = $gatepass->where('item_type', '=', 'Returnable')->where('item_status', '=', 'Unreturned')->count();
         $total_pending = $gatepass->where('status', 'FOR APPROVAL')->count();
+
         return [
             'gatepass' => $total_gatepass,
             'unreturned_items' => $total_unreturned,
@@ -185,6 +191,7 @@ final class GatepassService
         $company_activity = $gatepass->where('purpose_type', 'For Company Activity')->count();
         $personal_use = $gatepass->where('purpose_type', 'For Personal Use')->count();
         $others = $gatepass->where('purpose_type', 'Others')->count();
+
         return [
             ['purpose_type' => 'For Servicing', 'percentage' => round(($servicing / $divisor) * 100, 2)],
             ['purpose_type' => 'For Company Activity', 'percentage' => round(($company_activity / $divisor) * 100, 2)],
@@ -203,6 +210,7 @@ final class GatepassService
         $designation = $this->getSessionDetail('designation');
         $department = $this->getSessionDetail('department');
         $employees = $this->userRepository->getEmployeesOrdered();
+
         return compact('designation', 'department', 'employees');
     }
 
@@ -211,6 +219,7 @@ final class GatepassService
         $designation = $this->getSessionDetail('designation');
         $department = $this->getSessionDetail('department');
         $employees = $this->userRepository->getEmployeesOrdered();
+
         return compact('designation', 'department', 'employees');
     }
 

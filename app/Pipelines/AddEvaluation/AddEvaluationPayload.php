@@ -17,6 +17,5 @@ class AddEvaluationPayload
         public readonly string $evaluationDate,
         public readonly int|string $evaluatedBy,
         public readonly ?string $remarks = null,
-    ) {
-    }
+    ) {}
 }

@@ -8,16 +8,18 @@ use Spatie\Searchable\SearchResult;
 
 class Gallery extends Model implements Searchable
 {
-	protected $table= 'photo_albums';
+    protected $table = 'photo_albums';
+
     protected $fillable = ['name', 'description'];
 
     public function getSearchResult(): SearchResult
     {
-    
+
         // $url = route('operational.show', $this->policy_id);
         $url = '/gallery';
         $null = null;
-        $cat= 'Gallery';
+        $cat = 'Gallery';
+
         return new SearchResult(
             $this,
             $this->name,
@@ -25,6 +27,6 @@ class Gallery extends Model implements Searchable
             $cat,
             $null,
             $url
-         );
+        );
     }
 }

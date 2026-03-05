@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateGatepassTable extends Migration
 {
@@ -25,10 +25,10 @@ class CreateGatepassTable extends Migration
             $table->string('contact_no')->nullable();
             $table->string('tel_no')->nullable();
             $table->string('status');
-            $table->date('returned_on')->nullable();   
+            $table->date('returned_on')->nullable();
             $table->integer('approved_by')->nullable();
             $table->date('approved_date')->nullable();
-            $table->date('date_filed');  
+            $table->date('date_filed');
             $table->string('remarks');
             $table->timestamps();
         });

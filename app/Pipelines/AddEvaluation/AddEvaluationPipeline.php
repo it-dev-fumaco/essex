@@ -12,8 +12,7 @@ class AddEvaluationPipeline
 {
     public function __construct(
         private readonly Pipeline $pipeline,
-    ) {
-    }
+    ) {}
 
     public function run(AddEvaluationPayload $payload): AddEvaluationPayload
     {

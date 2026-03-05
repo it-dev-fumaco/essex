@@ -14,8 +14,7 @@ final class AuthService implements AuthServiceInterface
 {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository
-    ) {
-    }
+    ) {}
 
     public function attempt(Request $request): ?int
     {
@@ -34,8 +33,8 @@ final class AuthService implements AuthServiceInterface
             return null;
         }
 
-        $internalEmail = $username . '@fumaco.local';
-        $externalEmail = $username . '@fumaco.com';
+        $internalEmail = $username.'@fumaco.local';
+        $externalEmail = $username.'@fumaco.com';
         $user = $this->userRepository->findOneByInternalOrExternalEmail($internalEmail, $externalEmail);
 
         if ($user === null) {
@@ -54,7 +53,7 @@ final class AuthService implements AuthServiceInterface
             return null;
         }
 
-        $adldap = new adLDAP();
+        $adldap = new adLDAP;
         $usernameForLdap = explode('@', (string) $userEmail)[0] ?? '';
         $authenticated = $adldap->user()->authenticate($usernameForLdap, (string) $request->input('password'));
 

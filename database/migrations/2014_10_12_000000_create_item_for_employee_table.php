@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateItemForEmployeeTable extends Migration
 {
@@ -16,7 +16,7 @@ class CreateItemForEmployeeTable extends Migration
         Schema::create('item_for_employee', function (Blueprint $table) {
             $table->increments('item_id');
             $table->enum('item_type', ['Mobile Phone', 'Vehicle', 'Laptop', 'Tablet', 'Others']);
-            $table->enum('status', ['Active'], ['Inactive']); 
+            $table->enum('status', ['Active'], ['Inactive']);
             $table->string('brand')->nullable();
             $table->string('model')->nullable();
             $table->string('serial_no')->nullable();

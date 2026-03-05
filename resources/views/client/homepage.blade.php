@@ -337,6 +337,23 @@
                                 </ul>
                             </div>
                         @endif
+                        {{-- Clock In / Clock Out button (above My Attendance) --}}
+                        @php
+                            $clock_status = $clock_status ?? 'none';
+                        @endphp
+                        <div class="mb-2">
+                            <button type="button" id="clockBtn" class="btn btn-primary w-100 p-2 fw-bold" style="border-radius: 0.7rem; font-size: 11pt;"
+                                data-status="{{ $clock_status }}"
+                                @if($clock_status === 'clocked_out') disabled @endif>
+                                @if($clock_status === 'none')
+                                    <i class="fas fa-clock me-1"></i> Clock In
+                                @elseif($clock_status === 'clocked_in')
+                                    <i class="fas fa-sign-out-alt me-1"></i> Clock Out
+                                @else
+                                    <i class="fas fa-check-circle me-1"></i> Completed
+                                @endif
+                            </button>
+                        </div>
                         <div class="inner-box featured p-2">
                             <div class="widget property-agent p-0">
                                 <div class="d-flex w-100 p-0">
@@ -1083,6 +1100,47 @@
                     },
                     complete: function() {
                         $("#refreshAttendance").html("<i class=\"fas fa-sync-alt text-muted m-0 p-0\" style=\"font-size: 12px !important;\"></i> Refresh");
+                    }
+                });
+            });
+
+            $(document).on('click', '#clockBtn', function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                if (btn.prop('disabled')) return;
+                var status = btn.data('status');
+                var url = status === 'none' ? '/attendance/clock-in' : '/attendance/clock-out';
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...');
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    success: function(res) {
+                        btn.data('status', res.status);
+                        if (res.status === 'clocked_in') {
+                            btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                        } else if (res.status === 'clocked_out') {
+                            btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary');
+                        }
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl(res.message || (res.status === 'clocked_in' ? 'Clocked in.' : 'Clocked out.'), { type: 'success', align: 'center', delay: 3000 });
+                        }
+                    },
+                    error: function(xhr) {
+                        btn.prop('disabled', false);
+                        var res = xhr.responseJSON;
+                        var status = (res && res.status) ? res.status : status;
+                        var msg = (res && res.message) ? res.message : 'Request failed.';
+                        if (status === 'none') {
+                            btn.data('status', 'none').html('<i class="fas fa-clock me-1"></i> Clock In');
+                        } else if (status === 'clocked_in') {
+                            btn.data('status', 'clocked_in').html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                        }
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl(msg, { type: 'danger', align: 'center', delay: 4000 });
+                        } else {
+                            alert(msg);
+                        }
                     }
                 });
             });

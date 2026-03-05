@@ -34,8 +34,7 @@ final class EmployeeProfileService
         private readonly LookupRepositoryInterface $lookupRepository,
         private readonly IssuedItemRepositoryInterface $issuedItemRepository,
         private readonly ItemAccountabilityRepositoryInterface $itemAccountabilityRepository
-    ) {
-    }
+    ) {}
 
     public function fetchProfilesPaginated(Request $request): LengthAwarePaginator
     {
@@ -52,6 +51,7 @@ final class EmployeeProfileService
         foreach ($departments as $row) {
             $depts[] = $row->department_id;
         }
+
         return $this->userRepository->getEmployeeProfilesPaginated($depts === [] ? null : $depts, $request->q, 10);
     }
 
@@ -70,9 +70,9 @@ final class EmployeeProfileService
 
         $lastcodeID = $this->itemAccountabilityRepository->getLastItemId() ?? 0;
         $newcodeID = $lastcodeID + 1;
-        $neww = date('Y') . '00000';
+        $neww = date('Y').'00000';
         $newly = (int) $neww + $newcodeID;
-        $newwwly = 'FUM' . '-' . $newly;
+        $newwwly = 'FUM'.'-'.$newly;
 
         $userId = Auth::user()->user_id ?? '';
         $sessionDetail = $this->sessionDetailRepository->getByUserId($userId);
@@ -99,6 +99,7 @@ final class EmployeeProfileService
     {
         $userId = Auth::user()->user_id ?? '';
         $detail = $this->sessionDetailRepository->getByUserId($userId);
+
         return $detail->$column ?? null;
     }
 
@@ -114,7 +115,7 @@ final class EmployeeProfileService
     public function updateEmployeeProfile(Request $request): void
     {
         $employee = User::where('user_id', $request->user_id)->first();
-        if (!$employee) {
+        if (! $employee) {
             return;
         }
         $employee->employee_name = $request->employee_name;
@@ -148,11 +149,12 @@ final class EmployeeProfileService
     public function changePassword(Request $request): array
     {
         $employee = User::where('user_id', Auth::user()->user_id)->first();
-        if (!$employee || !Hash::check($request->current_pass, $employee->password)) {
+        if (! $employee || ! Hash::check($request->current_pass, $employee->password)) {
             return ['success' => false, 'logout' => false];
         }
         $employee->password = bcrypt($request->new_pass);
         $employee->save();
+
         return ['success' => true, 'logout' => true];
     }
 

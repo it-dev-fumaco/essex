@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Biometric_logs;
 use App\Contracts\Repositories\BiometricRepositoryInterface;
 use App\Contracts\Repositories\SessionDetailRepositoryInterface;
+use App\Models\Biometric_logs;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +17,13 @@ final class AttendanceService
     public function __construct(
         private readonly BiometricRepositoryInterface $biometricRepository,
         private readonly SessionDetailRepositoryInterface $sessionDetailRepository
-    ) {
-    }
+    ) {}
 
     public function getSessionDetail(string $column)
     {
         $userId = Auth::user()->user_id ?? '';
         $detail = $this->sessionDetailRepository->getByUserId($userId);
+
         return $detail->$column ?? null;
     }
 
@@ -39,10 +39,10 @@ final class AttendanceService
         $bioIds = '0000';
         if ($existingIds !== []) {
             $bioIds = implode(',', array_map('strval', $existingIds));
-            $bioIds = 'AND Transactions.[ID] NOT IN (' . $bioIds . ')';
+            $bioIds = 'AND Transactions.[ID] NOT IN ('.$bioIds.')';
         }
 
-        $sql = 'SELECT Transactions.[ID], Transactions.[date], Transactions.[time], Transactions.[SerialNo], Transactions.[TransType], Transactions.[pin], Transactions.[ReceivedDate], Transactions.[ReceivedTime], templates.[FirstName], templates.[LastName], UnitSiteQuery.[UnitName] FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE (Transactions.[TransType] = 7 OR Transactions.[TransType] = 8) AND Transactions.[ID] > 704020 AND Transactions.[pin] = ' . (int) $employeeId . ' ' . $bioIds;
+        $sql = 'SELECT Transactions.[ID], Transactions.[date], Transactions.[time], Transactions.[SerialNo], Transactions.[TransType], Transactions.[pin], Transactions.[ReceivedDate], Transactions.[ReceivedTime], templates.[FirstName], templates.[LastName], UnitSiteQuery.[UnitName] FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE (Transactions.[TransType] = 7 OR Transactions.[TransType] = 8) AND Transactions.[ID] > 704020 AND Transactions.[pin] = '.(int) $employeeId.' '.$bioIds;
 
         $attendance = DB::connection('access')->select($sql);
         $data = [];

@@ -8,7 +8,6 @@ use App\Contracts\Services\AuthServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Services\PostLoginCommandRunner;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -39,7 +38,7 @@ class LoginController extends Controller
      * Authenticate user (LDAP or credentials). Returns 1 on success, null on failure.
      * Same route and response contract as before.
      */
-    public function userLogin(LoginRequest $request): int|null
+    public function userLogin(LoginRequest $request): ?int
     {
         DB::beginTransaction();
         try {
