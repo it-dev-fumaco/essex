@@ -217,41 +217,7 @@ class EmployeeProfilesController extends Controller
 
     public function refreshAttendance($id)
     {
-        $existing_bio = DB::table('biometrics')->where('employee_id', (int) $id)->where('type', '!=', 'adjustment')->select('biometric_id')->get();
-
-        $bio_ids = '0000';
-
-        if (! empty($existing_bio)) {
-
-            foreach ($existing_bio as $bio_id) {
-                $bio_ids .= $bio_id->biometric_id.',';
-            }
-
-            $bio_ids = rtrim($bio_ids, ',');
-            $bio_ids = 'AND Transactions.[ID] NOT IN ('.$bio_ids.')';
-        }
-
-        $attendance = DB::connection('access')->select('SELECT Transactions.[ID], Transactions.[date], Transactions.[time], Transactions.[SerialNo], Transactions.[TransType], Transactions.[pin], Transactions.[ReceivedDate], Transactions.[ReceivedTime], templates.[FirstName], templates.[LastName], UnitSiteQuery.[UnitName] FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE (Transactions.[TransType] = 7 OR Transactions.[TransType] = 8) AND Transactions.[ID] > 704020 AND Transactions.[pin] = '.$id.' '.$bio_ids.'');
-
-        $data = [];
-
-        foreach ($attendance as $row) {
-            $data[] = ['biometric_id' => $row->ID,
-                'bio_date' => $row->date,
-                'bio_time' => $row->time,
-                'serial_no' => $row->SerialNo,
-                'trans_type' => $row->TransType,
-                'employee_id' => $row->pin,
-                'received_date' => $row->ReceivedDate,
-                'received_time' => $row->ReceivedTime,
-                'unit_name' => $row->UnitName,
-                'type' => 'raw data',
-            ];
-        }
-
-        DB::table('biometrics')->insert($data);
-
-        return response()->json(['success' => 'Updated: Biometric Logssss']);
+        return response()->json(['success' => 'Biometric logs are stored locally only. Sync from Access has been removed.']);
     }
 
     public function getWorkingDays($begin, $end)

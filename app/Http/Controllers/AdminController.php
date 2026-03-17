@@ -54,8 +54,6 @@ class AdminController extends Controller
     //         $c_logs[] = ['date' => Carbon::parse($d)->format('Y-m-d H:i:s')];
     //     }
 
-    //     $biometrics = DB::connection('access')->select("SELECT Transactions.[pin], Transactions.[date], MAX(iif (Transactions.[TransType] = 7, Transactions.[time], 0)) AS time_in, MAX(iif (Transactions.[TransType] = 8, Transactions.[time], 0)) AS time_out, MAX(iif (Transactions.[TransType] = 7, UnitSiteQuery.[UnitName], 0)) AS loc_in, MAX(iif (Transactions.[TransType] = 8, UnitSiteQuery.[UnitName], 0)) AS loc_out FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE Transactions.[ID] > 704020 AND Transactions.[pin] = ".$employee." GROUP BY Transactions.[date], Transactions.[pin]");
-
     //     $biometrics = collect($biometrics)->whereNotIn('date', array_column($c_logs, 'date'));
 
     //     $logs = [];

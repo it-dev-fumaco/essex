@@ -340,10 +340,12 @@
                         {{-- Clock In / Clock Out button (above My Attendance) --}}
                         @php
                             $clock_status = $clock_status ?? 'none';
+                            $clocked_in_at = $clocked_in_at ?? null;
                         @endphp
                         <div class="mb-2">
-                            <button type="button" id="clockBtn" class="btn btn-primary w-100 p-2 fw-bold" style="border-radius: 0.7rem; font-size: 11pt;"
+                            <button type="button" id="clockBtn" class="btn w-100 p-2 fw-bold {{ $clock_status === 'clocked_out' ? 'btn-secondary clock-btn-completed' : 'btn-primary' }}" style="border-radius: 0.7rem; font-size: 11pt;"
                                 data-status="{{ $clock_status }}"
+                                data-time-in="{{ $clocked_in_at }}"
                                 @if($clock_status === 'clocked_out') disabled @endif>
                                 @if($clock_status === 'none')
                                     <i class="fas fa-clock me-1"></i> Clock In
@@ -353,23 +355,29 @@
                                     <i class="fas fa-check-circle me-1"></i> Completed
                                 @endif
                             </button>
+                            <div id="clocked-in-timer" class="text-center small text-muted mt-1" style="display: none;">
+                                <span class="clocked-in-at">Clocked in at <strong class="time-in-display">--:--:--</strong></span>
+                                <span class="elapsed-display ms-1">— Elapsed: <strong class="elapsed-time">00:00:00</strong></span>
+                            </div>
+                            <div id="resume-clock-wrap" class="mt-1" style="{{ $clock_status === 'clocked_out' ? '' : 'display: none;' }}">
+                                <button type="button" id="resumeClockBtn" class="btn btn-outline-primary btn-sm w-100 clock-resume-btn" style="border-radius: 0.5rem; font-size: 10pt;">
+                                    <i class="fas fa-play me-1"></i> Continue working (undo clock out)
+                                </button>
+                            </div>
                         </div>
                         <div class="inner-box featured p-2">
                             <div class="widget property-agent p-0">
                                 <div class="d-flex w-100 p-0">
                                     <h3 class="widget-title mb-2 pb-2 w-100">
                                         <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
-                                            <span class="col-8">My Attendance</span>
-                                            <span id="refreshAttendance" class="col-4 text-muted text-end" style="cursor: pointer;">
-                                                <i class="fas fa-sync-alt text-muted m-0 p-0" style="font-size: 12px !important;"></i> Refresh
-                                            </span>
+                                            <span class="col-12">My Attendance</span>
                                         </div>
                                     </h3>
                                 </div>
                                 <div class="agent-info">
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="container">
+                                            <div class="container-fluid p-0">
                                                 @php
                                                     $current_date = Carbon\Carbon::now()->format('d');
                                                     $start_date = $end_date = null;
@@ -426,6 +434,40 @@
     <iframe id="iframe-print" hidden></iframe>
 
     <style type="text/css">
+    /* Clock button "Completed" state: keep text and icon always visible (no hover-only) */
+    #clockBtn.btn-secondary,
+    #clockBtn.btn-secondary:disabled,
+    #clockBtn.clock-btn-completed {
+        color: #fff !important;
+        opacity: 1 !important;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+    #clockBtn.btn-secondary:hover,
+    #clockBtn.btn-secondary:focus,
+    #clockBtn.clock-btn-completed:hover,
+    #clockBtn.clock-btn-completed:focus {
+        color: #fff !important;
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+    }
+    #clockBtn.btn-secondary i,
+    #clockBtn.clock-btn-completed i {
+        color: inherit !important;
+        opacity: 1 !important;
+    }
+    /* "Continue working" button: always show text and icon (no hover needed) */
+    #resumeClockBtn.clock-resume-btn,
+    #resumeClockBtn.clock-resume-btn:hover,
+    #resumeClockBtn.clock-resume-btn:focus {
+        color: #0d6efd !important;
+        opacity: 1 !important;
+        background-color: transparent !important;
+    }
+    #resumeClockBtn.clock-resume-btn i {
+        color: inherit !important;
+        opacity: 1 !important;
+    }
     .settings-btn-opacity {
         opacity: 30% !important;
     }
@@ -902,6 +944,27 @@
             loadGatepasses();
             loadItinerary();
 
+            // Auto-fetch attendance: run update then reload once on page load (same as Refresh button)
+            (function autoRefreshAttendanceOnce() {
+                var employee = '{{ Auth::user()->user_id }}';
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/update/' + employee,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    success: function() { loadAttendance(); }
+                });
+            })();
+            // Auto-refresh attendance every 5 minutes while page is open
+            setInterval(function() {
+                var employee = '{{ Auth::user()->user_id }}';
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/update/' + employee,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    success: function() { loadAttendance(); }
+                });
+            }, 5 * 60 * 1000);
+
             $(document).on('click', '#attendance-modal', function(event) {
                 loadAttendanceHistory();
             });
@@ -1077,73 +1140,142 @@
                 });
             }
 
-            $(document).on('click', '#refreshAttendance', function(e) {
-                e.preventDefault();
-                $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
-                    '<div class="spinner-border" role="status">' +
-                        '<span class="visually-hidden">Loading...</span>' +
-                    '</div>' +
-                '</div>');
-                loadAttendance(1);
-                var employee = '{{ Auth::user()->user_id }}';
-                $.ajax({
-                    type: 'POST',
-                    url: '/attendance/update/' + employee,
-                    data: {
-                        '_token': '{{ csrf_token() }}'
-                    },
-                    beforeSend: function() {
-                        $("#refreshAttendance").text("Updating...");
-                    },
-                    success: function(response) {
-                        loadAttendance();
-                    },
-                    complete: function() {
-                        $("#refreshAttendance").html("<i class=\"fas fa-sync-alt text-muted m-0 p-0\" style=\"font-size: 12px !important;\"></i> Refresh");
-                    }
-                });
-            });
-
             $(document).on('click', '#clockBtn', function(e) {
                 e.preventDefault();
                 var btn = $(this);
                 if (btn.prop('disabled')) return;
                 var status = btn.data('status');
-                var url = status === 'none' ? '/attendance/clock-in' : '/attendance/clock-out';
+                var isClockIn = (status === 'none');
+                var url = isClockIn ? '/attendance/clock-in' : '/attendance/clock-out';
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...');
                 $.ajax({
                     type: 'POST',
                     url: url,
                     data: { '_token': '{{ csrf_token() }}' },
+                    dataType: 'json',
                     success: function(res) {
-                        btn.data('status', res.status);
-                        if (res.status === 'clocked_in') {
+                        var newStatus = (res && res.status) ? res.status : (isClockIn ? 'clocked_in' : 'clocked_out');
+                        btn.data('status', newStatus);
+                        if (res && res.time_in) { btn.data('time-in', res.time_in); }
+                        if (newStatus === 'clocked_in') {
                             btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
-                        } else if (res.status === 'clocked_out') {
-                            btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary');
+                            startClockedInTimer(res && res.time_in ? res.time_in : btn.data('time-in'));
+                        } else if (newStatus === 'clocked_out') {
+                            btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary clock-btn-completed');
+                            stopClockedInTimer();
+                            $('#resume-clock-wrap').show();
                         }
                         if (typeof $.bootstrapGrowl === 'function') {
-                            $.bootstrapGrowl(res.message || (res.status === 'clocked_in' ? 'Clocked in.' : 'Clocked out.'), { type: 'success', align: 'center', delay: 3000 });
+                            $.bootstrapGrowl((res && res.message) || (newStatus === 'clocked_in' ? 'Clocked in.' : 'Clocked out.'), { type: 'success', align: 'center', delay: 3000 });
                         }
+                        loadAttendance();
                     },
                     error: function(xhr) {
-                        btn.prop('disabled', false);
                         var res = xhr.responseJSON;
-                        var status = (res && res.status) ? res.status : status;
-                        var msg = (res && res.message) ? res.message : 'Request failed.';
-                        if (status === 'none') {
-                            btn.data('status', 'none').html('<i class="fas fa-clock me-1"></i> Clock In');
-                        } else if (status === 'clocked_in') {
-                            btn.data('status', 'clocked_in').html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                        var errStatus = (res && res.status) ? res.status : 'none';
+                        btn.data('status', errStatus);
+                        btn.prop('disabled', false);
+                        if (errStatus === 'none') {
+                            btn.html('<i class="fas fa-clock me-1"></i> Clock In');
+                            stopClockedInTimer();
+                        } else if (errStatus === 'clocked_in') {
+                            btn.html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                            startClockedInTimer(btn.data('time-in'));
                         }
+                        var msg = (res && res.message) ? res.message : 'Request failed.';
                         if (typeof $.bootstrapGrowl === 'function') {
                             $.bootstrapGrowl(msg, { type: 'danger', align: 'center', delay: 4000 });
                         } else {
                             alert(msg);
                         }
+                    },
+                    complete: function() {
+                        if (btn.html().indexOf('Processing') !== -1) {
+                            var s = btn.data('status');
+                            if (s === 'clocked_in') {
+                                btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out').removeClass('clock-btn-completed');
+                                $('#resume-clock-wrap').hide();
+                            } else if (s === 'clocked_out') {
+                                btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary clock-btn-completed');
+                                $('#resume-clock-wrap').show();
+                            } else {
+                                btn.prop('disabled', false).html('<i class="fas fa-clock me-1"></i> Clock In').removeClass('clock-btn-completed');
+                                $('#resume-clock-wrap').hide();
+                            }
+                        }
                     }
                 });
             });
+
+            $(document).on('click', '#resumeClockBtn', function(e) {
+                e.preventDefault();
+                var $resumeBtn = $(this);
+                if ($resumeBtn.prop('disabled')) return;
+                $resumeBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Resuming...');
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/resume',
+                    data: { '_token': '{{ csrf_token() }}' },
+                    dataType: 'json',
+                    success: function(res) {
+                        var btn = $('#clockBtn');
+                        if (res && res.status === 'clocked_in') {
+                            btn.data('status', 'clocked_in').data('time-in', res.time_in || btn.data('time-in'));
+                            btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out').removeClass('btn-secondary clock-btn-completed').addClass('btn-primary');
+                            if (res.time_in) startClockedInTimer(res.time_in);
+                            $('#resume-clock-wrap').hide();
+                        }
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl((res && res.message) || 'Resumed. Clock out when you are done.', { type: 'success', align: 'center', delay: 3000 });
+                        }
+                        loadAttendance();
+                    },
+                    error: function(xhr) {
+                        var res = xhr.responseJSON;
+                        var msg = (res && res.message) ? res.message : 'Could not resume.';
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl(msg, { type: 'danger', align: 'center', delay: 4000 });
+                        } else {
+                            alert(msg);
+                        }
+                    },
+                    complete: function() {
+                        $resumeBtn.prop('disabled', false).html('<i class="fas fa-play me-1"></i> Continue working (undo clock out)');
+                    }
+                });
+            });
+            @if($clock_status === 'clocked_out')
+            $(function(){ $('#resume-clock-wrap').show(); });
+            @endif
+
+            var clockedInTimerInterval = null;
+            function startClockedInTimer(timeInStr) {
+                if (!timeInStr) return;
+                var $timer = $('#clocked-in-timer');
+                $timer.find('.time-in-display').text(timeInStr);
+                $timer.show();
+                function tick() {
+                    var parts = timeInStr.split(':');
+                    var start = new Date();
+                    start.setHours(parseInt(parts[0],10), parseInt(parts[1],10), parseInt(parts[2],10) || 0, 0);
+                    var now = new Date();
+                    if (start > now) start.setDate(start.getDate() - 1);
+                    var sec = Math.floor((now - start) / 1000);
+                    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+                    var fmt = function(n){ return (n < 10 ? '0' : '') + n; };
+                    $timer.find('.elapsed-time').text(fmt(h) + ':' + fmt(m) + ':' + fmt(s));
+                }
+                tick();
+                if (clockedInTimerInterval) clearInterval(clockedInTimerInterval);
+                clockedInTimerInterval = setInterval(tick, 1000);
+            }
+            function stopClockedInTimer() {
+                if (clockedInTimerInterval) { clearInterval(clockedInTimerInterval); clockedInTimerInterval = null; }
+                $('#clocked-in-timer').hide();
+            }
+            @if($clock_status === 'clocked_in' && $clocked_in_at)
+            $(function(){ startClockedInTimer('{{ $clocked_in_at }}'); });
+            @endif
 
 
             $(document).on('click', '#view-notice', function(event) {

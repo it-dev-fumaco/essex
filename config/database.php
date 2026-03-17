@@ -116,13 +116,6 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
-        'access' => [
-            'driver' => 'pdo_access',
-            'connection_string' => 'dsn=essex',
-            'username' => '',
-            'password' => '',
-            'table_prefix' => '',
-        ],
 
     ],
 

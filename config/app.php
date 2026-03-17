@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Notice Slip / Mail link base URL
+    |--------------------------------------------------------------------------
+    |
+    | Base URL used in notice slip approval emails (Approve/Disapprove links).
+    | Set to an internal URL (e.g. https://10.0.0.5) if emails must open on
+    | the internal network. Leave null to use APP_URL.
+    |
+    */
+    'notice_slip_base_url' => env('NOTICE_SLIP_BASE_URL', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

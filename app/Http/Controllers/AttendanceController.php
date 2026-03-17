@@ -30,7 +30,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Portal Clock In: record clock-in time for today.
+     * Portal Clock In: record clock-in in biometric_logs (our DB).
      */
     public function clockIn(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -38,37 +38,39 @@ class AttendanceController extends Controller
         $today = Carbon::today()->format('Y-m-d');
         $now = Carbon::now();
 
-        $exists = DB::table('portal_clock_logs')
+        $exists = DB::table('biometric_logs')
             ->where('user_id', $userId)
-            ->where('log_date', $today)
+            ->where('transaction_date', $today)
             ->first();
 
         if ($exists) {
             return response()->json([
                 'success' => false,
                 'message' => 'Already clocked in today.',
-                'status' => $exists->clock_out_at ? 'clocked_out' : 'clocked_in',
+                'status' => $exists->time_out ? 'clocked_out' : 'clocked_in',
             ], 422);
         }
 
-        DB::table('portal_clock_logs')->insert([
+        $timeIn = $now->format('H:i:s');
+        DB::table('biometric_logs')->insert([
             'user_id' => $userId,
-            'log_date' => $today,
-            'clock_in_at' => $now,
-            'clock_out_at' => null,
-            'created_at' => $now,
-            'updated_at' => $now,
+            'transaction_date' => $today,
+            'time_in' => $timeIn,
+            'time_out' => null,
+            'location_in' => null,
+            'location_out' => null,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Clocked in at '.$now->format('g:i A'),
             'status' => 'clocked_in',
+            'time_in' => $timeIn,
         ]);
     }
 
     /**
-     * Portal Clock Out: record clock-out time for today.
+     * Portal Clock Out: record clock-out in biometric_logs (our DB).
      */
     public function clockOut(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -76,9 +78,9 @@ class AttendanceController extends Controller
         $today = Carbon::today()->format('Y-m-d');
         $now = Carbon::now();
 
-        $log = DB::table('portal_clock_logs')
+        $log = DB::table('biometric_logs')
             ->where('user_id', $userId)
-            ->where('log_date', $today)
+            ->where('transaction_date', $today)
             ->first();
 
         if (! $log) {
@@ -89,7 +91,7 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        if ($log->clock_out_at !== null) {
+        if ($log->time_out !== null) {
             return response()->json([
                 'success' => false,
                 'message' => 'Already clocked out today.',
@@ -97,18 +99,60 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        DB::table('portal_clock_logs')
+        $timeOut = $now->format('H:i:s');
+        DB::table('biometric_logs')
             ->where('user_id', $userId)
-            ->where('log_date', $today)
-            ->update([
-                'clock_out_at' => $now,
-                'updated_at' => $now,
-            ]);
+            ->where('transaction_date', $today)
+            ->update(['time_out' => $timeOut]);
 
         return response()->json([
             'success' => true,
             'message' => 'Clocked out at '.$now->format('g:i A'),
             'status' => 'clocked_out',
+        ]);
+    }
+
+    /**
+     * Portal Resume: clear today's clock-out so the user can continue working and clock out again later.
+     * Use when they accidentally clicked Clock Out.
+     */
+    public function resumeClock(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $userId = (int) Auth::user()->user_id;
+        $today = Carbon::today()->format('Y-m-d');
+
+        $log = DB::table('biometric_logs')
+            ->where('user_id', $userId)
+            ->where('transaction_date', $today)
+            ->first();
+
+        if (! $log) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No attendance record found for today.',
+                'status' => 'none',
+            ], 422);
+        }
+
+        if ($log->time_out === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already clocked in.',
+                'status' => 'clocked_in',
+                'time_in' => $log->time_in,
+            ], 422);
+        }
+
+        DB::table('biometric_logs')
+            ->where('user_id', $userId)
+            ->where('transaction_date', $today)
+            ->update(['time_out' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Resumed. Clock out when you are done.',
+            'status' => 'clocked_in',
+            'time_in' => $log->time_in,
         ]);
     }
 
@@ -299,45 +343,15 @@ class AttendanceController extends Controller
             ->select('user_id')->get();
 
         foreach ($employees as $row) {
-            $try = "AND (Format(Transactions.[date],'yyyy-mm-dd') >= '".$request->from."' AND Format(Transactions.[date],'yyyy-mm-dd') <= '".$request->to."')";
-
             $for_delete = DB::table('biometric_logs')->where('user_id', (int) $row->user_id)
                 ->where(function ($q) {
                     $q->where('time_in', null)->orWhere('time_out', null);
                 })->pluck('id');
 
-            $delete = DB::table('biometric_logs')->whereIn('id', $for_delete)->delete();
-
-            $complete_logs = DB::table('biometric_logs')->where('user_id', (int) $row->user_id)
-                ->whereNotIn('id', $for_delete)->pluck('transaction_date');
-
-            $c_logs = [];
-
-            foreach ($complete_logs as $d) {
-                $c_logs[] = ['date' => Carbon::parse($d)->format('Y-m-d H:i:s')];
-            }
-
-            $biometrics = DB::connection('access')->select('SELECT Transactions.[pin], Transactions.[date], MAX(iif (Transactions.[TransType] = 7, Transactions.[time], 0)) AS time_in, MAX(iif (Transactions.[TransType] = 8, Transactions.[time], 0)) AS time_out, MAX(iif (Transactions.[TransType] = 7, UnitSiteQuery.[UnitName], 0)) AS loc_in, MAX(iif (Transactions.[TransType] = 8, UnitSiteQuery.[UnitName], 0)) AS loc_out FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE Transactions.[ID] > 704020 AND Transactions.[TransType] IN (7, 8) AND Transactions.[pin] = '.(int) $row->user_id.''.$try.' GROUP BY Transactions.[date], Transactions.[pin]');
-
-            $biometrics = collect($biometrics)->whereNotIn('date', array_column($c_logs, 'date'));
-
-            $logs = [];
-            foreach ($biometrics as $row) {
-                $logs[] = [
-                    'user_id' => $row->pin,
-                    'transaction_date' => Carbon::parse($row->date)->format('Y-m-d'),
-                    'time_in' => $row->loc_in != '0' ? Carbon::parse($row->time_in)->format('H:i:s') : null,
-                    'time_out' => $row->loc_out != '0' ? Carbon::parse($row->time_out)->format('H:i:s') : null,
-                    'location_in' => $row->loc_in,
-                    'location_out' => $row->loc_out,
-                    'remarks' => 'raw data',
-                ];
-            }
-
-            DB::table('biometric_logs')->insert($logs);
+            DB::table('biometric_logs')->whereIn('id', $for_delete)->delete();
         }
 
-        return response()->json(['message' => 'Updated: Biometric Logs from '.$request->from.' - '.$request->to.'.']);
+        return response()->json(['message' => 'Incomplete biometric logs cleaned for '.$request->from.' - '.$request->to.'. Sync from Access has been removed.']);
     }
 
     public function showAnalytics()
@@ -1135,46 +1149,12 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Update attendance logs for an employee from our database (portal_clock_logs).
-     * Syncs portal Clock In/Out into biometric_logs so MY ATTENDANCE shows data without acdb.
+     * Refresh attendance view for an employee. Data is from biometric_logs only.
+     * Incomplete rows (missing time_in or time_out) are kept so days with at least one punch show as Present.
      */
     public function updateAttendanceLogs($employee)
     {
-        $for_delete = DB::table('biometric_logs')->where('user_id', $employee)
-            ->where(function ($q) {
-                $q->where('time_in', null)->orWhere('time_out', null);
-            })->pluck('id');
-
-        $delete = DB::table('biometric_logs')->whereIn('id', $for_delete)->delete();
-
-        $complete_dates = DB::table('biometric_logs')->where('user_id', $employee)
-            ->whereNotIn('id', $for_delete)
-            ->pluck('transaction_date')
-            ->map(fn ($d) => Carbon::parse($d)->format('Y-m-d'))
-            ->all();
-
-        $portal_logs = DB::table('portal_clock_logs')
-            ->where('user_id', (int) $employee)
-            ->whereNotIn('log_date', $complete_dates)
-            ->get();
-
-        $logs = [];
-        foreach ($portal_logs as $row) {
-            $logs[] = [
-                'user_id' => (int) $employee,
-                'transaction_date' => Carbon::parse($row->log_date)->format('Y-m-d'),
-                'time_in' => $row->clock_in_at ? Carbon::parse($row->clock_in_at)->format('H:i:s') : null,
-                'time_out' => $row->clock_out_at ? Carbon::parse($row->clock_out_at)->format('H:i:s') : null,
-                'location_in' => null,
-                'location_out' => null,
-            ];
-        }
-
-        if ($logs !== []) {
-            DB::table('biometric_logs')->insert($logs);
-        }
-
-        return response()->json(['success' => 'Updated: Biometric Logs (from portal)']);
+        return response()->json(['success' => 'Updated: Biometric Logs']);
     }
 
     public function employeeAttendanceHistory(Request $request, $employee)
@@ -1200,14 +1180,15 @@ class AttendanceController extends Controller
 
         $start = $request->start;
         $end = $request->end;
-        $total_late = collect($employee_logs)->sum('late_in_minutes');
-        $total_overtime = collect($employee_logs)->sum('overtime');
-        $total_hours_worked = collect($employee_logs)->sum('hrs_worked');
+        $total_late = max(0, (int) collect($employee_logs)->sum('late_in_minutes'));
+        $total_overtime = max(0, (float) collect($employee_logs)->sum('overtime'));
+        $total_hours_worked = max(0, (float) collect($employee_logs)->sum('hrs_worked'));
         // $no_of_days = count($employee_logs);
         $no_of_days = collect($employee_logs)->where('day_of_week', '!=', 'Sunday')->count();
         $required_working_hrs = $no_of_days * 8;
+        $hours_balance = round($total_hours_worked - $required_working_hrs, 2);
 
-        return view('client.tables.attendance_table', compact('employee_logs', 'start', 'end', 'total_late', 'total_overtime', 'total_hours_worked', 'no_of_days', 'required_working_hrs'));
+        return view('client.tables.attendance_table', compact('employee_logs', 'start', 'end', 'total_late', 'total_overtime', 'total_hours_worked', 'no_of_days', 'required_working_hrs', 'hours_balance'));
     }
 
     public function employeeLateDeductions($employee)

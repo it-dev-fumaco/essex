@@ -413,3 +413,27 @@
     font-size: 14px;
   }
 }
+
+/* Horizontal scroll container for wide tables */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Small-screen tweaks for legacy layouts */
+@media (max-width: 767.98px) {
+  /* Slightly reduce vertical padding to fit content on phones */
+  .section {
+    padding: 20px 0;
+  }
+}
+
+/* Ensure My Attendance card handles wide content gracefully */
+#my-attendance {
+  overflow-x: auto;
+}
+
+#my-attendance .table {
+  width: 100%;
+}

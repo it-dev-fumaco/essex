@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode as Middleware;
+use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance as Middleware;
 
 /**
- * On Laravel 6+, change to extend Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.
+ * Laravel 12: extends PreventRequestsDuringMaintenance (CheckForMaintenanceMode was removed).
  */
 class CheckForMaintenanceMode extends Middleware
 {

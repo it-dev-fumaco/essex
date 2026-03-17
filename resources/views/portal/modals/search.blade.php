@@ -87,7 +87,7 @@
                             @endif
                           </p>
                         @else
-                          {{-- <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p> --}}
+                          {{-- <p>{{ Illuminate\Support\Str::limit(strip_tags($description), 100, '...') }}</p> --}}
                           <p class="one-line ellipsis responsive-font">{{ strip_tags($description) }}</p>
                         @endif
                       </div>
@@ -145,7 +145,7 @@
                           @endif
                         </p>
                       @else
-                        <p>{{ str_limit(strip_tags($description), $limit = 100, $end = '...') }}</p>
+                        <p>{{ Illuminate\Support\Str::limit(strip_tags($description), 100, '...') }}</p>
                       @endif
                     </div>
                   </div>

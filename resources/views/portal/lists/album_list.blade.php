@@ -36,7 +36,7 @@
       <div class="item-foot date hide-on-list">
         <div class="pull-left">
           <p class="prop-user-agent"><i class="icon-user"></i><a href="/gallery/album/{{ $album->id }}" class="text-decoration-none">{{
-              str_limit($album->created_by, 14) }}</a>
+              Illuminate\Support\Str::limit($album->created_by, 14) }}</a>
           </p>
         </div>
         <div class="pull-right">

@@ -10,7 +10,6 @@ use App\Models\Biometric_logs;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 final class AttendanceService
 {
@@ -28,42 +27,14 @@ final class AttendanceService
     }
 
     /**
-     * Refresh biometric logs from Access DB for the authenticated user.
-     * Returns the same JSON response as original controller.
+     * Refresh biometric attendance for the authenticated user.
+     * Biometric data is stored in biometric_logs only (Access DB sync has been removed).
      *
      * @return array{success: string}
      */
     public function refreshAttendance(int $employeeId): array
     {
-        $existingIds = $this->biometricRepository->getExistingBiometricIdsForEmployee($employeeId);
-        $bioIds = '0000';
-        if ($existingIds !== []) {
-            $bioIds = implode(',', array_map('strval', $existingIds));
-            $bioIds = 'AND Transactions.[ID] NOT IN ('.$bioIds.')';
-        }
-
-        $sql = 'SELECT Transactions.[ID], Transactions.[date], Transactions.[time], Transactions.[SerialNo], Transactions.[TransType], Transactions.[pin], Transactions.[ReceivedDate], Transactions.[ReceivedTime], templates.[FirstName], templates.[LastName], UnitSiteQuery.[UnitName] FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE (Transactions.[TransType] = 7 OR Transactions.[TransType] = 8) AND Transactions.[ID] > 704020 AND Transactions.[pin] = '.(int) $employeeId.' '.$bioIds;
-
-        $attendance = DB::connection('access')->select($sql);
-        $data = [];
-        foreach ($attendance as $row) {
-            $data[] = [
-                'biometric_id' => $row->ID,
-                'bio_date' => $row->date,
-                'bio_time' => $row->time,
-                'serial_no' => $row->SerialNo,
-                'trans_type' => $row->TransType,
-                'employee_id' => $row->pin,
-                'received_date' => $row->ReceivedDate,
-                'received_time' => $row->ReceivedTime,
-                'unit_name' => $row->UnitName,
-                'type' => 'raw data',
-            ];
-        }
-
-        $this->biometricRepository->insertRawBiometrics($data);
-
-        return ['success' => 'Updated: Biometric Logs'];
+        return ['success' => 'Biometric logs are stored locally only.'];
     }
 
     public function getBioAdjustmentsPaginated(int $perPage = 8): LengthAwarePaginator

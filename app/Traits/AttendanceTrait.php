@@ -402,9 +402,11 @@ trait AttendanceTrait
                 ->where('day_of_week', $dayOfWeek)
                 ->select('time_in', 'time_out', 'breaktime_by_hour as breaktime', 'grace_period_in_mins')
                 ->first();
-        }
 
-        $shift_detail = empty($special_shift) ? $regular_shift : [];
+            $shift_detail = $regular_shift;
+        } else {
+            $shift_detail = $special_shift;
+        }
             
         return $shift_detail;
     }
@@ -429,16 +431,23 @@ trait AttendanceTrait
     }
 
     public function overtimeHrs($attendance_status, $time_out, $shift_time_out){
-        $time_out = Carbon::parse($time_out);
-        $shift_time_out = Carbon::parse($shift_time_out);
-
-        if(empty($time_out) || $shift_time_out > $time_out){
-            $overtime = 0;
-        }else{
-            $overtime = $time_out->diffInHours($shift_time_out);
+        if (empty($time_out) || empty($shift_time_out)) {
+            return 0;
         }
 
-        $overtime = $attendance_status == 'Present' ? $overtime : 0;
+        $time_out_carbon = Carbon::parse($time_out);
+        $shift_time_out_carbon = Carbon::parse($shift_time_out);
+
+        if ($shift_time_out_carbon >= $time_out_carbon) {
+            $overtime = 0;
+        } else {
+            // Use minutes for precision, convert to hours, and round to 2 decimals.
+            $minutes = $time_out_carbon->diffInMinutes($shift_time_out_carbon);
+            $overtime = round($minutes / 60, 2);
+        }
+
+        // Only count OT on days marked Present, and never allow negatives.
+        $overtime = $attendance_status === 'Present' ? max(0, $overtime) : 0;
 
         return $overtime;
     }
@@ -447,30 +456,33 @@ trait AttendanceTrait
         $time_in = $logs ? $logs->time_in : null;
         $time_out = $logs ? $logs->time_out : null;
 
+        if (empty($time_in) || empty($time_out)) {
+            return 0;
+        }
+
         $parsed_shift_in = Carbon::parse($shift_details ? $shift_details->time_in : '00:00:00');
         $parsed_shift_out = Carbon::parse($shift_details ? $shift_details->time_out : '00:00:00');
         $grace_period = $shift_details ? $shift_details->grace_period_in_mins : 0;
-        $parsed_shift_in_grace_period = $parsed_shift_in->addMinutes($grace_period);
-        $breaktime = $shift_details ? $shift_details->breaktime : 0;
+        $parsed_shift_in_grace_period = $parsed_shift_in->copy()->addMinutes($grace_period);
+        $breaktime = $shift_details ? (float) $shift_details->breaktime : 0.0;
 
         $parsed_time_in = Carbon::parse($time_in);
         $parsed_time_out = Carbon::parse($time_out);
         
-        if (!empty($time_in) && !empty($time_out)) {
-            $minutes_worked = $parsed_time_out->diffInMinutes($parsed_time_in);
-            $hrs_worked = ($minutes_worked / 60) - $breaktime;
-            if ($parsed_time_in <= $parsed_shift_in_grace_period) {
-                $hrs_worked = $parsed_shift_out > $parsed_time_out ? round($hrs_worked, 2) : round($hrs_worked);
-            }elseif ($parsed_time_in > $parsed_shift_in_grace_period) {
-                $hrs_worked = round($hrs_worked, 2);
-            }else{
-                $hrs_worked = 0;
-            }
-        }else{
+        // Base worked time in hours (minus breaktime, which is stored in hours).
+        $minutes_worked = $parsed_time_out->diffInMinutes($parsed_time_in);
+        $hrs_worked = ($minutes_worked / 60) - $breaktime;
+
+        if ($parsed_time_in <= $parsed_shift_in_grace_period) {
+            $hrs_worked = $parsed_shift_out > $parsed_time_out ? round($hrs_worked, 2) : round($hrs_worked, 2);
+        } elseif ($parsed_time_in > $parsed_shift_in_grace_period) {
+            $hrs_worked = round($hrs_worked, 2);
+        } else {
             $hrs_worked = 0;
         }
 
-        return $hrs_worked;
+        // Never show negative hours worked.
+        return max(0, $hrs_worked);
     }
 
     public function attendanceLogs($employee, $date_from, $date_to){
