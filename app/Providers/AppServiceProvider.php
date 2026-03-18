@@ -25,6 +25,7 @@ use App\Repositories\ShiftRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,6 +36,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(2000);
+
+        // Force HTTP when HTTPS is disabled (Docker without SSL, local dev)
+        if (! config('app.force_https', false)) {
+            URL::forceScheme('http');
+        }
     }
 
     /**

@@ -56,6 +56,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | When true, ForceHttps middleware redirects HTTP to HTTPS and generates
+    | https:// URLs for assets. Set to false for local/Docker without SSL.
+    |
+    */
+    'force_https' => filter_var(env('HTTPS', false), FILTER_VALIDATE_BOOLEAN),
+
+    /*
+    |--------------------------------------------------------------------------
     | Notice Slip / Mail link base URL
     |--------------------------------------------------------------------------
     |
