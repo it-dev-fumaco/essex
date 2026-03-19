@@ -76,7 +76,8 @@ Route::get('/gallery/fetchAlbums', [PortalController::class, 'fetchAlbums']);
 // M A N U A L S
 Route::get('/manuals', [PortalController::class, 'showManuals']);
 Route::get('/article/{slug}', [PortalController::class, 'showArticle']);
-Route::get('/services/directory', [PortalController::class, 'phoneEmailDirectory']);
+Route::get('/services/directory', [PortalController::class, 'phoneEmailDirectory'])
+    ->withoutMiddleware('auth');
 Route::get('/services/internet', [PortalController::class, 'showInternet']);
 Route::get('/services/email', [PortalController::class, 'email']);
 Route::get('/services/system', [PortalController::class, 'system']);
@@ -279,6 +280,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reset_password/{id}', [EmployeeProfilesController::class, 'resetEmployeePassword'])->name('client.reset_password');
     Route::post('/update_profile', [EmployeeProfilesController::class, 'updateEmployeeProfile'])->name('client.update_profile');
     Route::post('/update_password', [EmployeeProfilesController::class, 'changePassword'])->name('client.updatePassword');
+    Route::post('/profile/personal-details', [EmployeeProfilesController::class, 'updatePersonalDetails'])->name('client.profile.update_personal_details');
+
+    // Employee Directory (profile modal)
+    Route::get('/services/directory/profile/{user_id}', [PortalController::class, 'directoryProfile'])
+        ->whereNumber('user_id')
+        ->withoutMiddleware('auth');
 
     // Emp Profile
     Route::post('/refreshAttendance/{id}', [EmployeeProfilesController::class, 'refreshAttendance']);

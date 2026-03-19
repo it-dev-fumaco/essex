@@ -21,7 +21,56 @@
       </div>
         <div style="float: left; padding: 1.5% 0;">
          <span style="font-size: 18pt; padding-top: 5%; display: block;">{{ $employee_profile->employee_name }}</span>
-         <span style="font-size: 13pt; padding-top: 1%; display: block;">{{ $employee_profile->designation }} | {{ $employee_profile->department }}</span>
+
+         @php
+            $joiningDateRaw = $employee_profile->date_joined ?? $employee_profile->joining_date ?? null;
+            $tenureText = 'Tenure: N/A';
+
+            if (! empty($joiningDateRaw)) {
+               try {
+                  $joinDate = \Carbon\Carbon::parse($joiningDateRaw);
+                  $now = \Carbon\Carbon::now();
+
+                  if ($joinDate->lte($now)) {
+                     $diff = $joinDate->diff($now);
+
+                     $years = (int) $diff->y;
+                     $months = (int) $diff->m;
+                     $days = (int) $diff->d;
+
+                     $yearsLabel = $years.' year'.($years === 1 ? '' : 's');
+                     $monthsLabel = $months.' month'.($months === 1 ? '' : 's');
+                     $daysLabel = $days.' day'.($days === 1 ? '' : 's');
+
+                     if ($years < 1) {
+                        if ($months > 0 && $days > 0) {
+                           $tenureText = $monthsLabel.' and '.$daysLabel;
+                        } elseif ($months > 0) {
+                           $tenureText = $monthsLabel;
+                        } else {
+                           $tenureText = $daysLabel;
+                        }
+                     } else {
+                        $parts = [$yearsLabel];
+                        if ($months > 0) {
+                           $parts[] = $monthsLabel;
+                        }
+                        if ($days > 0) {
+                           $parts[] = $daysLabel;
+                        }
+
+                        $tenureText = implode(' and ', $parts);
+                     }
+                  }
+               } catch (\Throwable $e) {
+                  // fall back to Tenure: N/A
+               }
+            }
+         @endphp
+
+         <span style="font-size: 13pt; padding-top: 1%; display: block;">{{ $employee_profile->designation }}</span>
+         <span style="font-size: 12pt; letter-spacing: 0.5px; display: block; text-transform: uppercase;">{{ $employee_profile->department }}</span>
+         <span style="font-size: 11pt; color: #777; display: block;"><em>{{ $tenureText }}</em></span>
          <span id="employee-id" hidden>{{ $employee_profile->user_id }}</span>
          <span id="user-id" hidden>{{ $employee_profile->id }}</span>
          <span id="today" hidden>{{ date('Y-m-d') }}</span>

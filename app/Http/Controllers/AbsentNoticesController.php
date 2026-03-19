@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Mail\SendMail_notice;
+use App\Events\AbsentNoticeStatusChanged;
 use App\Models\AbsentNotice;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -349,6 +351,7 @@ class AbsentNoticesController extends Controller
             $notice_id = $request->notice_id;
 
             $notice_slip = AbsentNotice::find($notice_id);
+            $previousStatus = $notice_slip?->status;
             if ($request->update_from_mail && request()->isMethod('get')) {
                 if (! $notice_slip || $notice_slip->status != 'FOR APPROVAL') {
                     $message = 'Absent Notice Slip no. <b>'.$notice_id.'</b> not found.';
@@ -439,6 +442,20 @@ class AbsentNoticesController extends Controller
 
             DB::commit();
 
+            // Send notice owner email only on APPROVED transition (avoid duplicates).
+            if (strtoupper((string) $previousStatus) !== 'APPROVED' && $notice_slip->status === 'APPROVED') {
+                try {
+                    event(new AbsentNoticeStatusChanged((int) $notice_slip->notice_id, (string) $previousStatus, (string) $notice_slip->status));
+                } catch (\Throwable $e) {
+                    Log::error('Failed to dispatch AbsentNoticeStatusChanged event.', [
+                        'notice_id' => $notice_slip->notice_id,
+                        'from' => $previousStatus,
+                        'to' => $notice_slip->status,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             if ($request->update_from_mail && request()->isMethod('get')) {
                 $flash_data = [
                     'success' => 1,
@@ -454,7 +471,15 @@ class AbsentNoticesController extends Controller
             return response()->json(['message' => 'Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b> has been <b>'.$notice_slip->status.'</b>.']);
         } catch (\Throwable $th) {
             DB::rollback();
-            // throw $th;
+            Log::error('Absent notice updateStatus failed.', [
+                'notice_id' => $request->notice_id ?? null,
+                'status' => $request->status ?? null,
+                'approved_by' => $request->approved_by ?? null,
+                'update_from_mail' => $request->update_from_mail ?? null,
+                'method' => $request->method(),
+                'error' => $th->getMessage(),
+            ]);
+
             if ($request->update_from_mail && request()->isMethod('get')) {
                 $flash_data = [
                     'success' => 0,

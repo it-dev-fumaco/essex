@@ -136,6 +136,94 @@ final class EmployeeProfileService
         $employee->save();
     }
 
+    /**
+     * @param array{
+     *   contact_no: string,
+     *   personal_email?: string|null,
+     *   address: string,
+     *   contact_person_no: string,
+     *   contact_person: string
+     * } $validated
+     *
+     * @return array{
+     *   updated: bool,
+     *   employee_user_id?: string,
+     *   employee_name?: string,
+     *   changes?: array<string, array{label: string, old: mixed, new: mixed}>
+     * }
+     */
+    public function updateOwnPersonalDetails(array $validated): array
+    {
+        $userId = (string) (Auth::user()->user_id ?? '');
+        if ($userId === '') {
+            return ['updated' => false];
+        }
+
+        $employee = User::where('user_id', $userId)->first();
+        if (! $employee) {
+            return ['updated' => false];
+        }
+
+        // users table columns (note: Barangay/City columns are capitalized in DB)
+        $fields = [
+            ['request' => 'contact_no', 'attr' => 'contact_no', 'label' => 'Contact Info'],
+            ['request' => 'personal_email', 'attr' => 'personal_email', 'label' => 'Personal Email'],
+            ['request' => 'address', 'attr' => 'address', 'label' => 'Home Address'],
+            ['request' => 'barangay', 'attr' => 'Barangay', 'label' => 'Barangay'],
+            ['request' => 'city', 'attr' => 'City', 'label' => 'City'],
+            ['request' => 'contact_person_no', 'attr' => 'contact_person_no', 'label' => 'Emergency Contact Number'],
+            ['request' => 'contact_person', 'attr' => 'contact_person', 'label' => 'Contact Person in Case of Emergency'],
+        ];
+
+        $changes = [];
+        foreach ($fields as $field) {
+            $requestKey = $field['request'];
+            $attr = $field['attr'];
+            $label = $field['label'];
+
+            $newValue = $validated[$requestKey] ?? null;
+            $oldValue = $employee->{$attr} ?? null;
+
+            $normalizedNew = is_string($newValue) ? trim($newValue) : $newValue;
+            $normalizedOld = is_string($oldValue) ? trim($oldValue) : $oldValue;
+
+            if ($normalizedNew !== $normalizedOld) {
+                $employee->{$attr} = $normalizedNew;
+                $changes[$requestKey] = [
+                    'label' => $label,
+                    'old' => $oldValue,
+                    'new' => $newValue,
+                ];
+            }
+        }
+
+        if ($changes === []) {
+            return ['updated' => false];
+        }
+
+        $employee->save();
+
+        // Optional: keep a simple history record (won't fail the update if missing table)
+        try {
+            DB::table('employee_profile_change_logs')->insert([
+                'employee_user_id' => $userId,
+                'employee_name' => $employee->employee_name,
+                'changes' => json_encode($changes),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable) {
+            // ignore (optional feature)
+        }
+
+        return [
+            'updated' => true,
+            'employee_user_id' => $userId,
+            'employee_name' => $employee->employee_name,
+            'changes' => $changes,
+        ];
+    }
+
     public function approveAbsentNotice(int $notice_id): void
     {
         $notice = AbsentNotice::find($notice_id);

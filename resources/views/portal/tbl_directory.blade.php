@@ -15,10 +15,17 @@
                                         $image = 'storage/img/user.png';
                                     }
                                 @endphp
-                                <div class="profile-image" style="background-image: url({{ asset($image) }}); border: 1px solid rgba(0,0,0,.3)"></div>
+                                <div class="profile-image" style="background-image: url({{ asset($image) }}); border: 1px solid rgba(0,0,0,.3); border-radius: 0 !important;"></div>
                             </div>
                             <div class="col-8 col-xl-9" style="padding: 0;">
-                                <span style="font-weight: 600; font-size: 14px; line-height: 20px; word-break: break-word !important" class="d-block responsive-font">{{ $emp->employee_name }}</span>
+                                <a
+                                    href="#"
+                                    class="d-block responsive-font employee-profile-link"
+                                    data-user-id="{{ $emp->user_id }}"
+                                    style="font-weight: 600; font-size: 14px; line-height: 20px; word-break: break-word !important; color: inherit; text-decoration: none;"
+                                >
+                                    {{ $emp->employee_name }}
+                                </a>
                                 <span class="text-muted d-block responsive-font" style="font-size: 13px;line-height: 19px;">{{ $emp->designation }}</span>
                                 <span class="d-block dir-caption" style="white-space: nowrap !important; line-height: 19px;">
                                     <i class="fa fa-envelope"></i>&nbsp;{{ $emp->email ? $emp->email : 'N/A' }}

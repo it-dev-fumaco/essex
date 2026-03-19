@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\EmployeeProfileService;
+use App\Traits\EmailsTrait;
 use Auth;
 use Carbon\Carbon;
 use DateInterval;
@@ -11,9 +12,12 @@ use DateTime;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeProfilesController extends Controller
 {
+    use EmailsTrait;
+
     public function __construct(
         private readonly EmployeeProfileService $employeeProfileService
     ) {}
@@ -51,6 +55,70 @@ class EmployeeProfilesController extends Controller
         $this->employeeProfileService->updateEmployeeProfile($request);
 
         return redirect()->route('client.view_employee_profile', $request->user_id);
+    }
+
+    public function updatePersonalDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'contact_no' => ['required', 'string', 'max:190'],
+            'personal_email' => ['nullable', 'email', 'max:2000'],
+            'address' => ['required', 'string', 'max:190'],
+            'barangay' => ['nullable', 'string', 'max:2000'],
+            'city' => ['nullable', 'string', 'max:2000'],
+            'contact_person_no' => ['required', 'string', 'max:100'],
+            'contact_person' => ['required', 'string', 'max:100'],
+        ]);
+
+        $result = $this->employeeProfileService->updateOwnPersonalDetails($validated);
+
+        if (! $result['updated']) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'updated' => false,
+                    'message' => 'No changes were made.',
+                ]);
+            }
+
+            return redirect()->back()->with(['message' => 'No changes were made.']);
+        }
+
+        // Send email notification to HR (do not block update on failure)
+        try {
+            $employeeName = $result['employee_name'];
+            $subject = 'Employee Profile Updated – '.$employeeName;
+
+            $data = [
+                'employee_name' => $employeeName,
+                'changes' => $result['changes'],
+            ];
+
+            $log = [
+                'type' => 'Employee Profile Updated',
+                'recipient' => 'hr@fumaco.com',
+                'subject' => $subject,
+                'template' => 'admin.email_template.employee_profile_updated',
+                'template_data' => json_encode($data),
+            ];
+
+            $this->send_mail($subject, $log['template'], $log['recipient'], $data, $log);
+        } catch (\Throwable $e) {
+            Log::error('Failed sending profile update email', [
+                'error' => $e->getMessage(),
+                'employee_user_id' => $result['employee_user_id'] ?? null,
+            ]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'updated' => true,
+                'message' => 'Profile updated successfully.',
+                'changes' => $result['changes'] ?? [],
+            ]);
+        }
+
+        return redirect()->back()->with(['message' => 'Your personal details have been updated successfully.']);
     }
 
     public function approveAbsentNotice($notice_id, $user_id)

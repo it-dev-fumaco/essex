@@ -94,9 +94,56 @@
                                 alt="User profile picture" width="170" height="170" style="border-radius: 50%;">
                         </div>
                         <h3 class="profile-username text-center">{{ Auth::user()->employee_name }}</h3>
+                        @php
+                            $joiningDateRaw = Auth::user()->date_joined ?? Auth::user()->joining_date ?? null;
+                            $tenureText = 'Tenure: N/A';
+
+                            if (! empty($joiningDateRaw)) {
+                                try {
+                                    $joinDate = \Carbon\Carbon::parse($joiningDateRaw);
+                                    $now = \Carbon\Carbon::now();
+
+                                    if ($joinDate->lte($now)) {
+                                        $diff = $joinDate->diff($now);
+
+                                        $years = (int) $diff->y;
+                                        $months = (int) $diff->m;
+                                        $days = (int) $diff->d;
+
+                                        $yearsLabel = $years.' year'.($years === 1 ? '' : 's');
+                                        $monthsLabel = $months.' month'.($months === 1 ? '' : 's');
+                                        $daysLabel = $days.' day'.($days === 1 ? '' : 's');
+
+                                        if ($years < 1) {
+                                            if ($months > 0 && $days > 0) {
+                                                $tenureText = $monthsLabel.' and '.$daysLabel;
+                                            } elseif ($months > 0) {
+                                                $tenureText = $monthsLabel;
+                                            } else {
+                                                $tenureText = $daysLabel;
+                                            }
+                                        } else {
+                                            $parts = [$yearsLabel];
+                                            if ($months > 0) {
+                                                $parts[] = $monthsLabel;
+                                            }
+                                            if ($days > 0) {
+                                                $parts[] = $daysLabel;
+                                            }
+
+                                            $tenureText = implode(' and ', $parts);
+                                        }
+                                    }
+                                } catch (\Throwable $e) {
+                                    // fall back to Tenure: N/A
+                                }
+                            }
+                        @endphp
+
                         <h6 class="text-muted text-center d-none d-xl-block"><em>{{ $designation }}</em></h6>
                         <small class="text-muted text-center d-block d-xl-none"><em>{{ $designation }}</em></small>
                         <small class="d-block text-muted text-center text-uppercase">{{ $department }}</small>
+                        <small class="text-muted text-center d-block" style="margin-top: -2px;"><em>{{ $tenureText }}</em></small>
                         <ul class="list-group list-group-unbordered mt-3 mb-3 responsive-font">
                             <li class="list-group-item">
                                 <div class="d-flex flex-row">
@@ -125,7 +172,7 @@
                             <li class="list-group-item">
                                 <div class="d-flex flex-row">
                                     <div class="fw-bold">Contact No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->contact_no }}</a></div>
+                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none" id="sidebarContactNo">{{ Auth::user()->contact_no }}</a></div>
                                 </div>
                             </li>
                             <li class="list-group-item">
@@ -150,6 +197,9 @@
                         <a href="#" class="btn btn-secondary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
                             <i class="fas fa-cog"></i> Change Password</b></a>
                         @include('client.modals.change_password')
+                        <a href="#" class="btn btn-secondary d-block btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#updateDetails"><b>
+                            <i class="fas fa-user-edit"></i> Update Details</b></a>
+                        @include('client.modals.update_details')
                     </div>
                 </div>
             </div>
@@ -770,6 +820,113 @@
                 '</div>');
                 get_cutoff_date($(this).data('action'));
             });
+
+            // Update Details (AJAX)
+            const updateDetailsModalEl = document.getElementById('updateDetails');
+            const updateDetailsForm = document.getElementById('updateDetailsForm');
+            const saveDetailsBtn = document.getElementById('saveDetails');
+            const updateDetailsAlert = document.getElementById('updateDetailsAlert');
+
+            if (updateDetailsModalEl && updateDetailsForm && saveDetailsBtn) {
+                const setAlert = (type, message) => {
+                    updateDetailsAlert.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+                    updateDetailsAlert.classList.add('alert-' + type);
+                    updateDetailsAlert.textContent = message;
+                };
+
+                const clearAlert = () => {
+                    updateDetailsAlert.classList.add('d-none');
+                    updateDetailsAlert.textContent = '';
+                };
+
+                const inputs = Array.from(updateDetailsForm.querySelectorAll('input, textarea, select'));
+                const captureOriginal = () => {
+                    inputs.forEach((el) => {
+                        el.dataset.original = (el.value ?? '').toString();
+                        el.classList.remove('border', 'border-warning');
+                    });
+                    saveDetailsBtn.disabled = true;
+                };
+
+                const computeDirty = () => {
+                    let dirty = false;
+                    inputs.forEach((el) => {
+                        const original = (el.dataset.original ?? '').toString();
+                        const current = (el.value ?? '').toString();
+                        const changed = original !== current;
+                        if (changed) dirty = true;
+                        el.classList.toggle('border', changed);
+                        el.classList.toggle('border-warning', changed);
+                    });
+                    saveDetailsBtn.disabled = !dirty;
+                };
+
+                updateDetailsModalEl.addEventListener('shown.bs.modal', () => {
+                    clearAlert();
+                    captureOriginal();
+                });
+
+                inputs.forEach((el) => el.addEventListener('input', computeDirty));
+
+                saveDetailsBtn.addEventListener('click', async () => {
+                    clearAlert();
+                    saveDetailsBtn.disabled = true;
+
+                    try {
+                        const csrf = $('meta[name="csrf-token"]').attr('content');
+                        const formData = new FormData(updateDetailsForm);
+
+                        const res = await fetch("{{ route('client.profile.update_personal_details') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json',
+                            },
+                            body: formData,
+                        });
+
+                        if (!res.ok) {
+                            if (res.status === 422) {
+                                const data = await res.json();
+                                const msg = Object.values(data.errors || {}).flat().join(' ');
+                                setAlert('danger', msg || 'Please check your inputs.');
+                            } else {
+                                setAlert('danger', 'An error occurred. Please try again.');
+                            }
+                            computeDirty();
+                            return;
+                        }
+
+                        const data = await res.json();
+                        if (!data.success) {
+                            setAlert('danger', data.message || 'An error occurred. Please try again.');
+                            computeDirty();
+                            return;
+                        }
+
+                        if (!data.updated) {
+                            setAlert('warning', data.message || 'No changes were made.');
+                            captureOriginal();
+                            return;
+                        }
+
+                        showNotification('fa fa-check-circle', 'Profile updated successfully.', 'success');
+
+                        // Update sidebar display without page reload
+                        const sidebarContactNo = document.getElementById('sidebarContactNo');
+                        const newContactNo = updateDetailsForm.querySelector('input[name="contact_no"]')?.value;
+                        if (sidebarContactNo && typeof newContactNo === 'string') {
+                            sidebarContactNo.textContent = newContactNo;
+                        }
+
+                        const modal = bootstrap.Modal.getInstance(updateDetailsModalEl) || new bootstrap.Modal(updateDetailsModalEl);
+                        modal.hide();
+                    } catch (e) {
+                        setAlert('danger', 'An error occurred. Please try again.');
+                        computeDirty();
+                    }
+                });
+            }
 
             function get_cutoff_date(op){
                 var date = new Date($('input[name="end"]').val());

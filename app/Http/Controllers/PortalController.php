@@ -180,6 +180,111 @@ class PortalController extends Controller
         return view('portal.directory');
     }
 
+    public function directoryProfile(Request $request, int $user_id)
+    {
+        // Access control: route is protected by auth middleware.
+        // Additional restrictions can be added here if needed (e.g., by department or role).
+
+        $employee = DB::table('users')
+            ->leftJoin('designation', 'designation.des_id', '=', 'users.designation_id')
+            ->leftJoin('departments', 'departments.department_id', '=', 'users.department_id')
+            ->where('users.user_id', $user_id)
+            ->select([
+                'users.user_id',
+                'users.employee_name',
+                'users.email',
+                'users.telephone',
+                'users.contact_no',
+                'users.status',
+                'users.employment_status',
+                'users.date_joined',
+                'users.joining_date',
+                'users.image',
+                'designation.designation',
+                'departments.department',
+            ])
+            ->first();
+
+        if (! $employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found.',
+            ], 404);
+        }
+
+        // If employee is inactive, you may still want to hide the profile.
+        // Keep it strict for safety.
+        if (! empty($employee->status) && strtolower((string) $employee->status) !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to view this profile.',
+            ], 403);
+        }
+
+        $joiningDateRaw = $employee->date_joined ?? $employee->joining_date ?? null;
+        $tenureText = 'N/A';
+        if (! empty($joiningDateRaw)) {
+            try {
+                $joinDate = Carbon::parse($joiningDateRaw);
+                $now = Carbon::now();
+
+                if ($joinDate->lte($now)) {
+                    $diff = $joinDate->diff($now);
+                    $years = (int) $diff->y;
+                    $months = (int) $diff->m;
+                    $days = (int) $diff->d;
+
+                    $yearsLabel = $years.' year'.($years === 1 ? '' : 's');
+                    $monthsLabel = $months.' month'.($months === 1 ? '' : 's');
+                    $daysLabel = $days.' day'.($days === 1 ? '' : 's');
+
+                    if ($years < 1) {
+                        if ($months > 0 && $days > 0) {
+                            $tenureText = $monthsLabel.' and '.$daysLabel;
+                        } elseif ($months > 0) {
+                            $tenureText = $monthsLabel;
+                        } else {
+                            $tenureText = $daysLabel;
+                        }
+                    } else {
+                        $parts = [$yearsLabel];
+                        if ($months > 0) {
+                            $parts[] = $monthsLabel;
+                        }
+                        if ($days > 0) {
+                            $parts[] = $daysLabel;
+                        }
+                        $tenureText = implode(' and ', $parts);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $tenureText = 'N/A';
+            }
+        }
+
+        $image = $employee->image ? $employee->image : 'storage/img/user.png';
+        if (! Storage::disk('public')->exists(str_replace('storage/', '', (string) $image))) {
+            $image = 'storage/img/user.png';
+        }
+
+        $contact = $employee->telephone ?: ($employee->contact_no ?: null);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user_id' => $employee->user_id,
+                'full_name' => $employee->employee_name,
+                'job_title' => $employee->designation,
+                'department' => $employee->department,
+                'contact' => $contact,
+                'email' => $employee->email,
+                'employment_status' => $employee->employment_status,
+                'tenure' => $tenureText,
+                'avatar_url' => asset($image),
+            ],
+        ]);
+    }
+
     public function internetServices()
     {
         return view('portal.internet_services');
