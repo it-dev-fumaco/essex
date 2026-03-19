@@ -83,9 +83,9 @@
                            <td>{{ $row->id }}</td>
                            <td width="20%">
                             @if($row->filepath)
-                            <img src="{{ asset('storage/'.$row->filepath) }}" alt="" style="border: 1px solid #ddd;border-radius: 4px;padding: 5px;width: 200px;">
+                            <img src="{{ Illuminate\Support\Facades\Storage::disk('upcloud')->url(ltrim((string) $row->filepath, '/')) }}" alt="" style="border: 1px solid #ddd;border-radius: 4px;padding: 5px;width: 200px;">
                              @else
-                            <img src="{{ asset('storage/uploads/assetpicture/thumbnail/notfound.png') }}" alt=""style="border: 1px solid #ddd;border-radius: 4px;padding: 5px;width: 200px;">
+                            <img src="{{ Illuminate\Support\Facades\Storage::disk('upcloud')->url('uploads/assetpicture/thumbnail/notfound.png') }}" alt=""style="border: 1px solid #ddd;border-radius: 4px;padding: 5px;width: 200px;">
                       @endif
                            </td>
                            <td  width="10%">{{ $row->item_code }}</td>
@@ -412,7 +412,7 @@ uploadFile.closest(".imgUp").find('.imagePrevieww').css("background-image", "url
     width: 80%;
     height: 100px;
     background-position: center center;
-  background:url({{ asset('storage/uploads/assetpicture/thumbnail/notfound.png') }});
+  background:url({{ Illuminate\Support\Facades\Storage::disk('upcloud')->url('uploads/assetpicture/thumbnail/notfound.png') }});
   background-color:#fff;
     background-size: cover;
   background-repeat:no-repeat;

@@ -15,6 +15,7 @@ use DateTime;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Image;
@@ -120,6 +121,10 @@ class EmployeesController extends Controller
         try {
             $image_path = $request->user_image;
             if ($request->hasFile('empImage')) {
+                $request->validate([
+                    'empImage' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+                ]);
+
                 $file = $request->file('empImage');
 
                 // get filename with extension
@@ -130,16 +135,30 @@ class EmployeesController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 // filename to store
                 $filenametostore = $request->user_id.'.'.$extension;
-                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-                Storage::put('public/employees/'.$filenametostore, fopen($file, 'r+'));
-                // Resize image here
-                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(500, 350, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
 
-                $image_path = '/storage/employees/'.$filenametostore;
+                try {
+                    $disk = Storage::disk('upcloud');
+
+                    $image = Image::make($file->getRealPath())
+                        ->resize(500, 350, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('employees/'.$filenametostore, (string) $image, [
+                        'visibility' => 'public',
+                    ]);
+
+                    $image_path = $disk->url('employees/'.$filenametostore);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (employee update photo)', [
+                        'user_id' => $request->user_id ?? null,
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with(['message' => 'Image upload failed. Please try again.']);
+                }
             }
 
             $employee = User::find($request->id);
@@ -368,6 +387,10 @@ class EmployeesController extends Controller
 
             $image_path = null;
             if ($request->hasFile('empImage')) {
+                $request->validate([
+                    'empImage' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+                ]);
+
                 $file = $request->file('empImage');
 
                 // get filename with extension
@@ -378,15 +401,30 @@ class EmployeesController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 // filename to store
                 $filenametostore = $request->user_id.'.'.$extension;
-                Storage::put('public/employees/'.$filenametostore, fopen($file, 'r+'));
-                // Resize image here
-                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(500, 350, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
 
-                $image_path = '/storage/employees/'.$filenametostore;
+                try {
+                    $disk = Storage::disk('upcloud');
+
+                    $image = Image::make($file->getRealPath())
+                        ->resize(500, 350, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('employees/'.$filenametostore, (string) $image, [
+                        'visibility' => 'public',
+                    ]);
+
+                    $image_path = $disk->url('employees/'.$filenametostore);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (employee create photo)', [
+                        'user_id' => $request->user_id ?? null,
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with(['message' => 'Image upload failed. Please try again.']);
+                }
             }
 
             $employee = new User;
@@ -505,6 +543,9 @@ class EmployeesController extends Controller
         try {
             $image_path = $request->user_image;
             if ($request->hasFile('empImage')) {
+                $request->validate([
+                    'empImage' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+                ]);
                 $file = $request->file('empImage');
 
                 // get filename with extension
@@ -515,16 +556,30 @@ class EmployeesController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 // filename to store
                 $filenametostore = $request->user_id.'.'.$extension;
-                // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-                Storage::put('public/employees/'.$filenametostore, fopen($file, 'r+'));
-                // Resize image here
-                $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(500, 350, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
+                try {
+                    $disk = Storage::disk('upcloud');
 
-                $image_path = '/storage/employees/'.$filenametostore;
+                    $image = Image::make($file->getRealPath())
+                        ->resize(500, 350, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('employees/'.$filenametostore, (string) $image, [
+                        'visibility' => 'public',
+                    ]);
+
+                    $image_path = $disk->url('employees/'.$filenametostore);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (employeeUpdate photo)', [
+                        'id' => $id,
+                        'user_id' => $request->user_id ?? null,
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with(['message' => 'Image upload failed. Please try again.']);
+                }
             }
 
             $employee = User::find($id);
@@ -727,6 +782,9 @@ class EmployeesController extends Controller
     {
         $image_path = $request->user_image;
         if ($request->hasFile('empImage')) {
+            $request->validate([
+                'empImage' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+            ]);
             $file = $request->file('empImage');
 
             // get filename with extension
@@ -739,15 +797,30 @@ class EmployeesController extends Controller
             $filenametostore = $request->userid.'.'.$extension;
 
             // Storage::put('public/employees/'. $filenametostore, fopen($file, 'r+'));
-            Storage::put('public/employees/'.$filenametostore, fopen($file, 'r+'));
-            // Resize image here
-            $thumbnailpath = public_path('storage/employees/'.$filenametostore);
-            $img = Image::make($thumbnailpath)->resize(500, 350, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save($thumbnailpath);
+            try {
+                $disk = Storage::disk('upcloud');
 
-            $image_path = '/storage/employees/'.$filenametostore;
+                $image = Image::make($file->getRealPath())
+                    ->resize(500, 350, function ($constraint) {
+                        $constraint->aspectRatio();
+                    })
+                    ->encode($extension, 85);
+
+                $disk->put('employees/'.$filenametostore, (string) $image, [
+                    'visibility' => 'public',
+                ]);
+
+                $image_path = $disk->url('employees/'.$filenametostore);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (hire applicant photo)', [
+                    'id' => $id,
+                    'user_id' => $request->userid ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return redirect()->back()->with(['message' => 'Image upload failed. Please try again.']);
+            }
         }
 
         $employee = User::find($id);

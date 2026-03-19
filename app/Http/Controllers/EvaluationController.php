@@ -18,7 +18,9 @@ use DateTime;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EvaluationController extends Controller
 {
@@ -65,9 +67,26 @@ class EvaluationController extends Controller
             $extension = $file->getClientOriginalExtension();
 
             // filename to store
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'evaluation';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/evaluations/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                Storage::disk('upcloud')->put('uploads/evaluations/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (edit evaluation)', [
+                    'evaluation_id' => $request->id ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'message' => ['Upload failed. Please try again.'],
+                    'class_name' => 'danger',
+                    'icon' => 'fa-exclamation-triangle',
+                ], 422);
+            }
         }
 
         $data = [
@@ -90,6 +109,19 @@ class EvaluationController extends Controller
 
     public function deleteEvaluation(Request $request)
     {
+        $row = DB::table('evaluation_files')->where('id', $request->id)->first();
+        if ($row && ! empty($row->evaluation_file)) {
+            try {
+                Storage::disk('upcloud')->delete('uploads/evaluations/'.(string) $row->evaluation_file);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud delete failed (evaluation file)', [
+                    'evaluation_id' => $request->id,
+                    'file' => $row->evaluation_file,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         DB::table('evaluation_files')->where('id', $request->id)->delete();
 
         return response()->json([

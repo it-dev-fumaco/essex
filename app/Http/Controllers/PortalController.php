@@ -8,8 +8,10 @@ use Auth;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Image;
 
 class PortalController extends Controller
@@ -262,9 +264,27 @@ class PortalController extends Controller
             }
         }
 
-        $image = $employee->image ? $employee->image : 'storage/img/user.png';
-        if (! Storage::disk('public')->exists(str_replace('storage/', '', (string) $image))) {
-            $image = 'storage/img/user.png';
+        $image = $employee->image ? (string) $employee->image : 'storage/img/user.png';
+
+        $avatarUrl = null;
+        if (Str::startsWith($image, ['http://', 'https://'])) {
+            $avatarUrl = $image;
+        } elseif (Str::startsWith($image, ['/storage/', 'storage/'])) {
+            $publicRelative = str_replace(['storage/', '/storage/'], '', $image);
+            if (Storage::disk('public')->exists($publicRelative)) {
+                $avatarUrl = asset(ltrim($image, '/'));
+            }
+        } else {
+            // Treat as a disk key (e.g. "employees/123.jpg" or "uploads/...").
+            try {
+                $avatarUrl = Storage::disk(config('filesystems.default'))->url(ltrim($image, '/'));
+            } catch (\Throwable $e) {
+                // ignore, fallback below
+            }
+        }
+
+        if (! $avatarUrl) {
+            $avatarUrl = asset('storage/img/user.png');
         }
 
         $contact = $employee->telephone ?: ($employee->contact_no ?: null);
@@ -280,7 +300,7 @@ class PortalController extends Controller
                 'email' => $employee->email,
                 'employment_status' => $employee->employment_status,
                 'tenure' => $tenureText,
-                'avatar_url' => asset($image),
+                'avatar_url' => $avatarUrl,
             ],
         ]);
     }
@@ -329,6 +349,12 @@ class PortalController extends Controller
 
     public function uploadImage(Request $request)
     {
+        $request->validate([
+            'album_id' => ['required'],
+            'imageFile' => ['required'],
+            'imageFile.*' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+        ]);
+
         $data = [];
         if ($request->hasFile('imageFile')) {
             foreach ($request->file('imageFile') as $file) {
@@ -343,17 +369,34 @@ class PortalController extends Controller
                 $extension = $file->getClientOriginalExtension();
 
                 // filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+                $safeBase = Str::slug($filename) ?: 'image';
+                $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-                Storage::put('public/uploads/'.$filenametostore, fopen($file, 'r+'));
-                Storage::put('public/uploads/thumbnail/'.$filenametostore, fopen($file, 'r+'));
+                try {
+                    $disk = Storage::disk('upcloud');
 
-                // Resize image here
-                $thumbnailpath = public_path('storage/uploads/thumbnail/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(750, 500, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
+                    $disk->put('uploads/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                        'visibility' => 'public',
+                    ]);
+
+                    $thumbnail = Image::make($file->getRealPath())
+                        ->resize(750, 500, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('uploads/thumbnail/'.$filenametostore, (string) $thumbnail, [
+                        'visibility' => 'public',
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (gallery image)', [
+                        'album_id' => $request->album_id,
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with('error', 'Upload failed. Please try again.');
+                }
 
                 $data[] = [
                     'album_id' => $request->album_id,
@@ -373,8 +416,19 @@ class PortalController extends Controller
     {
         $img = DB::table('images')->where('id', $id)->first();
 
-        Storage::delete('public/'.$img->filepath);
-        Storage::delete('public/'.$img->thumbnail);
+        try {
+            Storage::disk('upcloud')->delete([
+                (string) $img->filepath,
+                (string) $img->thumbnail,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('UpCloud delete failed (gallery image)', [
+                'image_id' => $id,
+                'filepath' => $img->filepath ?? null,
+                'thumbnail' => $img->thumbnail ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         DB::table('images')->where('id', $id)->delete();
 
@@ -544,6 +598,9 @@ class PortalController extends Controller
     {
         $filenametostore = null;
         if ($request->hasFile('featuredImage')) {
+            $request->validate([
+                'featuredImage' => ['file', 'mimes:jpg,jpeg,png,gif,webp,mp4', 'max:20480'],
+            ]);
             $file = $request->file('featuredImage');
 
             // get filename with extension
@@ -556,9 +613,22 @@ class PortalController extends Controller
             $extension = $file->getClientOriginalExtension();
 
             // filename to store
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'file';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/files/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                Storage::disk('upcloud')->put('uploads/files/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (post attachment)', [
+                    'category' => $request->post_category ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return redirect()->back()->with('error', 'Upload failed. Please try again.');
+            }
         }
 
         $data = [
@@ -589,6 +659,9 @@ class PortalController extends Controller
         // original image
         $filenametostore = $request->original_post_image;
         if ($request->hasFile('featuredImage')) {
+            $request->validate([
+                'featuredImage' => ['file', 'mimes:jpg,jpeg,png,gif,webp,mp4', 'max:20480'],
+            ]);
             $file = $request->file('featuredImage');
 
             // get filename with extension
@@ -601,9 +674,22 @@ class PortalController extends Controller
             $extension = $file->getClientOriginalExtension();
 
             // filename to store
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'file';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/files/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                Storage::disk('upcloud')->put('uploads/files/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (update post attachment)', [
+                    'post_id' => $request->post_id ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return redirect()->back()->with('error', 'Upload failed. Please try again.');
+            }
         }
 
         $data = [
@@ -647,6 +733,9 @@ class PortalController extends Controller
     {
         $filenametostore = null;
         if ($request->hasFile('file_attachment')) {
+            $request->validate([
+                'file_attachment' => ['file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt', 'max:20480'],
+            ]);
 
             $file = $request->file('file_attachment');
 
@@ -660,9 +749,22 @@ class PortalController extends Controller
             $extension = $file->getClientOriginalExtension();
 
             // filename to store
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'file';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/files/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                Storage::disk('upcloud')->put('uploads/files/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (policy attachment)', [
+                    'department_id' => $request->department ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return redirect()->back()->with('error', 'Upload failed. Please try again.');
+            }
         }
 
         $data = [
@@ -681,6 +783,9 @@ class PortalController extends Controller
     {
         $filenametostore = $request->old_file;
         if ($request->hasFile('file_attachment')) {
+            $request->validate([
+                'file_attachment' => ['file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt', 'max:20480'],
+            ]);
 
             $file = $request->file('file_attachment');
 
@@ -694,9 +799,22 @@ class PortalController extends Controller
             $extension = $file->getClientOriginalExtension();
 
             // filename to store
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'file';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/files/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                Storage::disk('upcloud')->put('uploads/files/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (edit policy attachment)', [
+                    'policy_id' => $request->policy_id ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return redirect()->back()->with('error', 'Upload failed. Please try again.');
+            }
         }
 
         $data = [

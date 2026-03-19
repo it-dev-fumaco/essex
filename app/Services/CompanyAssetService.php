@@ -9,7 +9,9 @@ use App\Pipelines\StoreCompanyAsset\StoreCompanyAssetPayload;
 use App\Pipelines\StoreCompanyAsset\StoreCompanyAssetPipeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
 
 final class CompanyAssetService
@@ -41,16 +43,33 @@ final class CompanyAssetService
             $filenamewithextension = $file->getClientOriginalName();
             $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
             $extension = $file->getClientOriginalExtension();
-            $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+            $safeBase = Str::slug($filename) ?: 'asset';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-            Storage::put('public/uploads/assetpicture/'.$filenametostore, fopen($file, 'r+'));
-            Storage::put('public/uploads/assetpicture/thumbnail/'.$filenametostore, fopen($file, 'r+'));
+            try {
+                $disk = Storage::disk('upcloud');
 
-            $thumbnailpath = public_path('storage/uploads/assetpicture/thumbnail/'.$filenametostore);
-            $img = Image::make($thumbnailpath)->resize(750, 500, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-            $img->save($thumbnailpath);
+                $disk->put('uploads/assetpicture/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+
+                $thumbnail = Image::make($file->getRealPath())
+                    ->resize(750, 500, function ($constraint) {
+                        $constraint->aspectRatio();
+                    })
+                    ->encode($extension, 85);
+
+                $disk->put('uploads/assetpicture/thumbnail/'.$filenametostore, (string) $thumbnail, [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (company asset image)', [
+                    'asset_id' => $asset->id ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
 
             $asset->filename = $filenametostore;
             $asset->filepath = 'uploads/assetpicture/thumbnail/'.$filenametostore;

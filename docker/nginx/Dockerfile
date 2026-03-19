@@ -4,8 +4,11 @@ FROM nginx:alpine
 RUN rm -f /etc/nginx/conf.d/default.conf
 
 # Production nginx config (context: docker/nginx)
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY conf.d /etc/nginx/conf.d
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/conf.d /etc/nginx/conf.d
+
+# Ship static public assets inside nginx image (no shared code volume in production)
+COPY public /var/www/html/public
 
 # Create log dir and ensure nginx can write
 RUN mkdir -p /var/log/nginx /var/cache/nginx \

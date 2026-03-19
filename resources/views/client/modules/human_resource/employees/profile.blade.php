@@ -602,7 +602,7 @@ textarea{
                   table.clear();
                   if (data != '') {
                      $.each(data, function(i, d){
-                        file_dir = "{{ asset('storage/uploads/evaluations/') }}";
+                        file_dir = "{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url('uploads/evaluations/') }}";
                         eval_file = "<a href=\"" + file_dir +"/"+ data[i].evaluation_file + "\" target=\"_blank\"><i class=\"fa fa-search\"></i></a>";
                         table.row.add([
                            data[i].title, 

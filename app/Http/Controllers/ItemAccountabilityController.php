@@ -9,7 +9,9 @@ use App\Models\User;
 use Auth;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Image;
 
 class ItemAccountabilityController extends Controller
@@ -126,17 +128,34 @@ class ItemAccountabilityController extends Controller
                 $extension = $file->getClientOriginalExtension();
 
                 // filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+                $safeBase = Str::slug($filename) ?: 'asset';
+                $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-                Storage::put('public/uploads/assetpicture/'.$filenametostore, fopen($file, 'r+'));
-                Storage::put('public/uploads/assetpicture/thumbnail/'.$filenametostore, fopen($file, 'r+'));
+                try {
+                    $disk = Storage::disk('upcloud');
 
-                // Resize image here
-                $thumbnailpath = public_path('storage/uploads/assetpicture/thumbnail/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(750, 500, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
+                    $disk->put('uploads/assetpicture/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                        'visibility' => 'public',
+                    ]);
+
+                    $thumbnail = Image::make($file->getRealPath())
+                        ->resize(750, 500, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('uploads/assetpicture/thumbnail/'.$filenametostore, (string) $thumbnail, [
+                        'visibility' => 'public',
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (item accountability asset update)', [
+                        'user_id' => $user_id ?? null,
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with(['message' => 'Upload failed. Please try again.']);
+                }
 
                 $path = 'uploads/assetpicture/thumbnail/'.$filenametostore;
 
@@ -233,17 +252,33 @@ class ItemAccountabilityController extends Controller
                 $extension = $file->getClientOriginalExtension();
 
                 // filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
+                $safeBase = Str::slug($filename) ?: 'asset';
+                $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
 
-                Storage::put('public/uploads/assetpicture/'.$filenametostore, fopen($file, 'r+'));
-                Storage::put('public/uploads/assetpicture/thumbnail/'.$filenametostore, fopen($file, 'r+'));
+                try {
+                    $disk = Storage::disk('upcloud');
 
-                // Resize image here
-                $thumbnailpath = public_path('storage/uploads/assetpicture/thumbnail/'.$filenametostore);
-                $img = Image::make($thumbnailpath)->resize(750, 500, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-                $img->save($thumbnailpath);
+                    $disk->put('uploads/assetpicture/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                        'visibility' => 'public',
+                    ]);
+
+                    $thumbnail = Image::make($file->getRealPath())
+                        ->resize(750, 500, function ($constraint) {
+                            $constraint->aspectRatio();
+                        })
+                        ->encode($extension, 85);
+
+                    $disk->put('uploads/assetpicture/thumbnail/'.$filenametostore, (string) $thumbnail, [
+                        'visibility' => 'public',
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('UpCloud upload failed (item accountability asset create)', [
+                        'original_name' => $filenamewithextension,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->back()->with(['message' => 'Upload failed. Please try again.']);
+                }
 
                 $path = 'uploads/assetpicture/thumbnail/'.$filenametostore;
 

@@ -7,7 +7,7 @@
           <figure class="item-thumb">
             <a class="hover-effect" href="/gallery/album/{{ $album->id }}">
               @if($album->featured_image)
-              <img src="{{ asset('storage/'. $album->featured_image) }}" alt="" width="340" height="210">
+              <img src="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($album->featured_image) }}" alt="" width="340" height="210">
               @else
               <img src="{{ asset('storage/img/notfound.png') }}" alt="" width="340" height="210">
               @endif

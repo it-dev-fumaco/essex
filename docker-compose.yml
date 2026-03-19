@@ -4,15 +4,16 @@
 services:
   nginx:
     build:
-      context: docker/nginx
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/nginx/Dockerfile
     image: essex-nginx:latest
     container_name: essex-nginx
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - app_volume:/var/www/html:ro
+      # Static assets shipped inside nginx image; only mount uploads
+      - storage_public:/var/www/html/public/storage:ro
     depends_on:
       app:
         condition: service_healthy
@@ -33,7 +34,8 @@ services:
     container_name: essex-app
     restart: unless-stopped
     volumes:
-      - app_volume:/var/www/html
+      # Persist only public uploads; do NOT mount the whole app code in production
+      - storage_public:/var/www/html/storage/app/public
       - storage_logs:/var/www/html/storage/logs
     environment:
       - APP_ENV=production
@@ -78,7 +80,7 @@ services:
       start_period: 5s
 
 volumes:
-  app_volume:
+  storage_public:
     driver: local
   redis_data:
     driver: local

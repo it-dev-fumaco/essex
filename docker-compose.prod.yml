@@ -13,7 +13,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - app_volume:/var/www/html:ro
+      # Only mount uploads (public storage). Do NOT mount the whole app code.
+      - storage_public:/var/www/html/public/storage:ro
     depends_on:
       app:
         condition: service_healthy
@@ -31,7 +32,8 @@ services:
     container_name: essex-app
     restart: unless-stopped
     volumes:
-      - app_volume:/var/www/html
+      # Persist only public uploads; code comes from the image tag
+      - storage_public:/var/www/html/storage/app/public
       - storage_logs:/var/www/html/storage/logs
     environment:
       - APP_ENV=production
@@ -74,7 +76,7 @@ services:
       start_period: 5s
 
 volumes:
-  app_volume:
+  storage_public:
     driver: local
   redis_data:
     driver: local

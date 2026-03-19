@@ -367,7 +367,7 @@ uploadFile.closest(".imgUp").find('.imagePreview').css("background-image", "url(
     width: 80%;
     height: 100px;
     background-position: center center;
-  background:url({{ asset('storage/uploads/assetpicture/thumbnail/notfound.png') }});
+  background:url({{ Illuminate\Support\Facades\Storage::disk('upcloud')->url('uploads/assetpicture/thumbnail/notfound.png') }});
   background-color:#fff;
     background-size: cover;
   background-repeat:no-repeat;
