@@ -77,10 +77,27 @@
                                  <input type="hidden" name="user_image" value="{{$employee_profile->image }}">
                                  <div style="text-align: center;">
                                     @php
-                                    $img = $employee_profile->image ? $employee_profile->image : '/storage/img/user.png'
+                                    use Illuminate\Support\Facades\Storage;
+                                    use Illuminate\Support\Str;
+
+                                    $imgValue = $employee_profile->image ? (string) $employee_profile->image : '/storage/img/user.png';
+                                    $img = null;
+                                    if (Str::startsWith($imgValue, ['http://', 'https://'])) {
+                                      $img = $imgValue;
+                                    } elseif (Str::startsWith($imgValue, ['/storage/', 'storage/'])) {
+                                      $img = asset(ltrim($imgValue, '/'));
+                                    } else {
+                                      try {
+                                        $disk = Storage::disk('upcloud');
+                                        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                                        $img = $disk->url(ltrim($imgValue, '/'));
+                                      } catch (\Throwable $e) {
+                                        $img = asset('storage/img/user.png');
+                                      }
+                                    }
                                     @endphp
                                     <div>
-                                       <img src="{{ asset($img) }}" width="110" height="110" class="imgPreview">
+                                       <img src="{{ $img }}" width="110" height="110" class="imgPreview">
                                     </div>
                                     <div class="fileUpload btn btn-primary upload-btn">
                                        <span>Choose File..</span>

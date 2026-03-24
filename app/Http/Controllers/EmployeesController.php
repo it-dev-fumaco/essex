@@ -2,27 +2,106 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\EmployeeLifecycleActionTriggered;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\ItemAccountability;
 use App\Models\User;
 use App\Traits\EmailsTrait;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Image;
+use Intervention\Image\Facades\Image;
 
 class EmployeesController extends Controller
 {
     use EmailsTrait;
+
+    private function triggerWelcomeEmail(User $employee): void
+    {
+        if (! $employee->id) {
+            return;
+        }
+
+        event(new EmployeeLifecycleActionTriggered((int) $employee->id, 'welcome'));
+    }
+
+    private function triggerOnboardingEmail(User $employee): void
+    {
+        if (! $employee->id) {
+            return;
+        }
+
+        event(new EmployeeLifecycleActionTriggered((int) $employee->id, 'onboarding'));
+    }
+
+    private function triggerOffboardingEmail(User $employee): void
+    {
+        if (! $employee->id) {
+            return;
+        }
+
+        event(new EmployeeLifecycleActionTriggered((int) $employee->id, 'offboarding'));
+    }
+
+    /**
+     * Build display name as "First Middle Last" from split name columns.
+     */
+    private function composeEmployeeFullName(?string $first, ?string $middle, ?string $last): string
+    {
+        $parts = [];
+        if ($first !== null && trim($first) !== '') {
+            $parts[] = trim($first);
+        }
+        if ($middle !== null && trim((string) $middle) !== '') {
+            $parts[] = trim((string) $middle);
+        }
+        if ($last !== null && trim($last) !== '') {
+            $parts[] = trim($last);
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * `users.telephone` is int(10); strip non-digits and store as integer or null.
+     */
+    private function normalizeUsersTelephoneInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $digits = preg_replace('/\D/', '', (string) $value);
+        if ($digits === '') {
+            return null;
+        }
+        $n = (int) $digits;
+        if ($n > 2147483647) {
+            $n = (int) substr($digits, 0, 9);
+        }
+
+        return $n;
+    }
+
+    private function truncateUtf8(?string $value, int $max): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (mb_strlen($value) <= $max) {
+            return $value;
+        }
+
+        return mb_substr($value, 0, $max);
+    }
 
     public function index()
     {
@@ -43,6 +122,23 @@ class EmployeesController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'user_id' => ['required', 'string', 'max:255'],
+            'employee_name' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:4'],
+            'email' => ['required', 'email', 'max:255'],
+            'department' => ['nullable'],
+            'designation' => ['nullable'],
+            'shift' => ['nullable'],
+            'branch' => ['nullable'],
+            'employment_status' => ['nullable', 'in:Regular,Contractual,Probationary'],
+            'civil_status' => ['nullable', 'in:Single,Married,Widowed'],
+            'telephone' => ['nullable', 'string', 'max:30'],
+            'contact_no' => ['nullable', 'string', 'max:30'],
+            'date_joined' => ['nullable', 'date'],
+            'company' => ['nullable', 'string', 'max:255'],
+        ]);
+
         DB::beginTransaction();
         try {
             $employee = new User;
@@ -54,60 +150,38 @@ class EmployeesController extends Controller
             $employee->nick_name = $request->nickname;
             $employee->designation_id = $request->designation;
             $employee->branch = $request->branch;
-            $employee->telephone = $request->telephone;
+            $employee->telephone = $this->normalizeUsersTelephoneInt($request->telephone);
             $employee->email = $request->email;
             $employee->user_type = 'Employee';
             $employee->employment_status = $request->employment_status;
             $employee->address = $request->address;
-            $employee->contact_no = $request->contact_no;
+            $employee->contact_no = $this->truncateUtf8(trim((string) $request->contact_no), 190);
             $employee->sss_no = $request->sss_no;
             $employee->tin_no = $request->tin_no;
             $employee->user_group = $request->user_group;
             $employee->birth_date = $request->birthdate;
-            $employee->civil_status = $request->civil_status;
+            $employee->civil_status = $request->civil_status ?: 'Single';
             $employee->payroll_type = $request->payroll_type;
+            $employee->company = $this->truncateUtf8($request->company ?: 'FUMACO Inc.', 100);
             $employee->status = 'Active';
             $employee->save();
 
             $department = Department::find($employee->department_id);
             $designation = Designation::find($employee->designation_id);
 
-            switch ($employee->branch) {
-                case 3:
-                    $file_server = 'xylon';
-                    break;
-                case 2:
-                    $file_server = 'kimberly';
-                    break;
-                default:
-                    $file_server = 'sam';
-                    break;
-            }
-
-            $data = [
-                'name' => $employee->employee_name,
-                'department' => $department->department,
-                'job_title' => $designation->designation,
-                'file_server' => $file_server,
-            ];
-
-            $log = [
-                'type' => 'Welcome Email',
-                'recipient' => $employee->email,
-                'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
-                'template' => 'admin.email_template.welcome',
-                'template_data' => json_encode($data),
-            ];
-
-            if ($request->email) {
-                $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
-            }
+            // Welcome email trigger (listener handles queue/later + safeguards).
+            $this->triggerWelcomeEmail($employee);
 
             DB::commit();
 
             return redirect()->back()->with(['message' => 'Employee <b>'.$employee->employee_name.'</b>  has been successfully added!']);
         } catch (\Throwable $th) {
             DB::rollback();
+            Log::error('Employee store failed.', [
+                'user_id' => $request->user_id ?? null,
+                'employee_name' => $request->employee_name ?? null,
+                'error' => $th->getMessage(),
+            ]);
 
             // throw $th;
             return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
@@ -149,7 +223,8 @@ class EmployeesController extends Controller
                         'visibility' => 'public',
                     ]);
 
-                    $image_path = $disk->url('employees/'.$filenametostore);
+                    // Store only relative key in DB
+                    $image_path = 'employees/'.$filenametostore;
                 } catch (\Throwable $e) {
                     Log::error('UpCloud upload failed (employee update photo)', [
                         'user_id' => $request->user_id ?? null,
@@ -162,6 +237,7 @@ class EmployeesController extends Controller
             }
 
             $employee = User::find($request->id);
+            $previousStatus = (string) ($employee->status ?? '');
             $employee->user_id = $request->user_id;
             $employee->department_id = $request->department;
             $employee->shift_group_id = $request->shift;
@@ -169,17 +245,17 @@ class EmployeesController extends Controller
             $employee->nick_name = $request->nickname;
             $employee->designation_id = $request->designation;
             $employee->branch = $request->branch;
-            $employee->telephone = $request->telephone;
+            $employee->telephone = $this->normalizeUsersTelephoneInt($request->telephone);
             $employee->email = $request->email;
             $employee->employment_status = $request->employment_status;
             $employee->address = $request->address;
-            $employee->contact_no = $request->contact_no;
+            $employee->contact_no = $this->truncateUtf8(trim((string) $request->contact_no), 190);
             $employee->sss_no = $request->sss_no;
             $employee->tin_no = $request->tin_no;
             $employee->gender = $request->gender;
             $employee->user_group = $request->user_group;
             $employee->birth_date = $request->birthdate;
-            $employee->civil_status = $request->civil_status;
+            $employee->civil_status = $request->civil_status ?: 'Single';
             $employee->status = $request->status;
             $employee->date_joined = $request->date_joined;
             $employee->contact_person = $request->contact_person;
@@ -229,6 +305,19 @@ class EmployeesController extends Controller
             }
 
             $employee->save();
+
+            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
+            $newStatus = (string) ($employee->status ?? '');
+            if (
+                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
+                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
+                && empty($employee->offboarding_email_sent_at)
+            ) {
+                $this->triggerOffboardingEmail($employee);
+            }
+
+            // Re-trigger welcome if joining date was added/updated and not yet sent.
+            $this->triggerWelcomeEmail($employee);
 
             DB::commit();
 
@@ -345,7 +434,17 @@ class EmployeesController extends Controller
 
         $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
 
-        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
+        $departmentHeadUserIds = DB::table('department_head_list')->pluck('employee_id')->unique()->values();
+        $regular_employees = collect($employees)
+            ->filter(function ($employee) use ($departmentHeadUserIds) {
+                $isActiveEmployee = ($employee->status ?? null) === 'Active' && ($employee->user_type ?? null) === 'Employee';
+                $isRegular = ($employee->employment_status ?? null) === 'Regular';
+                $isDepartmentHead = $departmentHeadUserIds->contains($employee->user_id);
+
+                return $isActiveEmployee && ($isRegular || $isDepartmentHead);
+            })
+            ->sortBy('employee_name')
+            ->values();
 
         $data = [
             'employees' => $employees,
@@ -371,6 +470,37 @@ class EmployeesController extends Controller
 
     public function employeeCreate(Request $request)
     {
+        $request->validate([
+            'user_id' => ['required', 'string', 'max:10'],
+            'employee_id' => ['required', 'string', 'max:20'],
+            'employee_first_name' => ['required', 'string', 'max:2000'],
+            'employee_middle_name' => ['nullable', 'string', 'max:2000'],
+            'employee_last_name' => ['required', 'string', 'max:2000'],
+            'nick_name' => ['nullable', 'string', 'max:100'],
+            'password' => ['required', 'string', 'min:4'],
+            'email' => ['required', 'email', 'max:191'],
+            'gender' => ['required', 'in:Male,Female'],
+            'civil_status' => ['required', 'in:Single,Married,Widowed'],
+            'employment_status' => ['required', 'in:Regular,Contractual,Probationary'],
+            'user_group' => ['required', 'in:Employee,Manager,HR Personnel,Editor'],
+            'date_joined' => ['required', 'date'],
+            'company' => ['required', 'string', 'max:100'],
+            'department_id' => ['required'],
+            'designation_id' => ['required'],
+            'shift_group_id' => ['required'],
+            'branch' => ['required'],
+            'reporting_to' => ['required', 'string', 'max:10'],
+            'payroll_type' => ['required', 'in:Weekly,Monthly'],
+            'telephone' => ['nullable', 'string', 'max:30'],
+            'contact_no' => ['required', 'string', 'max:190'],
+            'contact_person' => ['required', 'string', 'max:100'],
+            'contact_person_no' => ['required', 'string', 'max:100'],
+            'birth_date' => ['required', 'date'],
+            'address' => ['required', 'string', 'max:190'],
+            'barangay' => ['required', 'string', 'max:2000'],
+            'city' => ['required', 'string', 'max:2000'],
+        ]);
+
         DB::beginTransaction();
         try {
             if (User::where('user_id', $request->user_id)->exists()) {
@@ -386,12 +516,12 @@ class EmployeesController extends Controller
             }
 
             $image_path = null;
-            if ($request->hasFile('empImage')) {
+            if ($request->hasFile('image')) {
                 $request->validate([
-                    'empImage' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+                    'image' => ['file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
                 ]);
 
-                $file = $request->file('empImage');
+                $file = $request->file('image');
 
                 // get filename with extension
                 $filenamewithextension = $file->getClientOriginalName();
@@ -415,7 +545,8 @@ class EmployeesController extends Controller
                         'visibility' => 'public',
                     ]);
 
-                    $image_path = $disk->url('employees/'.$filenametostore);
+                    // Store only relative key in DB
+                    $image_path = 'employees/'.$filenametostore;
                 } catch (\Throwable $e) {
                     Log::error('UpCloud upload failed (employee create photo)', [
                         'user_id' => $request->user_id ?? null,
@@ -427,39 +558,61 @@ class EmployeesController extends Controller
                 }
             }
 
+            $first = trim((string) $request->input('employee_first_name'));
+            $middleRaw = $request->employee_middle_name;
+            $middle = (is_string($middleRaw) && trim($middleRaw) !== '') ? trim($middleRaw) : null;
+            $last = trim((string) $request->input('employee_last_name'));
+
+            $fullName = $this->composeEmployeeFullName($first, $middle, $last);
+            if ($fullName === '') {
+                return redirect()->back()->with('error', 'Employee full name could not be built from first and last name.')->withInput();
+            }
+
+            $designationName = $request->designation_name;
+            if (! is_string($designationName) || trim($designationName) === '') {
+                $designationName = Designation::where('des_id', $request->designation_id)->value('designation');
+            }
+            $designationName = $this->truncateUtf8(is_string($designationName) ? trim($designationName) : null, 100);
+
             $employee = new User;
-            $employee->user_id = $request->user_id;
-            $employee->department_id = $request->department;
-            $employee->shift_group_id = $request->shift;
+            $employee->user_id = $this->truncateUtf8(trim((string) $request->user_id), 10);
+            $employee->department_id = $request->department_id;
+            $employee->shift_group_id = $request->shift_group_id;
             $employee->password = bcrypt($request->password);
-            $employee->employee_name = $request->employee_name;
-            $employee->nick_name = $request->nickname;
-            $employee->designation_id = $request->designation;
+            $employee->employee_first_name = $this->truncateUtf8($first, 2000);
+            $employee->employee_middle_name = $middle !== null ? $this->truncateUtf8($middle, 2000) : null;
+            $employee->employee_last_name = $this->truncateUtf8($last, 2000);
+            $employee->employee_name = $this->truncateUtf8($fullName, 191);
+            $employee->nick_name = $this->truncateUtf8(trim((string) $request->input('nick_name')), 100);
+            $employee->designation_id = $request->designation_id;
             $employee->branch = $request->branch;
-            $employee->telephone = $request->telephone;
-            $employee->email = $request->email;
+            $employee->telephone = $this->normalizeUsersTelephoneInt($request->telephone);
+            $employee->email = $this->truncateUtf8(trim((string) $request->email), 191);
             $employee->user_type = 'Employee';
             $employee->gender = $request->gender;
             $employee->employment_status = $request->employment_status;
-            $employee->address = $request->address;
-            $employee->contact_no = $request->contact_no;
-            $employee->sss_no = $request->sss_no;
-            $employee->tin_no = $request->tin_no;
+            $employee->address = $this->truncateUtf8(trim((string) $request->address), 190);
+            $employee->barangay = $this->truncateUtf8(trim((string) $request->barangay), 2000);
+            $employee->city = $this->truncateUtf8(trim((string) $request->city), 2000);
+            $employee->contact_no = $this->truncateUtf8(trim((string) $request->contact_no), 190);
             $employee->user_group = $request->user_group;
-            $employee->birth_date = $request->birthdate;
-            $employee->civil_status = $request->civil_status;
+            $employee->birth_date = $request->birth_date;
+            $employee->civil_status = $request->civil_status ?: 'Single';
             $employee->date_joined = $request->date_joined;
-            $employee->contact_person = $request->contact_person;
-            $employee->contact_person_no = $request->contact_person_no;
-            $employee->pagibig_no = $request->pagibig_no;
-            $employee->philhealth_no = $request->philhealth_no;
-            $employee->employee_id = $request->employee_id;
-            $employee->reporting_to = $request->reporting_to;
+            $employee->contact_person = $this->truncateUtf8(trim((string) $request->contact_person), 100);
+            $employee->contact_person_no = $this->truncateUtf8(trim((string) $request->contact_person_no), 100);
+            $employee->pagibig_no = $this->truncateUtf8($request->filled('pagibig_no') ? trim((string) $request->pagibig_no) : null, 20);
+            $employee->philhealth_no = $this->truncateUtf8($request->filled('philhealth_no') ? trim((string) $request->philhealth_no) : null, 20);
+            $employee->employee_id = $this->truncateUtf8(trim((string) $request->employee_id), 20);
+            $employee->reporting_to = $this->truncateUtf8(trim((string) $request->reporting_to), 10);
             $employee->image = $image_path;
-            $employee->designation_name = $request->designation_name;
+            $employee->designation_name = $designationName;
             $employee->status = 'Active';
-            $employee->id_security_key = $request->id_key;
-            $employee->company = $request->company;
+            $employee->id_security_key = $this->truncateUtf8($request->filled('id_security_key') ? trim((string) $request->id_security_key) : null, 100);
+            $employee->payroll_type = $this->truncateUtf8($request->filled('payroll_type') ? trim((string) $request->payroll_type) : null, 255);
+            $employee->company = $this->truncateUtf8($request->filled('company') ? trim((string) $request->company) : 'FUMACO Inc.', 100);
+            $employee->sss_no = $this->truncateUtf8($request->filled('sss_no') ? trim((string) $request->sss_no) : null, 20);
+            $employee->tin_no = $this->truncateUtf8($request->filled('tin_no') ? trim((string) $request->tin_no) : null, 20);
             $employee->save();
 
             $department = Department::find($employee->department_id);
@@ -467,72 +620,31 @@ class EmployeesController extends Controller
             $reporting_to = User::find($employee->reporting_to);
             $branch = DB::table('branch')->where('branch_id', $employee->branch)->pluck('branch_name')->first();
 
-            switch ($employee->branch) {
-                case 3:
-                    $file_server = 'xylon';
-                    break;
-                case 2:
-                    $file_server = 'kimberly';
-                    break;
-                default:
-                    $file_server = 'sam';
-                    break;
-            }
+            // Welcome email trigger (listener handles queue/later + safeguards).
+            $this->triggerWelcomeEmail($employee);
 
-            if ($request->email && Str::contains($request->email, '@fumaco.local')) {
-                $data = [
-                    'name' => $employee->employee_name,
-                    'department' => $department->department,
-                    'job_title' => $designation->designation,
-                    'file_server' => $file_server,
-                ];
-
-                $log = [
-                    'type' => 'Welcome Email',
-                    'recipient' => $employee->email,
-                    'subject' => 'WELCOME EMAIL ['.strtoupper($employee->employee_name).']',
-                    'template' => 'admin.email_template.welcome',
-                    'template_data' => json_encode($data),
-                ];
-
-                try {
-                    $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.welcome', $employee->email, $data, $log);
-                } catch (\Throwable $th) {
-                }
-            }
-
-            $admin_data = [
-                'employee_id' => $employee->employee_id,
-                'biometric_id' => $employee->user_id,
-                'name' => $employee->employee_name,
-                'birthday' => $employee->birth_date,
-                'department' => $department->department,
-                'designation' => $designation->designation,
-                'reporting_to' => $reporting_to->employee_name,
-                'location' => $branch,
-            ];
-
-            $admin_log = [
-                'type' => 'New Employee',
-                'recipient' => env('MAIL_RECIPIENT', 'it@fumaco.local'),
-                'subject' => '[Action Required] New Employee for Onboarding',
-                'template' => 'admin.email_template.new_employee',
-                'template_data' => json_encode($admin_data),
-            ];
-
-            try {
-                $mail = $this->send_mail($admin_log['subject'], 'admin.email_template.new_employee', env('MAIL_RECIPIENT', 'it@fumaco.local'), $admin_data, $admin_log);
-            } catch (\Throwable $th) {
-            }
+            // Onboarding email trigger.
+            $this->triggerOnboardingEmail($employee);
 
             DB::commit();
 
             return redirect()->back()->with(['message' => 'Employee <b>'.$employee->employee_name.'</b>  has been successfully added!']);
         } catch (\Throwable $th) {
             DB::rollback();
+            Log::error('Employee create failed.', [
+                'user_id' => $request->user_id ?? null,
+                'employee_first_name' => $request->employee_first_name ?? null,
+                'employee_last_name' => $request->employee_last_name ?? null,
+                'error' => $th->getMessage(),
+                'exception' => $th,
+            ]);
 
-            // throw $th;
-            return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
+            $msg = 'An error occurred while saving the employee.';
+            if (app()->environment('local') || config('app.debug')) {
+                $msg .= ' '.$th->getMessage();
+            }
+
+            return redirect()->back()->with('error', $msg)->withInput();
         }
 
     }
@@ -569,7 +681,8 @@ class EmployeesController extends Controller
                         'visibility' => 'public',
                     ]);
 
-                    $image_path = $disk->url('employees/'.$filenametostore);
+                    // Store only relative key in DB
+                    $image_path = 'employees/'.$filenametostore;
                 } catch (\Throwable $e) {
                     Log::error('UpCloud upload failed (employeeUpdate photo)', [
                         'id' => $id,
@@ -583,6 +696,7 @@ class EmployeesController extends Controller
             }
 
             $employee = User::find($id);
+            $previousStatus = (string) ($employee->status ?? '');
             $employee->user_id = $request->user_id;
             $employee->department_id = $request->department;
             $employee->shift_group_id = $request->shift;
@@ -590,16 +704,16 @@ class EmployeesController extends Controller
             $employee->nick_name = $request->nickname;
             $employee->designation_id = $request->designation;
             $employee->branch = $request->branch;
-            $employee->telephone = $request->telephone;
+            $employee->telephone = $this->normalizeUsersTelephoneInt($request->telephone);
             $employee->email = $request->email;
             $employee->employment_status = $request->employment_status;
             $employee->address = $request->address;
-            $employee->contact_no = $request->contact_no;
+            $employee->contact_no = $this->truncateUtf8(trim((string) $request->contact_no), 190);
             $employee->sss_no = $request->sss_no;
             $employee->tin_no = $request->tin_no;
             $employee->user_group = $request->user_group;
             $employee->birth_date = $request->birthdate;
-            $employee->civil_status = $request->civil_status;
+            $employee->civil_status = $request->civil_status ?: 'Single';
             $employee->status = $request->status;
             $employee->gender = $request->gender;
             $employee->date_joined = $request->date_joined;
@@ -613,7 +727,7 @@ class EmployeesController extends Controller
             $employee->id_security_key = $request->id_key;
             $employee->designation_name = $request->designation_name;
             $employee->last_modified_by = Auth::user()->employee_name;
-            $employee->company = $request->company;
+            $employee->company = $request->company ?: ($employee->company ?: 'FUMACO Inc.');
 
             if ($request->status == 'Resigned') {
                 $employee->resignation_date = $request->resignation_date;
@@ -652,11 +766,30 @@ class EmployeesController extends Controller
 
             $employee->save();
 
+            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
+            $newStatus = (string) ($employee->status ?? '');
+            if (
+                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
+                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
+                && empty($employee->offboarding_email_sent_at)
+            ) {
+                $this->triggerOffboardingEmail($employee);
+            }
+
+            // Re-trigger welcome if joining date was added/updated and not yet sent.
+            $this->triggerWelcomeEmail($employee);
+
             DB::commit();
 
             return redirect()->back()->with(['message' => 'Employee <b>'.$employee->employee_name.'</b>  has been successfully updated!']);
         } catch (\Throwable $th) {
             DB::rollback();
+            Log::error('Employee update failed.', [
+                'id' => $id,
+                'user_id' => $request->user_id ?? null,
+                'employee_name' => $request->employee_name ?? null,
+                'error' => $th->getMessage(),
+            ]);
 
             return redirect()->back()->with(['message' => 'An error occured. Please try again.']);
         }
@@ -752,7 +885,17 @@ class EmployeesController extends Controller
         $newwwly = 'FUM'.'-'.$newly;
 
         $companies = DB::connection('mysql_erp')->table('tabCompany')->pluck('company_name');
-        $regular_employees = collect($employees)->where('status', 'Active')->where('user_type', 'Employee')->where('employment_status', 'Regular');
+        $departmentHeadUserIds = DB::table('department_head_list')->pluck('employee_id')->unique()->values();
+        $regular_employees = collect($employees)
+            ->filter(function ($employee) use ($departmentHeadUserIds) {
+                $isActiveEmployee = ($employee->status ?? null) === 'Active' && ($employee->user_type ?? null) === 'Employee';
+                $isRegular = ($employee->employment_status ?? null) === 'Regular';
+                $isDepartmentHead = $departmentHeadUserIds->contains($employee->user_id);
+
+                return $isActiveEmployee && ($isRegular || $isDepartmentHead);
+            })
+            ->sortBy('employee_name')
+            ->values();
         $data = [
             'employee_profile' => $employee_profile,
             'regular_shift' => $regular_shift,
@@ -778,8 +921,127 @@ class EmployeesController extends Controller
         return view('client.modules.human_resource.employees.profile')->with($data);
     }
 
+    public function updateEmployeeProfilePhoto(Request $request, $user_id)
+    {
+        $authUser = Auth::user();
+        if (! $authUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'empImage' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:5120'], // 5MB
+        ]);
+
+        $file = $request->file('empImage');
+        if (! $file) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No file uploaded.',
+            ], 422);
+        }
+
+        // Store only the relative path in DB (not full URL).
+        // Encode as JPG for a consistent extension.
+        $path = 'employees/profile/'.(string) $user_id.'.jpg';
+
+        try {
+            $disk = Storage::disk('upcloud');
+
+            $employee = User::where('user_id', $user_id)->first();
+            $oldImage = $employee?->image ? (string) $employee->image : null;
+
+            $image = Image::make($file->getRealPath())
+                ->resize(500, 350, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+
+            $encoded = $image->encode('jpg', 85);
+
+            $disk->put($path, (string) $encoded, [
+                'visibility' => 'public',
+                'ContentType' => 'image/jpeg',
+            ]);
+
+            $imageUrl = $disk->url($path).'?v='.time();
+
+            // Delete previous UpCloud file if it was a relative key and changed.
+            // (If it was a full URL, we don't attempt deletion here.)
+            if (
+                $oldImage
+                && ! Str::startsWith($oldImage, ['http://', 'https://', '/storage/', 'storage/'])
+                && ltrim($oldImage, '/') !== ltrim($path, '/')
+            ) {
+                try {
+                    $deleted = $disk->delete(ltrim($oldImage, '/'));
+                    if (! $deleted) {
+                        Log::warning('UpCloud delete returned false (employee profile photo)', [
+                            'user_id' => $user_id,
+                            'old_image' => $oldImage,
+                        ]);
+                    }
+                } catch (\Throwable $deleteEx) {
+                    Log::error('UpCloud delete failed (employee profile photo)', [
+                        'user_id' => $user_id,
+                        'old_image' => $oldImage,
+                        'error' => $deleteEx->getMessage(),
+                    ]);
+                }
+            }
+
+            if ($employee) {
+                $employee->image = $path;
+                $employee->last_modified_by = $authUser->employee_name ?? null;
+                $employee->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'image_url' => $imageUrl,
+                'path' => $path,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('UpCloud upload failed (employee profile photo)', [
+                'user_id' => $user_id,
+                'exception' => get_class($e),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Image upload failed. Please try again.',
+                'error_detail' => app()->environment('local') || config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
     public function hireApplicant(Request $request, $id)
     {
+        $request->validate([
+            'user_id' => ['required', 'string', 'max:255'],
+            'employee_id' => ['required', 'string', 'max:255'],
+            'employee_name' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:4'],
+            'email' => ['required', 'email', 'max:255'],
+            'department' => ['required'],
+            'designation' => ['required'],
+            'shift' => ['required'],
+            'branch' => ['required'],
+            'date_joined' => ['required', 'date'],
+            'gender' => ['required', 'in:Male,Female'],
+            'civil_status' => ['required', 'in:Single,Married,Widowed'],
+            'employment_status' => ['required', 'in:Regular,Contractual,Probationary'],
+            'user_group' => ['required', 'in:Employee,Manager,HR Personnel,Editor'],
+            'telephone' => ['nullable', 'string', 'max:30'],
+            'contact_no' => ['required', 'string', 'max:190'],
+            'contact_person' => ['required', 'string', 'max:100'],
+            'contact_person_no' => ['required', 'string', 'max:100'],
+            'birthdate' => ['required', 'date'],
+        ]);
+
         $image_path = $request->user_image;
         if ($request->hasFile('empImage')) {
             $request->validate([
@@ -810,7 +1072,8 @@ class EmployeesController extends Controller
                     'visibility' => 'public',
                 ]);
 
-                $image_path = $disk->url('employees/'.$filenametostore);
+                // Store only relative key in DB
+                $image_path = 'employees/'.$filenametostore;
             } catch (\Throwable $e) {
                 Log::error('UpCloud upload failed (hire applicant photo)', [
                     'id' => $id,
@@ -828,36 +1091,41 @@ class EmployeesController extends Controller
         $employee->department_id = $request->department;
         $employee->shift_group_id = $request->shift;
         $employee->password = bcrypt($request->password);
-        $employee->employee_name = $request->employee_name;
+        $employee->employee_name = $this->truncateUtf8(trim((string) $request->employee_name), 191);
         $employee->nick_name = $request->nickname;
         $employee->designation_id = $request->designation;
         $employee->branch = $request->branch;
-        $employee->telephone = $request->telephone;
-        $employee->email = $request->email;
+        $employee->telephone = $this->normalizeUsersTelephoneInt($request->telephone);
+        $employee->email = $this->truncateUtf8(trim((string) $request->email), 191);
         $employee->gender = $request->gender;
         $employee->employment_status = $request->employment_status;
-        $employee->address = $request->address;
-        $employee->contact_no = $request->contact_no;
-        $employee->sss_no = $request->sss_no;
-        $employee->tin_no = $request->tin_no;
+        $employee->address = $this->truncateUtf8($request->filled('address') ? trim((string) $request->address) : null, 190);
+        $employee->contact_no = $this->truncateUtf8(trim((string) $request->contact_no), 190);
+        $employee->sss_no = $this->truncateUtf8($request->filled('sss_no') ? trim((string) $request->sss_no) : null, 20);
+        $employee->tin_no = $this->truncateUtf8($request->filled('tin_no') ? trim((string) $request->tin_no) : null, 20);
         $employee->user_group = $request->user_group;
         $employee->birth_date = $request->birthdate;
-        $employee->civil_status = $request->civil_status;
+        $employee->civil_status = $request->civil_status ?: 'Single';
         $employee->status = 'Active';
         $employee->date_joined = $request->date_joined;
-        $employee->contact_person = $request->contact_person;
-        $employee->contact_person_no = $request->contact_person_no;
-        $employee->pagibig_no = $request->pagibig_no;
-        $employee->philhealth_no = $request->philhealth_no;
-        $employee->employee_id = $request->employee_id;
+        $employee->contact_person = $this->truncateUtf8(trim((string) $request->contact_person), 100);
+        $employee->contact_person_no = $this->truncateUtf8(trim((string) $request->contact_person_no), 100);
+        $employee->pagibig_no = $this->truncateUtf8($request->filled('pagibig_no') ? trim((string) $request->pagibig_no) : null, 20);
+        $employee->philhealth_no = $this->truncateUtf8($request->filled('philhealth_no') ? trim((string) $request->philhealth_no) : null, 20);
+        $employee->employee_id = $this->truncateUtf8(trim((string) $request->employee_id), 20);
         $employee->image = $image_path;
-        $employee->designation_name = $request->designation_name;
+        $employee->designation_name = $this->truncateUtf8($request->filled('designation_name') ? trim((string) $request->designation_name) : null, 100);
         $employee->last_modified_by = Auth::user()->employee_name;
-        $employee->id_security_key = $request->id_key;
+        $employee->id_security_key = $this->truncateUtf8($request->filled('id_key') ? trim((string) $request->id_key) : null, 100);
+        $employee->company = $this->truncateUtf8($request->filled('company') ? trim((string) $request->company) : ($employee->company ?: 'FUMACO Inc.'), 100);
         $employee->resignation_date = null;
         $employee->applicant_status = 'Hired';
         $employee->user_type = 'Employee';
         $employee->save();
+
+        // Trigger-based welcome + onboarding for applicants hired as employees.
+        $this->triggerWelcomeEmail($employee);
+        $this->triggerOnboardingEmail($employee);
 
         return redirect('/client/employee/profile/'.$request->user_id)->with(['message' => 'Employee <b>'.$employee->employee_name.'</b>  has been successfully registered as employee!']);
     }

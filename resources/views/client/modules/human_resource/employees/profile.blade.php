@@ -13,11 +13,39 @@
       </a>
    </div>
    <div class="col-md-8" style="padding: 2% 1% 1% 1%;">
-      <div style="float: left; padding: 0.5% 0.5% 0.5% 2%;">
-         @php
-         $img = $employee_profile->image ? $employee_profile->image : '/storage/img/user.png'
-         @endphp
-         <img src="{{ asset($img) }}" width="105" height="103" class="user-image">
+      <div class="profile-photo-wrapper" style="float: left; padding: 0.5% 0.5% 0.5% 2%;">
+        @php
+          use Illuminate\Support\Facades\Storage;
+          use Illuminate\Support\Str;
+
+          $avatarUrl = asset('storage/img/user.png');
+          try {
+            $disk = Storage::disk('upcloud');
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $key = 'employees/profile/'.(string) $employee_profile->user_id.'.jpg';
+            if ($disk->exists($key)) {
+              $v = optional($employee_profile->updated_at)->timestamp ?? time();
+              $avatarUrl = $disk->url($key).'?v='.$v;
+            }
+          } catch (\Throwable $e) {
+            // keep fallback
+          }
+        @endphp
+
+        <img
+          id="employee-profile-photo"
+          src="{{ $avatarUrl }}"
+          width="105"
+          height="103"
+          class="user-image"
+          data-current-src="{{ $avatarUrl }}"
+        >
+
+        <div class="profile-photo-overlay" aria-hidden="true"></div>
+        <button type="button" class="btn btn-primary profile-photo-change-btn" id="profilePhotoChangeBtn">
+          <i class="fa fa-upload"></i> Change Photo
+        </button>
+        <input type="file" id="profilePhotoInput" name="empImage" accept="image/png,image/jpeg,image/jpg" style="display: none;">
       </div>
         <div style="float: left; padding: 1.5% 0;">
          <span style="font-size: 18pt; padding-top: 5%; display: block;">{{ $employee_profile->employee_name }}</span>
@@ -90,6 +118,8 @@
       </div>
    </div>
    @endif
+
+   <div id="profile-photo-message" class="col-md-12" style="display:none; margin-top: 10px; text-align: center;"></div>
 </div>
 <div class="row" style="padding-top: 0">
    <div class="col-md-9">
@@ -316,6 +346,45 @@ textarea{
   padding: 5px;
 }
 
+.profile-photo-wrapper{
+  position: relative;
+  display: inline-block;
+}
+.profile-photo-overlay{
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  background: rgba(0,0,0,0.35);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  border-radius: 4px;
+  z-index: 1;
+}
+.profile-photo-wrapper:hover .profile-photo-overlay{
+  opacity: 1;
+}
+.profile-photo-change-btn{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
+  font-size: 10pt;
+}
+.profile-photo-wrapper:hover .profile-photo-change-btn{
+  opacity: 1;
+  pointer-events: auto;
+}
+.profile-photo-change-btn:disabled{
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
 .imgPreview {
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -371,9 +440,103 @@ textarea{
 
       $.ajaxSetup({
          headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
          }
       });
+
+      const uploadUrl = "/client/employee/profile/" + $('#employee-id').text() + "/photo";
+      const profilePhotoInput = document.getElementById('profilePhotoInput');
+      const profilePhotoChangeBtn = document.getElementById('profilePhotoChangeBtn');
+      const profilePhotoImg = document.getElementById('employee-profile-photo');
+      const profilePhotoMessage = document.getElementById('profile-photo-message');
+      let currentProfileSrc = profilePhotoImg ? (profilePhotoImg.dataset.currentSrc || profilePhotoImg.src) : null;
+
+      function showProfilePhotoMessage(type, msg){
+        if (!profilePhotoMessage) return;
+        profilePhotoMessage.style.display = 'block';
+        profilePhotoMessage.className = 'col-md-12 alert alert-' + type;
+        profilePhotoMessage.textContent = msg;
+      }
+
+      if (profilePhotoInput && profilePhotoChangeBtn && profilePhotoImg) {
+        profilePhotoChangeBtn.addEventListener('click', function(){
+          profilePhotoInput.click();
+        });
+
+        profilePhotoInput.addEventListener('change', function(){
+          const file = this.files && this.files[0];
+          if (!file) return;
+
+          const allowedTypes = ['image/jpeg', 'image/png'];
+          const maxBytes = 5 * 1024 * 1024; // 5MB
+
+          if (!allowedTypes.includes(file.type)) {
+            showProfilePhotoMessage('danger', 'Please upload a JPG or PNG image.');
+            this.value = '';
+            if (currentProfileSrc) profilePhotoImg.src = currentProfileSrc;
+            return;
+          }
+
+          if (file.size > maxBytes) {
+            showProfilePhotoMessage('danger', 'Image must be 5MB or less.');
+            this.value = '';
+            if (currentProfileSrc) profilePhotoImg.src = currentProfileSrc;
+            return;
+          }
+
+          // Preview before upload
+          const reader = new FileReader();
+          reader.onload = function(e){
+            profilePhotoImg.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+
+          const formData = new FormData();
+          formData.append('empImage', file);
+
+          profilePhotoChangeBtn.disabled = true;
+          profilePhotoChangeBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+          $.ajax({
+            url: uploadUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(res){
+              if (res && res.success && res.image_url) {
+                currentProfileSrc = res.image_url;
+                profilePhotoImg.src = res.image_url;
+                profilePhotoImg.dataset.currentSrc = res.image_url;
+                showProfilePhotoMessage('success', 'Photo updated successfully.');
+                profilePhotoInput.value = '';
+              } else {
+                showProfilePhotoMessage(
+                  'danger',
+                  (res && res.error_detail) ? res.error_detail : ((res && res.message) ? res.message : 'Upload failed.')
+                );
+                if (currentProfileSrc) profilePhotoImg.src = currentProfileSrc;
+              }
+            },
+            error: function(xhr){
+              let msg = 'Upload failed. Please try again.';
+              try{
+                const j = xhr.responseJSON;
+                if (j && j.error_detail) msg = j.error_detail;
+                else if (j && j.message) msg = j.message;
+                else if (j && j.errors && j.errors.empImage && j.errors.empImage[0]) msg = j.errors.empImage[0];
+              }catch(e){}
+              showProfilePhotoMessage('danger', msg);
+              if (currentProfileSrc) profilePhotoImg.src = currentProfileSrc;
+            },
+            complete: function(){
+              profilePhotoChangeBtn.disabled = false;
+              profilePhotoChangeBtn.innerHTML = '<i class="fa fa-upload"></i> Change Photo';
+            }
+          });
+        });
+      }
 
       $('#filters .date').datepicker({
            'format': 'yyyy-mm-dd',

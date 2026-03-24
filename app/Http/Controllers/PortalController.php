@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Mail\SendMail_notice;
 use App\Traits\EmailsTrait;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -169,6 +169,36 @@ class PortalController extends Controller
                 })
                 ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department', 'designation.designation', 'users.branch', 'users.company')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
                 ->get();
+
+            $employees = collect($employees)->map(function ($employee) {
+                $employee->avatar_url = asset('storage/img/user.png');
+
+                try {
+                    $image = $employee->image ? trim((string) $employee->image) : '';
+                    if ($image === '') {
+                        return $employee;
+                    }
+
+                    if (Str::startsWith($image, ['http://', 'https://'])) {
+                        $employee->avatar_url = $image;
+
+                        return $employee;
+                    }
+
+                    if (Str::startsWith($image, ['/storage/', 'storage/'])) {
+                        $employee->avatar_url = asset(ltrim($image, '/'));
+
+                        return $employee;
+                    }
+
+                    // Treat non-storage relative values as disk keys.
+                    $employee->avatar_url = Storage::url(ltrim($image, '/'));
+                } catch (\Throwable $e) {
+                    // Keep default fallback avatar to avoid breaking directory render.
+                }
+
+                return $employee;
+            });
 
             if ($request->total) {
                 return collect($employees)->count();

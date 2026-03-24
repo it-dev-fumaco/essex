@@ -12,12 +12,12 @@ class User extends Authenticatable
     use Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * Legacy HR `users` row uses many columns; avoid a long fillable list.
      *
-     * @var array
+     * @var array<int, string>
      */
-    protected $fillable = [
-        'name', 'email', 'password', 'user_id',
+    protected $guarded = [
+        'id',
     ];
 
     /**
@@ -28,6 +28,37 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    /**
+     * Production DB uses PascalCase `Barangay` / `City` columns; map snake_case accessors.
+     */
+    public function getBarangayAttribute(): ?string
+    {
+        return $this->attributes['Barangay'] ?? null;
+    }
+
+    public function setBarangayAttribute(mixed $value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['Barangay'] = null;
+        } else {
+            $this->attributes['Barangay'] = $value;
+        }
+    }
+
+    public function getCityAttribute(): ?string
+    {
+        return $this->attributes['City'] ?? null;
+    }
+
+    public function setCityAttribute(mixed $value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['City'] = null;
+        } else {
+            $this->attributes['City'] = $value;
+        }
+    }
 }
 // class User extends Model
 // {

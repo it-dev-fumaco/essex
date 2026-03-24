@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\AbsentNoticeStatusChanged;
+use App\Events\EmployeeLifecycleActionTriggered;
 use App\Listeners\SendAbsentNoticeOwnerStatusEmail;
+use App\Listeners\SendEmployeeLifecycleNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -22,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         AbsentNoticeStatusChanged::class => [
             SendAbsentNoticeOwnerStatusEmail::class,
+        ],
+        EmployeeLifecycleActionTriggered::class => [
+            SendEmployeeLifecycleNotification::class,
         ],
     ];
 

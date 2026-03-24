@@ -88,10 +88,53 @@
                     <div class="card-body box-profile p-2">
                         <div class="text-center">
                             @php
-                                $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png';
+                                use Illuminate\Support\Facades\Storage;
+                                use Illuminate\Support\Str;
+
+                                $avatarUrl = asset('storage/img/user.png');
+                                try {
+                                    $disk = Storage::disk('upcloud');
+                                    /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                                    $key = 'employees/profile/'.(string) Auth::user()->user_id.'.jpg';
+                                    if ($disk->exists($key)) {
+                                        $v = optional(Auth::user()->updated_at)->timestamp ?? time();
+                                        $avatarUrl = $disk->url($key).'?v='.$v;
+                                    }
+                                } catch (\Throwable $e) {
+                                    // keep fallback
+                                }
                             @endphp
-                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}"
-                                alt="User profile picture" width="170" height="170" style="border-radius: 50%;">
+
+                            <div class="profile-photo-wrapper-home">
+                                <img
+                                    id="homeProfilePhotoImg"
+                                    data-user-id="{{ Auth::user()->user_id }}"
+                                    src="{{ $avatarUrl }}"
+                                    alt="User profile picture"
+                                    width="170"
+                                    height="170"
+                                    class="profile-user-img img-thumbnail img-fluid"
+                                    style="border-radius: 50%;"
+                                >
+
+                                <div class="profile-photo-overlay-home" aria-hidden="true"></div>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary profile-photo-change-btn-home"
+                                    id="homeProfilePhotoChangeBtn"
+                                >
+                                    <i class="fa fa-upload"></i> Change Photo
+                                </button>
+                                <input
+                                    type="file"
+                                    id="homeProfilePhotoInput"
+                                    name="empImage"
+                                    accept="image/png,image/jpeg,image/jpg"
+                                    style="display: none;"
+                                >
+                            </div>
+
+                            <div id="home-profile-photo-message" style="display:none; margin-top: 10px;"></div>
                         </div>
                         <h3 class="profile-username text-center">{{ Auth::user()->employee_name }}</h3>
                         @php
@@ -484,6 +527,47 @@
     <iframe id="iframe-print" hidden></iframe>
 
     <style type="text/css">
+    .profile-photo-wrapper-home{
+        position: relative;
+        display: inline-block;
+    }
+    .profile-photo-overlay-home{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.35);
+        opacity: 0;
+        transition: opacity 0.15s ease-in-out;
+        z-index: 1;
+    }
+    .profile-photo-wrapper-home:hover .profile-photo-overlay-home{
+        opacity: 1;
+    }
+    .profile-photo-change-btn-home{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease-in-out;
+        font-size: 10pt;
+    }
+    .profile-photo-wrapper-home:hover .profile-photo-change-btn-home{
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .profile-photo-change-btn-home:disabled{
+        opacity: 0.75;
+        cursor: not-allowed;
+    }
+    #home-profile-photo-message{
+        text-align: center;
+    }
     /* Clock button "Completed" state: keep text and icon always visible (no hover-only) */
     #clockBtn.btn-secondary,
     #clockBtn.btn-secondary:disabled,
@@ -791,6 +875,108 @@
             });
 
             $('.open-reminder').click();
+
+            // Profile Photo Upload (AJAX, no page reload)
+            const homeProfilePhotoImg = document.getElementById('homeProfilePhotoImg');
+            const homeProfilePhotoInput = document.getElementById('homeProfilePhotoInput');
+            const homeProfilePhotoChangeBtn = document.getElementById('homeProfilePhotoChangeBtn');
+            const homeProfilePhotoMessage = document.getElementById('home-profile-photo-message');
+
+            let currentHomeProfileSrc = homeProfilePhotoImg ? homeProfilePhotoImg.src : null;
+
+            function setHomeProfilePhotoMessage(type, message) {
+                if (!homeProfilePhotoMessage) return;
+                homeProfilePhotoMessage.style.display = 'block';
+                homeProfilePhotoMessage.className = 'alert alert-' + type;
+                homeProfilePhotoMessage.textContent = message;
+            }
+
+            if (homeProfilePhotoImg && homeProfilePhotoInput && homeProfilePhotoChangeBtn) {
+                const uploadUrl = "/client/employee/profile/" + (homeProfilePhotoImg.dataset.userId || "") + "/photo";
+
+                homeProfilePhotoChangeBtn.addEventListener('click', function () {
+                    homeProfilePhotoInput.click();
+                });
+
+                homeProfilePhotoInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) return;
+
+                    const allowedTypes = ['image/jpeg', 'image/png'];
+                    const maxBytes = 5 * 1024 * 1024; // 5MB
+
+                    if (!allowedTypes.includes(file.type)) {
+                        setHomeProfilePhotoMessage('danger', 'Please upload a JPG or PNG image.');
+                        this.value = '';
+                        if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        return;
+                    }
+
+                    if (file.size > maxBytes) {
+                        setHomeProfilePhotoMessage('danger', 'Image must be 5MB or less.');
+                        this.value = '';
+                        if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        return;
+                    }
+
+                    // Preview before upload
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        homeProfilePhotoImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    // `portal.app` layout (used by /home) may not include csrf meta tag.
+                    // Use Blade-generated token to avoid CSRF mismatch.
+                    const csrf = '{{ csrf_token() }}' || ($('meta[name="csrf-token"]').attr('content') || '');
+                    const formData = new FormData();
+                    formData.append('empImage', file);
+
+                    homeProfilePhotoChangeBtn.disabled = true;
+                    homeProfilePhotoChangeBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+                    $.ajax({
+                        url: uploadUrl,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf
+                        },
+                        success: function (res) {
+                            if (res && res.success && res.image_url) {
+                                currentHomeProfileSrc = res.image_url;
+                                homeProfilePhotoImg.src = res.image_url + '&t=' + Date.now();
+                                setHomeProfilePhotoMessage('success', 'Photo updated successfully.');
+                                homeProfilePhotoInput.value = '';
+                            } else {
+                                setHomeProfilePhotoMessage(
+                                    'danger',
+                                    (res && res.error_detail) ? res.error_detail : ((res && res.message) ? res.message : 'Upload failed.')
+                                );
+                                if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                            }
+                        },
+                        error: function (xhr) {
+                            let msg = 'Upload failed. Please try again.';
+                            try {
+                                const j = xhr.responseJSON;
+                                if (j && j.error_detail) msg = j.error_detail;
+                                else if (j && j.message) msg = j.message;
+                                else if (j && j.errors && j.errors.empImage && j.errors.empImage[0]) msg = j.errors.empImage[0];
+                            } catch (e) {}
+                            setHomeProfilePhotoMessage('danger', msg);
+                            if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        },
+                        complete: function () {
+                            homeProfilePhotoChangeBtn.disabled = false;
+                            homeProfilePhotoChangeBtn.innerHTML = '<i class="fa fa-upload"></i> Change Photo';
+                        }
+                    });
+                });
+            }
 
             const showNotification = (icon, message, status, title = null) => {
                 titleTxt = ''

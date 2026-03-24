@@ -567,6 +567,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/client/employee/delete/{id}', [EmployeesController::class, 'employeeDelete']);
     Route::post('/client/employee/reset_password', [EmployeesController::class, 'reset_password']);
     Route::get('/client/employee/profile/{id}', [EmployeesController::class, 'employeeProfile']);
+    Route::post('/client/employee/profile/{id}/photo', [EmployeesController::class, 'updateEmployeeProfilePhoto'])->name('client.employee_profile.photo.upload');
     Route::get('/showBirthdaysToday', [EmployeesController::class, 'checkEmployeeBirthday']);
     // END CLIENT EMPLOYEES
 

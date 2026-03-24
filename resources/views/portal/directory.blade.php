@@ -22,15 +22,329 @@
 	</div>
 </div>
 
+<style>
+	.directory-department-heading {
+		margin-top: 18px;
+		text-align: center;
+		text-transform: uppercase;
+	}
+
+	.directory-department-heading h3 {
+		margin: 0;
+		color: #1f2a44;
+		font-size: 18px;
+		letter-spacing: 1px;
+		font-weight: 700;
+	}
+
+	.directory-card-col {
+		padding: 10px;
+	}
+
+	.directory-card {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		height: 100%;
+		padding: 14px;
+		border-radius: 12px;
+		border: 1px solid #dfe6ef;
+		background: #fff;
+		box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+		transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.directory-card:hover,
+	.directory-card:focus {
+		text-decoration: none;
+		color: inherit;
+		transform: translateY(-1px);
+		border-color: #c8d8ea;
+		box-shadow: 0 6px 14px rgba(16, 24, 40, 0.12);
+	}
+
+	.directory-card__avatar-wrap {
+		flex: 0 0 74px;
+	}
+
+	.directory-card__avatar {
+		width: 74px;
+		height: 74px;
+		border-radius: 10px;
+		border: 1px solid #d0dae8;
+		background: #f6f8fb center/cover no-repeat;
+	}
+
+	.directory-card__body {
+		min-width: 0;
+	}
+
+	.directory-card__name {
+		font-weight: 700;
+		font-size: 18px;
+		line-height: 1.2;
+		color: #1f2a44;
+		word-break: break-word;
+	}
+
+	.directory-card__role {
+		margin-top: 3px;
+		font-size: 14px;
+		font-weight: 500;
+		color: #667085;
+		word-break: break-word;
+	}
+
+	.directory-card__line {
+		margin-top: 8px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		line-height: 1.35;
+		color: #2d3b52;
+	}
+
+	.directory-card__line i {
+		width: 14px;
+		color: #4a77a8;
+	}
+
+	.directory-card__line span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.employee-profile-modal .modal-dialog {
+		max-width: 760px;
+		margin: 1.2rem auto;
+	}
+
+	.employee-profile-modal .modal-content {
+		border-radius: 14px;
+		border: 0;
+		overflow: hidden;
+	}
+
+	.employee-profile-modal .modal-header {
+		padding: 12px 18px;
+		border-bottom: 1px solid rgba(16, 24, 40, 0.08);
+	}
+
+	.employee-profile-modal .modal-title {
+		font-size: 20px;
+		font-weight: 700;
+		color: #172b4d;
+	}
+
+	.employee-profile-modal .modal-body {
+		background: #eef3f8;
+		padding: 12px 16px 16px;
+	}
+
+	.employee-profile-panel {
+		background: #fff;
+		border: 1px solid #e3e9f2;
+		border-radius: 10px;
+		padding: 16px;
+	}
+
+	.employee-profile-main {
+		display: flex;
+		gap: 16px;
+		align-items: flex-start;
+		padding-bottom: 12px;
+		margin-bottom: 12px;
+		border-bottom: 1px solid #edf1f7;
+	}
+
+	.employee-profile-avatar {
+		width: 116px;
+		height: 116px;
+		border: 1px solid #d5deea;
+		border-radius: 6px;
+		background: #f8fafc center/cover no-repeat;
+		flex: 0 0 auto;
+	}
+
+	.employee-profile-name {
+		font-size: 22px;
+		line-height: 1.2;
+		font-weight: 700;
+		color: #132540;
+		word-break: break-word;
+	}
+
+	.employee-profile-meta {
+		margin-top: 4px;
+		font-size: 15px;
+		font-weight: 600;
+		color: #44516a;
+		line-height: 1.35;
+		word-break: break-word;
+	}
+
+	.employee-profile-grid {
+		margin-top: 10px;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px 16px;
+	}
+
+	.employee-profile-label {
+		font-size: 13px;
+		font-weight: 600;
+		color: #41536f;
+		line-height: 1.3;
+	}
+
+	.employee-profile-value {
+		font-size: 14px;
+		font-weight: 700;
+		color: #152c49;
+		line-height: 1.35;
+		word-break: break-word;
+		overflow-wrap: anywhere;
+	}
+
+	.employee-profile-tenure-value {
+		font-style: italic;
+	}
+
+	.employee-profile-footer {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.employee-profile-footer-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 16px;
+		font-weight: 600;
+		color: #1b2d4b;
+		min-width: 0;
+	}
+
+	.employee-profile-footer-item i {
+		color: #2f73b7;
+	}
+
+	.employee-profile-footer-item span {
+		white-space: normal;
+		word-break: break-word;
+		overflow-wrap: anywhere;
+	}
+
+	.employee-profile-status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 11px;
+		border-radius: 999px;
+		font-size: 16px;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.employee-profile-status-pill i {
+		font-size: 12px;
+	}
+
+	.employee-profile-status-pill.is-regular {
+		background: #e4f8f2;
+		color: #1f8a66;
+	}
+
+	.employee-profile-status-pill.is-probationary {
+		background: #fff5df;
+		color: #b87407;
+	}
+
+	.employee-profile-status-pill.is-other {
+		background: #edf2f7;
+		color: #3b4a60;
+	}
+
+	@media (max-width: 991.98px) {
+		.employee-profile-modal .modal-dialog {
+			max-width: 680px;
+		}
+
+		.employee-profile-name {
+			font-size: 20px;
+		}
+
+		.employee-profile-meta {
+			font-size: 14px;
+		}
+
+		.employee-profile-label {
+			font-size: 12px;
+		}
+
+		.employee-profile-value {
+			font-size: 13px;
+		}
+
+		.employee-profile-footer-item,
+		.employee-profile-status-pill {
+			font-size: 14px;
+		}
+	}
+
+	@media (max-width: 767.98px) {
+		.employee-profile-modal .modal-dialog {
+			max-width: calc(100% - 1rem);
+			margin: 0.5rem auto;
+		}
+
+		.employee-profile-modal .modal-header {
+			padding: 10px 12px;
+		}
+
+		.employee-profile-modal .modal-body {
+			padding: 10px 10px 12px;
+		}
+
+		.employee-profile-panel {
+			padding: 12px;
+		}
+
+		.employee-profile-main {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.employee-profile-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.employee-profile-footer {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 575.98px) {
+		.employee-profile-footer {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+
 <!-- Employee Profile Modal -->
-<div class="modal fade" id="employeeProfileModal" tabindex="-1" aria-labelledby="employeeProfileModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-		<div class="modal-content" style="border-radius: 0;">
-			<div class="modal-header" style="border-bottom: 1px solid rgba(0,0,0,.08);">
-				<h5 class="modal-title" id="employeeProfileModalLabel" style="font-weight: 600; letter-spacing: .2pt;">Employee Profile</h5>
+<div class="modal fade employee-profile-modal" id="employeeProfileModal" tabindex="-1" aria-labelledby="employeeProfileModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="employeeProfileModalLabel">Employee Profile</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
-			<div class="modal-body" style="background: #EFF3F6;">
+			<div class="modal-body">
 				<div id="employeeProfileError" class="alert alert-danger d-none" role="alert" style="margin-bottom: 12px;"></div>
 
 				<div id="employeeProfileLoading" class="text-center" style="padding: 28px 0;">
@@ -39,39 +353,54 @@
 				</div>
 
 				<div id="employeeProfileContent" class="d-none">
-					<div class="card shadow-sm" style="border: 0; border-radius: 0;">
-						<div class="card-body">
-							<div class="row">
-								<div class="col-12 col-md-4 text-center" style="display: flex; justify-content: center; align-items: center; padding: 18px;">
-									<div id="employeeProfileAvatar" style="width: 110px; height: 110px; border-radius: 0; background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,.15); background-color: #fff;"></div>
+					<div class="employee-profile-panel">
+						<div class="employee-profile-main">
+							<div id="employeeProfileAvatar" class="employee-profile-avatar"></div>
+							<div class="employee-profile-details flex-grow-1">
+								<div id="employeeProfileName" class="employee-profile-name"></div>
+								<div class="employee-profile-meta">
+									<span id="employeeProfileRole"></span>
+									<span id="employeeProfileDeptWrap" class="d-none">
+										&nbsp;•&nbsp;<span id="employeeProfileDept"></span>
+									</span>
 								</div>
-								<div class="col-12 col-md-8" style="padding: 18px;">
-									<div id="employeeProfileName" style="font-size: 18pt; font-weight: 700; line-height: 1.2;"></div>
-									<div class="text-muted" style="margin-top: 4px;">
-										<span id="employeeProfileRole" style="font-weight: 600;"></span>
-										<span id="employeeProfileDeptWrap" class="d-none">
-											&nbsp;•&nbsp;<span id="employeeProfileDept"></span>
-										</span>
+								<div class="employee-profile-grid">
+									<div>
+										<div class="employee-profile-label">Email</div>
+										<div id="employeeProfileEmail" class="employee-profile-value"></div>
 									</div>
-									<div class="row" style="margin-top: 14px;">
-										<div class="col-12 col-sm-6" style="margin-bottom: 10px;">
-											<div class="text-muted" style="font-size: 10pt;">Email</div>
-											<div id="employeeProfileEmail" style="font-weight: 600;"></div>
-										</div>
-										<div class="col-12 col-sm-6" style="margin-bottom: 10px;">
-											<div class="text-muted" style="font-size: 10pt;">Contact Information</div>
-											<div id="employeeProfilePhone" style="font-weight: 600;"></div>
-										</div>
-										<div class="col-12 col-sm-6" style="margin-bottom: 10px;">
-											<div class="text-muted" style="font-size: 10pt;">Employment Status</div>
-											<div id="employeeProfileEmploymentStatus" style="font-weight: 600;"></div>
-										</div>
-										<div class="col-12 col-sm-6" style="margin-bottom: 10px;">
-											<div class="text-muted" style="font-size: 10pt;">Tenure</div>
-											<div id="employeeProfileTenure" style="font-weight: 600; font-style: italic;"></div>
-										</div>
+									<div>
+										<div class="employee-profile-label">Contact Information</div>
+										<div id="employeeProfilePhone" class="employee-profile-value"></div>
+									</div>
+									<div>
+										<div class="employee-profile-label">Employment Status</div>
+										<div id="employeeProfileEmploymentStatus" class="employee-profile-value"></div>
+									</div>
+									<div>
+										<div class="employee-profile-label">Tenure</div>
+										<div id="employeeProfileTenure" class="employee-profile-value employee-profile-tenure-value"></div>
 									</div>
 								</div>
+							</div>
+						</div>
+						<div class="employee-profile-footer">
+							<div class="employee-profile-footer-item">
+								<i class="fa fa-envelope-o" aria-hidden="true"></i>
+								<span id="employeeProfileEmailFooter"></span>
+							</div>
+							<div class="employee-profile-footer-item">
+								<i class="fa fa-phone" aria-hidden="true"></i>
+								<span id="employeeProfilePhoneFooter"></span>
+							</div>
+							<div class="employee-profile-footer-item">
+								<span id="employeeProfileStatusPill" class="employee-profile-status-pill is-other">
+									<i class="fa fa-check-circle" aria-hidden="true"></i>
+									<span id="employeeProfileEmploymentStatusFooter"></span>
+								</span>
+							</div>
+							<div class="employee-profile-footer-item">
+								<span id="employeeProfileTenureFooter"></span>
 							</div>
 						</div>
 					</div>
@@ -112,6 +441,11 @@
 		}
 
 		function setProfileContent(data){
+			var email = data.email || 'N/A';
+			var phone = data.contact || 'N/A';
+			var status = data.employment_status || 'N/A';
+			var tenure = data.tenure || 'N/A';
+
 			$('#employeeProfileLoading').addClass('d-none');
 			$('#employeeProfileError').addClass('d-none').text('');
 
@@ -125,10 +459,25 @@
 				$('#employeeProfileDeptWrap').addClass('d-none');
 			}
 
-			$('#employeeProfileEmail').text(data.email || 'N/A');
-			$('#employeeProfilePhone').text(data.contact || 'N/A');
-			$('#employeeProfileEmploymentStatus').text(data.employment_status || 'N/A');
-			$('#employeeProfileTenure').text(data.tenure || 'N/A');
+			$('#employeeProfileEmail').text(email);
+			$('#employeeProfilePhone').text(phone);
+			$('#employeeProfileEmploymentStatus').text(status);
+			$('#employeeProfileTenure').text(tenure);
+			$('#employeeProfileEmailFooter').text(email);
+			$('#employeeProfilePhoneFooter').text(phone);
+			$('#employeeProfileEmploymentStatusFooter').text(status);
+			$('#employeeProfileTenureFooter').text(tenure);
+
+			var normalizedStatus = (status || '').toString().toLowerCase();
+			var statusPill = $('#employeeProfileStatusPill');
+			statusPill.removeClass('is-regular is-probationary is-other');
+			if (normalizedStatus === 'regular') {
+				statusPill.addClass('is-regular');
+			} else if (normalizedStatus === 'probationary') {
+				statusPill.addClass('is-probationary');
+			} else {
+				statusPill.addClass('is-other');
+			}
 
 			if (data.avatar_url) {
 				$('#employeeProfileAvatar').css('background-image', 'url("' + data.avatar_url + '")');

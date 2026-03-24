@@ -62,9 +62,13 @@ RUN composer install \
     --no-dev \
     --prefer-dist \
     --no-interaction \
-    --no-progress
+    --no-progress \
+    --no-scripts
 
-FROM node:20-alpine AS node-build
+# Laravel Mix v2 (webpack 3 era) depends on legacy node-sass tooling which
+# fails on modern Node + Alpine (musl). Use an older Debian-based Node image
+# for reproducible production asset builds.
+FROM node:10-buster AS node-build
 WORKDIR /app
 COPY package.json webpack.mix.js ./
 COPY resources ./resources
