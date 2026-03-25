@@ -430,7 +430,7 @@
                                 </ul>
                             </div>
                         @endif
-                        {{-- Clock In / Clock Out button (above My Attendance) --}}
+                        {{-- Clock In / Clock Out — disabled temporarily (re-enable with routes + HomeController)
                         @php
                             $clock_status = $clock_status ?? 'none';
                             $clocked_in_at = $clocked_in_at ?? null;
@@ -458,6 +458,7 @@
                                 </button>
                             </div>
                         </div>
+                        --}}
                         <div class="inner-box featured p-2">
                             <div class="widget property-agent p-0">
                                 <div class="d-flex w-100 p-0">
@@ -568,7 +569,8 @@
     #home-profile-photo-message{
         text-align: center;
     }
-    /* Clock button "Completed" state: keep text and icon always visible (no hover-only) */
+    /* Clock button styles — disabled with portal clock feature (single block; no nested comments)
+    Clock button "Completed" state: keep text and icon always visible (no hover-only)
     #clockBtn.btn-secondary,
     #clockBtn.btn-secondary:disabled,
     #clockBtn.clock-btn-completed {
@@ -602,6 +604,7 @@
         color: inherit !important;
         opacity: 1 !important;
     }
+    */
     .settings-btn-opacity {
         opacity: 30% !important;
     }
@@ -1483,6 +1486,7 @@
                 });
             }
 
+            {{-- Portal clock in/out JS — disabled temporarily (re-enable with HTML block above + routes)
             $(document).on('click', '#clockBtn', function(e) {
                 e.preventDefault();
                 var btn = $(this);
@@ -1619,7 +1623,7 @@
             @if($clock_status === 'clocked_in' && $clocked_in_at)
             $(function(){ startClockedInTimer('{{ $clocked_in_at }}'); });
             @endif
-
+            --}}
 
             $(document).on('click', '#view-notice', function(event) {
                 event.preventDefault();

@@ -799,9 +799,10 @@ Route::prefix('kpi_overview/engineering')->middleware('auth')->group(function ()
 // Attendance
 Route::prefix('attendance')->middleware('auth')->group(function () {
     Route::post('/update/{employee}', [AttendanceController::class, 'updateAttendanceLogs']);
-    Route::post('/clock-in', [AttendanceController::class, 'clockIn']);
-    Route::post('/clock-out', [AttendanceController::class, 'clockOut']);
-    Route::post('/resume', [AttendanceController::class, 'resumeClock']);
+    // Portal clock in/out — disabled temporarily (re-enable with homepage + HomeController)
+    // Route::post('/clock-in', [AttendanceController::class, 'clockIn']);
+    // Route::post('/clock-out', [AttendanceController::class, 'clockOut']);
+    // Route::post('/resume', [AttendanceController::class, 'resumeClock']);
     Route::get('/history/{employee}', [AttendanceController::class, 'employeeAttendanceHistory']);
     Route::get('/dashboard/{employee}', [AttendanceController::class, 'employeeAttendanceDashboard']);
     Route::get('/deductions/{employee}', [AttendanceController::class, 'employeeLateDeductions']);

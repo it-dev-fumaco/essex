@@ -269,6 +269,17 @@ class EmployeesController extends Controller
             $employee->last_modified_by = Auth::user()->employee_name;
             $employee->payroll_type = $request->payroll_type;
 
+            $employee->separation_date = $request->filled('separation_date') ? $request->separation_date : null;
+            $employee->separation_type = $request->filled('separation_type')
+                ? $this->truncateUtf8(trim((string) $request->separation_type), 50)
+                : null;
+            $employee->separation_reason = $request->filled('separation_reason')
+                ? $this->truncateUtf8(trim((string) $request->separation_reason), 65535)
+                : null;
+            $employee->clearance_status = $request->filled('clearance_status')
+                ? $this->truncateUtf8(trim((string) $request->clearance_status), 20)
+                : null;
+
             if ($request->status == 'Resigned') {
                 $employee->resignation_date = $request->resignation_date;
 
@@ -728,6 +739,17 @@ class EmployeesController extends Controller
             $employee->designation_name = $request->designation_name;
             $employee->last_modified_by = Auth::user()->employee_name;
             $employee->company = $request->company ?: ($employee->company ?: 'FUMACO Inc.');
+
+            $employee->separation_date = $request->filled('separation_date') ? $request->separation_date : null;
+            $employee->separation_type = $request->filled('separation_type')
+                ? $this->truncateUtf8(trim((string) $request->separation_type), 50)
+                : null;
+            $employee->separation_reason = $request->filled('separation_reason')
+                ? $this->truncateUtf8(trim((string) $request->separation_reason), 65535)
+                : null;
+            $employee->clearance_status = $request->filled('clearance_status')
+                ? $this->truncateUtf8(trim((string) $request->clearance_status), 20)
+                : null;
 
             if ($request->status == 'Resigned') {
                 $employee->resignation_date = $request->resignation_date;

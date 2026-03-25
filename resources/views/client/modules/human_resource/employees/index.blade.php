@@ -54,6 +54,7 @@
                               <th>Designation</th>
                               <th>Department</th>
                               <th>Status</th>
+                              <th>IT Status</th>
                               <th>Last Modified</th>
                               <th>Actions</th>
                            </tr>
@@ -68,6 +69,25 @@
                               <td>{{ $employee->designation }}</td>
                               <td>{{ $employee->department }}</td>
                               <td>{{ $employee->status }}</td>
+                              <td>
+                                 @php
+                                    $s = trim((string) ($employee->status ?? ''));
+                                    $itStatus = '—';
+                                    if (strcasecmp($s, 'Active') === 0) {
+                                       $dj = $employee->date_joined ?? null;
+                                       if ($dj && \Carbon\Carbon::parse($dj)->greaterThan(\Carbon\Carbon::now()->subMonths(3))) {
+                                          $itStatus = 'For Onboarding';
+                                       } else {
+                                          $itStatus = 'Onboarded';
+                                       }
+                                    } elseif (strcasecmp($s, 'Inactive') === 0) {
+                                       $itStatus = 'For Offboarding';
+                                    } elseif (strcasecmp($s, 'Resigned') === 0) {
+                                       $itStatus = 'Offboarded';
+                                    }
+                                 @endphp
+                                 {{ $itStatus }}
+                              </td>
                               <td style="font-size: 8pt;"><b><i>{{ $employee->updated_at }}-{{ $employee->last_modified_by }}</i></b></td>
                               <td>
                                  <a href="/client/employee/profile/{{ $employee->user_id }}">
@@ -89,7 +109,7 @@
                            @include('client.modules.human_resource.employees.modals.reset_password')
                            @empty
                            <tr>
-                              <td colspan="4">No Employee(s) Found.</td>
+                              <td colspan="8">No Employee(s) Found.</td>
                            </tr>
                            @endforelse
                         </tbody>
@@ -202,10 +222,10 @@ textarea{
 
    function hideResignationDate(){
       if ($('#edit-employee-modal .status').val() == 'Resigned') {
-         $('#edit-employee-modal .resignation-date-div').show();
+         $('#edit-employee-modal #resignation-date-field').show();
          $("#edit-employee-modal input[name='resignation_date']").prop('required',true);
       }else{
-         $('#edit-employee-modal .resignation-date-div').hide();
+         $('#edit-employee-modal #resignation-date-field').hide();
          $("#edit-employee-modal input[name='resignation_date']").prop('required',false);
       }
    }
@@ -268,6 +288,12 @@ textarea{
                $('#edit-employee-form input[name="telephone"]').val(response.telephone);
                $('#edit-employee-form input[name="email"]').val(response.email);
                $('#edit-employee-form select[name="status"]').val(response.status);
+               $('#edit-employee-form input[name="separation_date"]').val(response.separation_date || '');
+               $('#edit-employee-form select[name="separation_type"]').val(response.separation_type || '');
+               $('#edit-employee-form textarea[name="separation_reason"]').val(response.separation_reason || '');
+               $('#edit-employee-form select[name="clearance_status"]').val(response.clearance_status || '');
+               $('#edit-employee-form input[name="resignation_date"]').val(response.resignation_date || '');
+               hideResignationDate();
                $('#edit-employee-modal').modal('show');
             },
             error: function(data) {

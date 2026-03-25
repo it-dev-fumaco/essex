@@ -22,6 +22,9 @@
             @php
             $img = $album->featured_image ? $album->featured_image : 'img/notfound.png';
             $imgPath = ltrim((string) $img, '/');
+            if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                $imgPath = \Illuminate\Support\Str::after($imgPath, 'storage/');
+            }
             // Album images are stored under `uploads/...` in UpCloud.
             // If it's not an uploads path (e.g., local placeholder), fall back to local `asset('storage/...')`.
             if (\Illuminate\Support\Str::startsWith($imgPath, 'uploads/')) {

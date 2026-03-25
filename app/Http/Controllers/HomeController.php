@@ -177,9 +177,12 @@ class HomeController extends Controller
 
         $reports_to = DB::table('users')->join('designation', 'users.designation_id', 'designation.des_id')->where('user_id', Auth::user()->reporting_to)->first();
 
-        $clockData = $this->getPortalClockStatus(Auth::user()->user_id);
-        $clock_status = $clockData['status'];
-        $clocked_in_at = $clockData['time_in'];
+        // Portal clock in/out — disabled temporarily (see routes + client/homepage)
+        // $clockData = $this->getPortalClockStatus(Auth::user()->user_id);
+        // $clock_status = $clockData['status'];
+        // $clocked_in_at = $clockData['time_in'];
+        $clock_status = 'none';
+        $clocked_in_at = null;
 
         return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability', 'getholiday', 'departmentHeads', 'department_heads', 'depart', 'kpi_schedules', 'holiday_reminder', 'reports_to', 'clock_status', 'clocked_in_at'));
 
@@ -189,6 +192,7 @@ class HomeController extends Controller
      * Get today's portal clock status for the given user from biometric_logs.
      * Returns: ['status' => 'none'|'clocked_in'|'clocked_out', 'time_in' => 'H:i:s'|null]
      */
+    /*
     protected function getPortalClockStatus($userId)
     {
         $log = DB::table('biometric_logs')
@@ -204,6 +208,7 @@ class HomeController extends Controller
 
         return ['status' => 'clocked_in', 'time_in' => $log->time_in];
     }
+    */
 
     public function getEmployeesPerDept()
     {
