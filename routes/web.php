@@ -14,7 +14,7 @@ Route::get('/local', 'TestingEnvironmentController@local_login');
 Route::post('/updateExamineeStatus', 'ExamineesController@updateExamineeStatus');
 
 // E M P L O Y E E  P O R T A L
-Route::get('/', 'PortalController@index')->name('portal');
+Route::view('/', 'portal_moved')->name('portal');
 Route::get('/tbl_manuals', 'PortalController@load_manuals');
 Route::get('/email_logs', 'PortalController@email_logs');
 Route::get('/resend_email/{id}', 'PortalController@resend_email');
