@@ -235,6 +235,29 @@
                                 </div>
                             </div>
                         </div>
+                        @if ($direct_reports->isNotEmpty())
+                        <div class="card mb-3">
+                            <div class="card-body p-2">
+                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Direct reports</h3>
+                                <table class="table m-0 remove-last-row-border">
+                                    <tbody class="table-body">
+                                        @foreach ($direct_reports as $direct_report)
+                                            <tr>
+                                                <td>
+                                                    @php
+                                                        $drImg = $direct_report->image ? $direct_report->image : '/storage/img/user.png';
+                                                    @endphp
+                                                    <img src="{{ $drImg }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;" alt="">
+                                                    <span class="approver-name d-block">{{ $direct_report->employee_name }}</span>
+                                                    <small class="d-block fst-italic text-muted">{{ $direct_report->designation }}</small>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @endif
 
                         @include('client.modals.change_password')
                     </div>
