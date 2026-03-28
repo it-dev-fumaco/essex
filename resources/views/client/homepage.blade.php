@@ -516,8 +516,9 @@
                                         <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
                                             <span class="col-12">My Attendance</span>
                                         </div>
-                                        <small class="d-block text-muted mt-1" style="font-size: 10px;">
-                                            Note: Attendance data is synced every 15 minutes.
+                                        <small class="d-flex align-items-center gap-1 text-info mt-1" style="font-size: 10px;">
+                                            <i class="fas fa-info-circle flex-shrink-0" aria-hidden="true"></i>
+                                            <span><strong>Note:</strong> Attendance data is synced every 15 minutes.</span>
                                         </small>
                                     </h3>
                                 </div>
