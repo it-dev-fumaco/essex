@@ -210,7 +210,9 @@ class PortalController extends Controller
 
         $categories = $categories->pluck('name', 'id')->unique();
 
-        return view('portal.homepage', compact('albums', 'milestones', 'it_policy', 'approvals', 'categories', 'approvers', 'celebrants', 'out_of_office_today'));
+        $portalSystems = collect(config('portal.systems', []));
+
+        return view('portal.homepage', compact('albums', 'milestones', 'it_policy', 'approvals', 'categories', 'approvers', 'celebrants', 'out_of_office_today', 'portalSystems'));
     }
 
     public function load_manuals(Request $request)
