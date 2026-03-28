@@ -338,6 +338,19 @@
                                                             <div class="flex-grow-1 text-end"><a class="text-decoration-none" id="sidebarContactNo">{{ Auth::user()->contact_no }}</a></div>
                                                         </div>
                                                     </li>
+                                                    @php
+                                                        $personalInfoAddress = collect([
+                                                            Auth::user()->address,
+                                                            Auth::user()->barangay,
+                                                            Auth::user()->city,
+                                                        ])->filter(fn ($v) => filled($v))->implode(', ');
+                                                    @endphp
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row align-items-start">
+                                                            <div class="fw-bold">Address</div>
+                                                            <div class="flex-grow-1 text-end text-break ps-2">{{ $personalInfoAddress !== '' ? $personalInfoAddress : '—' }}</div>
+                                                        </div>
+                                                    </li>
                                                     <li class="list-group-item">
                                                         <div class="d-flex flex-row">
                                                             <div class="fw-bold">TIN No.</div>
