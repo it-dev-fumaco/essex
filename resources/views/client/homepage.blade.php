@@ -82,7 +82,7 @@
         <button class="btn open-reminder d-none" data-bs-toggle="modal" data-bs-target="#reminder-modal">open</button>
     @endif
     <div class="container-fluid mt-2">
-        <div class="row m-0 p-0">
+        <div class="row m-0 p-0 align-items-start">
             <div class="col-3 col-xl-2 profile-container">
                 <div class="card card-primary card-outline mb-3">
                     <div class="card-body box-profile p-2">
@@ -241,7 +241,7 @@
                 </div>
             </div>
             <div class="col-9 col-xl-10">
-                <div class="row p-0 right-panel">
+                <div class="row p-0 right-panel align-items-start">
                     <div class="col-12 col-xl-7">
                         @if(in_array($designation, ['HR Payroll Assistant', 'HR Head', 'Human Resources Head', 'Director of Operations', 'President', 'Operations Manager']))
                             <div class="inner-box featured d-block d-xl-none mb-3">
@@ -377,6 +377,88 @@
                                     <div class="tab-pane" id="tab-my-exam-history">
                                         <div class="row">
                                             <div class="col-sm-12">
+                                                @php
+                                                    $pendingClientExams = $clientexams->filter(fn ($e) => $e->start_time == null);
+                                                    $completedClientExams = $clientexams->filter(fn ($e) => $e->start_time != null);
+                                                @endphp
+                                                <div class="card mb-3">
+                                                    <div class="card-body p-2">
+                                                        <h3 class="widget-title mb-2" style="font-size: 12px !important;">
+                                                            <div class="d-flex">
+                                                                <span class="d-inline-block">Pending Exam Schedule</span>
+                                                            </div>
+                                                        </h3>
+                                                        <div class="container-fluid p-0">
+                                                            <table class="table table-bordered table-striped m-0" style="font-size: 13px;">
+                                                                <col style="width: 50%;">
+                                                                <col style="width: 25%;">
+                                                                <col style="width: 25%;">
+                                                                <thead>
+                                                                    <th class="text-center text-uppercase p-1">Assessment</th>
+                                                                    <th class="text-center text-uppercase p-1">Validity Date</th>
+                                                                    <th class="text-center text-uppercase p-1">Action</th>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($pendingClientExams as $exam)
+                                                                    <tr>
+                                                                        <td class="align-middle p-1">
+                                                                            <span class="d-block fw-bold">{{ $exam->exam_title }}</span>
+                                                                            <small class="d-block text-muted">{{ $exam->exam_group_description }}</small>
+                                                                        </td>
+                                                                        <td class="align-middle text-center p-1">
+                                                                            <small>{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</small>
+                                                                        </td>
+                                                                        <td class="align-middle text-center p-1">
+                                                                            @if (date('m-d-Y') <= date('m-d-Y', strtotime($exam->validity_date)) && date('m-d-Y') >= date('m-d-Y', strtotime($exam->date_of_exam)))
+                                                                            <a href="#" class="btn btn-xs px-3 py-2 btn-primary" data-bs-toggle="modal" data-bs-target="#take-exam-modal-{{ $exam->examinee_id }}">Take Exam</a>
+                                                                            @else
+                                                                            <span class="badge bg-secondary" style="font-size: 10px;">Validity Expired!</span>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                    @empty
+                                                                    <tr>
+                                                                        <td colspan="3" class="text-center text-muted text-uppercase">No Pending Examination</td>
+                                                                    </tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @foreach($pendingClientExams as $exam)
+                                                <div class="modal fade" id="take-exam-modal-{{ $exam->examinee_id }}" tabindex="-1"
+                                                    aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Exam Confirmation</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <dl class="row m-0 p-0">
+                                                                    <dt class="col-sm-3">Exam Title</dt>
+                                                                    <dd class="col-sm-9">{{ $exam->exam_title }}</dd>
+                                                                    <dt class="col-sm-3">Exam Date</dt>
+                                                                    <dd class="col-sm-9">{{ \Carbon\Carbon::parse($exam->validity_date)->format('M. d, Y') }}</dd>
+                                                                    <dt class="col-sm-3">Duration</dt>
+                                                                    <dd class="col-sm-9">{{ $exam->duration }} minute(s)</dd>
+                                                                </dl>
+                                                                <div class="alert alert-info mb-0 mt-3" role="alert">
+                                                                <p class="text-center">Please click <b><i>Take Exam</i></b> to start exam.</p>
+                                                                </div>
+                                                                <input type="hidden" name="employee_exam_code" id="employee_exam_code" class="employee_exam_code_class" value="{{ $exam->exam_code }}">
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-primary" data-idcode="{{ $exam->exam_code }}" id="employee_submit"><i class="fa fa-check"></i> Take Exam</button>
+                                                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+
+                                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Completed assessments</h3>
                                                 <table class="table" style="font-size: 12px;">
                                                     <thead class="text-uppercase">
                                                         <th class="text-center">Exam Date</th>
@@ -387,9 +469,8 @@
                                                         <th class="text-center">Action</th>
                                                     </thead>
                                                     <tbody>
-                                                        @forelse($clientexams as $exam)
+                                                        @forelse($completedClientExams as $exam)
                                                             <tr>
-                                                            @if($exam->start_time != null)
                                                                 <td class="text-center align-middle">{{ \Carbon\Carbon::parse($exam->date_of_exam)->format('M. d, Y') }}</td>
                                                                 <td class="text-center align-middle">{{$exam->exam_title}}</td>
                                                                 <td class="text-center align-middle">{{$exam->exam_group_description}}</td>
@@ -399,7 +480,6 @@
                                                                     <span class="badge bg-success">Completed
                                                                     </span>
                                                                 </td>
-                                                            @endif
                                                             </tr>
                                                         @empty
                                                             <tr> <td colspan="6" class="text-center text-muted text-uppercase p-2">No records found</td></tr>
@@ -819,6 +899,11 @@
             overflow-y: auto;
         }
     }
+
+    /* Prevent equal-height columns from stretching the shorter white card (dead vertical space) */
+    .right-panel > [class*="col-"] {
+        align-self: flex-start;
+    }
     </style>
 
     @include('client.modals.add_datainput')
@@ -1175,11 +1260,6 @@
 				e.preventDefault();
 				$(this).tab("show");
 			});
-
-            $('#view-exam-history-tab').click(function (e) {
-                e.preventDefault();
-                $('#profile-tabs a[href="#tab-my-exam-history"]').tab('show');
-            });
 
             $('#view-my-leaves-tab').click(function (e) {
                 e.preventDefault();
