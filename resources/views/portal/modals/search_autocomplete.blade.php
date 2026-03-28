@@ -4,18 +4,42 @@
             @if (count($searchResults) > 0)
                 @foreach ($searchResults as $searchResult)
                     @php
-                        if(is_object($searchResult)){
-                            $url = $searchResult->url;
-                            $title = $searchResult->title;
-                            $category = $searchResult->category;
-                            $description = $searchResult->description;
+                        if ($searchResult instanceof \Spatie\Searchable\SearchResult) {
+                            $url = $searchResult->url ?? '#';
+                            $title = $searchResult->title ?? '';
+                            $category = $searchResult->type ?? '';
+                            $description = '';
                             $icon = 'icon-info';
-                        }else{
-                            $url = $searchResult['url'];
-                            $title = $searchResult['title'];
-                            $category = $searchResult['category'];
-                            $description = $searchResult['description'];
+                            $model = $searchResult->searchable;
+                            if ($model instanceof \Illuminate\Database\Eloquent\Model) {
+                                if ($model->getTable() === 'users' && isset($model->email)) {
+                                    $description = (string) $model->email;
+                                }
+                                if ($description === '' && isset($model->short_text) && $model->short_text !== '') {
+                                    $description = (string) $model->short_text;
+                                }
+                                if ($description === '' && isset($model->content) && $model->content !== '') {
+                                    $description = (string) $model->content;
+                                }
+                                if ($description === '' && isset($model->description) && $model->description !== '') {
+                                    $description = (string) $model->description;
+                                }
+                            }
+                            if (($searchResult->type ?? '') === 'Files') {
+                                $icon = 'fas fa-file';
+                            }
+                        } elseif (is_array($searchResult)) {
+                            $url = $searchResult['url'] ?? '#';
+                            $title = $searchResult['title'] ?? '';
+                            $category = $searchResult['category'] ?? '';
+                            $description = $searchResult['description'] ?? '';
                             $icon = 'fas fa-file';
+                        } else {
+                            $url = '#';
+                            $title = '';
+                            $category = '';
+                            $description = '';
+                            $icon = 'icon-info';
                         }
                     @endphp
                     <a href="{{ $url }}" class="text-decoration-none">

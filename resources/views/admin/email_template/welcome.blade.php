@@ -43,13 +43,13 @@
                 <tr>
                    <td style=" padding: 0.5%; text-align: center;">AthenaERP</td>
                    <td style=" padding: 0.5%; text-align: center;">Inventory System to check Items, Stock Availability and track item movements</td>
-                   <td style=" padding: 0.5%; text-align: center;"><a href="http://athenaerp.fumaco.local" target="_blank">http://athenaerp.fumaco.local</a></td>
+                   <td style=" padding: 0.5%; text-align: center;"><a href="http://athenaerp.fumaco.com" target="_blank">http://athenaerp.fumaco.com</a></td>
                    <td style=" padding: 0.5%; text-align: center;">Your Windows Account/LDAP</td>
                 </tr>
                 <tr>
                    <td style=" padding: 0.5%; text-align: center;">Essex</td>
                    <td style=" padding: 0.5%; text-align: center;">Employee Portal, Company Updates, File your Leave of Absence, Monitor your attendance and Gatepass Form</td>
-                   <td style=" padding: 0.5%; text-align: center;"><a href="http://essex.fumaco.local" target="_blank">http://essex.fumaco.local</a></td>
+                   <td style=" padding: 0.5%; text-align: center;"><a href="http://essex.fumaco.com" target="_blank">http://essex.fumaco.com</a></td>
                    <td style=" padding: 0.5%; text-align: center;">Biometric Access ID <br> Password: <i>fumaco</i></td>
                 </tr>
                 <tr>

@@ -145,8 +145,8 @@
               <h3>...or login to other fumaco sytems:</h3>
               <div class="social-login-buttons">
                 <a href="javascript:" class="btn btn-link-2" onClick="window.open('https://zimbra.fumaco.local');">Zimbra</a>
-                <a href="javascript:" class="btn btn-link-2" onClick="window.open('http://athenaerp.fumaco.local');">ERPNext Inventory</a>
-                <a href="javascript:" class="btn btn-link-2" onClick="window.open('http://10.0.0.83:8000');">ERPNext</a>
+                <a href="javascript:" class="btn btn-link-2" onClick="window.open('http://athenaerp.fumaco.com');">AthenaERP Inventory</a>
+                <a href="javascript:" class="btn btn-link-2" onClick="window.open('http://mes.fumaco.com');">MES</a>
               </div>
             </div>
           </div>

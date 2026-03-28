@@ -1,315 +1,315 @@
 @extends('portal.app')
 
+@push('styles')
+@include('portal.partials.portal-home-styles')
+@endpush
+
 @section('content')
 @include('portal.modals.edit_post_modal')
 @include('portal.modals.delete_post_modal')
-    <div class="container-fluid">
-        <div class="col-md-12 col-sm-10">
-            <div class="row">
-                <div class="col-8 col-xl-9">
-                    <div id="imagecontainer" class="container-fluid">
-                        <div class="container-fluid">
-                            <div class="col-md-12">
-                                <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; line-height: 94px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: #fff; display: inline-block !important">Welcome to </h3>
-                                <h3 style="font-family: 'Trebuchet MS'; text-align: left !important; min-height: 0px; min-width: 0px; border-width: 0px; padding: 0px; letter-spacing: 2px; font-size: 28px; text-transform: uppercase; font-weight: 700; color: yellow; display: inline-block !important">Essex!</h3>
-                            </div>
-                            <div class="col-12 col-xl-8">
-                                <form action="{{ route('search') }}" id="searh-form" method="get">
-                                    <div class="row p-0 m-0">
-                                        <div class="col-md-9 p-0 m-0">
-                                            <input type="text" class="form-control carousel-search" type="search" name="query" placeholder="How can we help you today?" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-3 p-0 m-0">
-                                            <button type="button" class="btn h-100 w-100 fw-bold submit-search responsive-font" style="border-radius: 0 25px 25px 0; background-color: #0dc761">Search</button>
-                                        </div>
-                                    </div>
-                                </form>
-                                <div id="autocomplete-container" class="container w-50 p-0 d-none"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <section id="tbl-manuals" class="mt-2 p-2 responsive-font" style="z-index: 999 !important"></section>
-                    <section id="videos-container" class="mt-2" style="z-index: 999 !important">
-                        <div class="container-fluid p-0">
-                            @php
-                                $videos_array = [];
-                                if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4')){
-                                    $videos_array[0] = [
-                                        'title' => 'IT Guidelines and Policies',
-                                        'url' => 'storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4',
-                                        'thumbnail' => 'storage/thumbnail/it_guidelines.png'
-                                    ];
-                                }
 
-                                if (Storage::disk('public')->exists('videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4')){
-                                    $videos_array[1] = [
-                                        'title' => 'Internet Services Proxy Configuration',
-                                        'url' => 'storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4',
-                                        'thumbnail' => 'storage/thumbnail/internet_services.png'
-                                    ];
-                                }
-                            @endphp
-                            <div class="row">
-                                <div class="col-4 p-3 d-none d-xl-inline">
-                                    <div class="card h-100 shadow" style="border-top: 3px solid #0D6EFD">
-                                        <div class="card-header">
-                                            <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
-                                        </div>
-                                        <div class="card-body">
-                                            <b>1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                                            <p>2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                                            <p>3. Log off each terminal after use</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                @foreach ($videos_array as $video)
-                                    <div class="col-6 col-xl-4 p-3">
-                                        <div class="card thumbnail h-100 shadow" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
-                                            <div class="card-body p-0">
-                                                <div class="h-100 position-relative" style="background-color: #000">
-                                                    <img src="{{ $video['thumbnail'] }}" class="w-100 h-100" style="opacity: .9">
-                                                    <i class="far fa-play-circle video-play-icon absolute-center"></i>
-                                                </div>
-                                            </div>
-                                            {{-- <div class="card-footer fw-bold">
-                                                <span>{{ $video['title'] }}</span><br/>
-                                                <span class="text-muted">General IT Concern</span>
-                                            </div> --}}
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </section>
-                    {{-- <section id="tbl-manuals" class="mt-2 p-2" style="z-index: 999 !important"></section> --}}
+@php
+    $videos_array = [];
+    if (Storage::disk('public')->exists('videos/IT-Guidelines-and-Policy-09-20-2017.mp4')){
+        $videos_array[0] = [
+            'title' => 'IT Guidelines and Policies',
+            'url' => 'storage/videos/IT-Guidelines-and-Policy-09-20-2017.mp4',
+            'thumbnail' => 'storage/thumbnail/it_guidelines.png'
+        ];
+    }
+    if (Storage::disk('public')->exists('videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4')){
+        $videos_array[1] = [
+            'title' => 'Internet Services Proxy Configuration',
+            'url' => 'storage/videos/Internet-Services-Proxy-Server-Configuration 09-20-2017.mp4',
+            'thumbnail' => 'storage/thumbnail/internet_services.png'
+        ];
+    }
+    $greet = 'Morning';
+    if(Carbon\Carbon::now()->format('A') == 'PM'){
+        $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
+    }
+@endphp
+
+<div class="portal-home portal-home-main">
+    <div class="portal-hero">
+        <div class="container-fluid px-3 px-xl-4">
+            <div class="row align-items-center py-3 py-xl-4">
+                <div class="col-lg-5 mb-3 mb-lg-0">
+                    <h1 class="portal-hero-title">Welcome to Essex!</h1>
                 </div>
-                <div class="col-4 col-xl-3">
-                    <div id="carouselExampleCaptions" class="carousel slide mt-2 shadow" data-bs-ride="carousel">
-                        <div class="carousel-inner" style="border-radius: 5px;">
-                            <div class="carousel-item bg-dark active" style="min-height: 350px;">
-                                <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
-                                <div class="carousel-caption d-none d-md-block" style="top: 45%; transform: translateY(-50%);">
-                                    <h5 style="text-shadow: 2px 2px 8px #000">Mission</h5>
-                                    <br>
-                                    <p style="text-shadow: 2px 2px 8px #000">To design and provide excellent, affordable, quality, energy efficient lighting solutions that doesn't jeopardize the environment.</p>
-                                </div>
+                <div class="col-lg-7">
+                    <div class="portal-hero-glass portal-hero-search-wrap">
+                        <form action="{{ route('search') }}" id="searh-form" method="get" class="m-0">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted" aria-hidden="true"></i></span>
+                                <input type="search" class="form-control carousel-search" name="query" placeholder="How can we help you today?" autocomplete="off" aria-label="Search">
+                                <button type="button" class="btn submit-search portal-btn-gradient">Search</button>
                             </div>
-                            <div class="carousel-item bg-dark" style="min-height: 350px;">
-                                <img src="{{ asset('storage/img/slider/achievement.jpg') }}" class="d-block w-100" style="height: 350px; object-fit: cover; opacity: .28">
-                                <div class="carousel-caption d-none d-md-block" id="vision-carousel">
-                                    <h5 style="text-shadow: 2px 2px 4px #000">Vision</h5>
-                                    <p style="text-shadow: 2px 2px 8px #000"><b>FUMACO</b> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
-                                    <br>
-                                    <p style="text-shadow: 2px 2px 8px #000">We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                    </div>
-
-                    <div class="card mt-2 shadow d-xl-none" style="border-top: 3px solid #11703C">
-                        <div class="card-body">
-                            <div class="row">
-                                @php
-                                    $greet = 'Morning';
-                                    if(Carbon\Carbon::now()->format('A') == 'PM'){
-                                        $greet = Carbon\Carbon::now()->format('H') >= 17 ? 'Evening' : 'Afternoon';
-                                    }
-                                @endphp
-                                <div class="col-5" style="display: flex; justify-content: center; align-items: center;">
-                                    <div class="text-center">
-                                        <i class="fa fa-cloud" style="font-size: 30pt;"></i>
-                                        <span class="fw-bold d-block responsive-font" style="font-size: 10pt;">Good {{ $greet }}!</span>
-                                    </div>
-                                </div>
-                                <div class="col-7" style="display: flex; justify-content: center; align-items: center;">
-                                    <div class="text-center">
-                                        <span class="current-time fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap"></span>
-                                        <span class="current-date fw-bold d-block mt-2" style="font-size: 11pt;"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if (count($celebrants) > 0)
-                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
-                            <div class="card-header">
-                                <span class="fw-bold" style="font-size: 12pt;">Today's Celebration</span>
-                            </div>
-                            <div class="card-body">
-                                @foreach ($celebrants as $celebrant)
-                                    @php
-                                        $image = 'storage/img/user.png';
-                                        if($celebrant->image && Storage::disk('public')->exists(str_replace('storage/', null, $celebrant->image))){
-                                            $image = $celebrant->image;
-                                        }
-
-                                        $celebration = 'Birthday';
-                                        $celebration_icon = 'fa-birthday-cake';
-                                        if($celebrant->date_joined && Carbon\Carbon::parse($celebrant->date_joined)->format('m-d') == Carbon\Carbon::now()->format('m-d')){
-                                            $celebration = 'Work Anniversary';
-                                            $celebration_icon = 'fa-glass-cheers';
-                                        }
-                                    @endphp
-                                    <div class="row" style="font-size: 9pt !important">
-                                        <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
-                                            <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
-                                        </div>
-                                        <div class="col-7 col-xl-8 p-0 d-flex justify-content-center align-items-center">
-                                            <div class="container-fluid p-0">
-                                                <span style="font-size: 10pt;" class="fw-bold">{{ $celebrant->employee_name }}</span><br>
-                                                <small class="text-muted">{{ $celebration }}</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-2 d-flex justify-content-center align-items-center">
-                                            <i class="fas {{ $celebration_icon }}" style="font-size: 25pt; color: rgba(0,0,0,.3)"></i>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (Auth::check())
-                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
-                            <div class="card-header">
-                                <span style="font-size: 12pt; font-weight: 700 !important">Pending for Approval</span>
-                            </div>
-                            <div class="card-body">
-                                @forelse ($approvals as $i => $approval)
-                                    @php
-                                        $date = 'on '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y');
-                                        if(Carbon\Carbon::parse($approval->date_from)->format('M d, Y') != Carbon\Carbon::parse($approval->date_to)->format('M d, Y')){
-                                            $date = 'from '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' to '.Carbon\Carbon::parse($approval->date_to)->format('M d, Y');
-                                        }
-                                    @endphp
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#approval-modal-{{ $i }}" style="margin-bottom: 5px; text-decoration: none; text-transform: none; color: #000;">&nbsp;●&nbsp;{{ $approval->leave_type }} {{ $date }}</a> <br>
-
-                                    <!-- The modal -->
-                                    <div class="modal fade" id="approval-modal-{{ $i }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">{{ $approval->leave_type }} {{ $date }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            Type of Absence: <b>{{ $approval->leave_type }}</b><br/>
-                                                            Status: <b>{{ $approval->status }}</b>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            From: <b>{{ Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_from)->format('h:i A') }}</b><br/>
-                                                            To: <b>{{ Carbon\Carbon::parse($approval->date_to)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_to)->format('h:i A') }}</b>
-                                                        </div>
-                                                        <div class="col-md-12" style="margin-top: 10px;">
-                                                            Reported to: <b>{{ $approval->info_by }}</b><br/>
-                                                            Reason: <b>{{ $approval->reason }}</b>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn bg-secondary" data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p class="center" style="margin-bottom: 5px;">You have no pending for approval</p>
-                                @endforelse
-                                <hr>
-                                <div class="container-fluid" style="padding: 0 !important">
-                                    <span style="font-size: 10pt; font-weight: 700 !important">My Leave Approver(s)</span>
-                                    @foreach ($approvers as $approver)
-                                        @if ($approver->employee_id == Auth::user()->user_id)
-                                            @continue
-                                        @endif
-                                        @php
-                                            $image = $approver->image ? $approver->image : 'storage/img/user.png';
-                                            if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
-                                                $image = 'storage/img/user.png';
-                                            }
-                                        @endphp
-                                        <div class="row container-fluid d-flex justify-content-center align-items-center">
-                                            <div class="col-3 col-xl-2" style="padding: 5px !important">
-                                                <div class="profile-image" style="background-image: url({{ asset($image) }});"></div>
-                                            </div>
-                                            <div class="col-9 col-xl-9">
-                                                <span style="font-weight: 600; font-size: 9pt;">{{ $approver->employee_name }}</span><br>
-                                                <cite style="font-size: 8pt;">{{ $approver->designation }}</cite>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (count($out_of_office_today) > 0)
-                        <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
-                            <div class="card-header">
-                                <span class="fw-bold" style="font-size: 12pt;">Out of the Office</span>
-                            </div>
-                            <div class="card-body">
-                                @foreach ($out_of_office_today as $out_of_office)
-                                    <div class="row" style="font-size: 9pt !important">
-                                        @php
-                                            $image = $out_of_office->image ? $out_of_office->image : '/storage/img/user.png';
-                                            if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
-                                                $image = 'storage/img/user.png';
-                                            }
-                                        @endphp
-                                        <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
-                                            <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
-                                        </div>
-                                        <div class="col-7 col-xl-6 p-0 d-flex justify-content-center align-items-center">
-                                            <div class="container-fluid p-0">
-                                                <span style="font-size: 10pt;" class="fw-bold">{{ $out_of_office->employee_name }}</span><br>
-                                                <small class="text-muted">{{ $out_of_office->designation }}</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-4 d-flex justify-content-center align-items-center text-muted p-0">
-                                            <i class="icon-clock"></i>&nbsp;{{ $out_of_office->time_from.' - '.$out_of_office->time_to }}
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="card mt-2 shadow" style="text-align: left; border-top: 3px solid #FFC414">
-                        <div class="card-header">
-                            <span class="fw-bold" style="font-size: 12pt;">Need for Support?</span>
-                        </div>
-                        <div class="card-body">
-                            <p class="responsive-font">If you cannot find an answer in the knowledgebase, email IT at <b>it@fumaco.local</b> or <b>it@fumaco.com</b></p>
-                        </div>
-                    </div>
-
-                    <div class="card mt-2 shadow d-xl-none" style="border-top: 3px solid #0D6EFD">
-                        <div class="card-header">
-                            <span class="fw-bold" style="font-size: 12pt;">Reminder</span>
-                        </div>
-                        <div class="card-body">
-                            <b class="responsive-font">1. FIRST TIME USERS - please read the <a href="/article/{{ $it_policy }}" style="color: inherit; text-decoration: underline">IT Guidelines and Policies</a>.</b>
-                            <p class="responsive-font">2. Shutdown computers, and turn off monitors, printers, photocopiers, laptops, AVR s(Automatic voltage regulators) and transformers.</p>
-                            <p class="responsive-font">3. Log off each terminal after use</p>
-                        </div>
+                        </form>
+                        <div id="autocomplete-container" class="p-0 d-none"></div>
                     </div>
                 </div>
             </div>
         </div>
-        
     </div>
+
+    <div class="container-fluid px-3 px-xl-4 pb-3 pt-4">
+        <div class="row g-4 align-items-stretch">
+            {{-- Left: articles + reminders --}}
+            <div class="col-12 col-xl-3">
+                <section id="tbl-manuals" class="responsive-font" style="z-index: 999 !important"></section>
+
+                <div class="card portal-card portal-reminders mt-3 mt-xl-4">
+                    <div class="card-header">Reminders</div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" value="" id="rem1" checked disabled>
+                            <label class="form-check-label small" for="rem1">Review IT guidelines and daily shutdown checklist.</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" value="" id="rem2" disabled>
+                            <label class="form-check-label small" for="rem2"><strong>First-time users:</strong> read <a href="/article/{{ $it_policy }}">IT Guidelines and Policies</a>.</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" value="" id="rem3" disabled>
+                            <label class="form-check-label small" for="rem3">Shut down computers, monitors, printers, and AVRs when leaving.</label>
+                        </div>
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" value="" id="rem4" disabled>
+                            <label class="form-check-label small" for="rem4">Log off each terminal after use.</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Center: systems --}}
+            <div class="col-12 col-xl-6">
+                <h2 class="portal-systems-title">FUMACO Systems</h2>
+                <div class="row g-3">
+                    @foreach ($portalSystems as $idx => $sys)
+                        <div class="col-md-6">
+                            <div class="card portal-system-card h-100 p-3">
+                                <div class="portal-system-icon accent-{{ $idx % 4 }}">
+                                    <i class="fas {{ $sys['icon'] ?? 'fa-link' }}" aria-hidden="true"></i>
+                                </div>
+                                <div class="portal-system-name">{{ $sys['name'] }}</div>
+                                <div class="portal-system-url">{{ $sys['label'] }}</div>
+                                <div class="small text-muted mb-2 text-break">{{ $sys['url'] }}</div>
+                                <a href="{{ $sys['url'] }}" class="portal-btn-open" target="_blank" rel="noopener noreferrer">Open system</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Right: vision + widgets --}}
+            <div class="col-12 col-xl-3">
+                <div class="portal-vision-card mb-3 mb-xl-4">
+                    <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
+                    <div class="portal-vision-body">
+                        <h2>Vision</h2>
+                        <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
+                        <p>We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
+                    </div>
+                </div>
+
+                <div class="card portal-card portal-widget-time shadow d-xl-none mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 d-flex justify-content-center align-items-center">
+                                <div class="text-center">
+                                    <i class="fa fa-cloud" style="font-size: 28pt;"></i>
+                                    <span class="fw-bold d-block responsive-font" style="font-size: 10pt;">Good {{ $greet }}!</span>
+                                </div>
+                            </div>
+                            <div class="col-7 d-flex justify-content-center align-items-center">
+                                <div class="text-center">
+                                    <span class="current-time fw-bold d-block" style="font-size: 2.5rem; white-space: nowrap"></span>
+                                    <span class="current-date fw-bold d-block mt-2" style="font-size: 11pt;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (count($celebrants) > 0)
+                    <div class="card portal-card mb-3 mb-xl-4" style="text-align: left; border-top: 3px solid #FFC414">
+                        <div class="card-header">
+                            <span class="fw-bold" style="font-size: 12pt;">Today's Celebration</span>
+                        </div>
+                        <div class="card-body">
+                            @foreach ($celebrants as $celebrant)
+                                @php
+                                    $image = 'storage/img/user.png';
+                                    if($celebrant->image && Storage::disk('public')->exists(str_replace('storage/', null, $celebrant->image))){
+                                        $image = $celebrant->image;
+                                    }
+
+                                    $celebration = 'Birthday';
+                                    $celebration_icon = 'fa-birthday-cake';
+                                    if($celebrant->date_joined && Carbon\Carbon::parse($celebrant->date_joined)->format('m-d') == Carbon\Carbon::now()->format('m-d')){
+                                        $celebration = 'Work Anniversary';
+                                        $celebration_icon = 'fa-glass-cheers';
+                                    }
+                                @endphp
+                                <div class="row" style="font-size: 9pt !important">
+                                    <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
+                                        <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                    </div>
+                                    <div class="col-7 col-xl-8 p-0 d-flex justify-content-center align-items-center">
+                                        <div class="container-fluid p-0">
+                                            <span style="font-size: 10pt;" class="fw-bold">{{ $celebrant->employee_name }}</span><br>
+                                            <small class="text-muted">{{ $celebration }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-2 d-flex justify-content-center align-items-center">
+                                        <i class="fas {{ $celebration_icon }}" style="font-size: 25pt; color: rgba(0,0,0,.3)"></i>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if (Auth::check())
+                    <div class="card portal-card mb-3 mb-xl-4" style="text-align: left; border-top: 3px solid #FFC414">
+                        <div class="card-header">
+                            <span style="font-size: 12pt; font-weight: 700 !important">Pending for Approval</span>
+                        </div>
+                        <div class="card-body">
+                            @forelse ($approvals as $i => $approval)
+                                @php
+                                    $date = 'on '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y');
+                                    if(Carbon\Carbon::parse($approval->date_from)->format('M d, Y') != Carbon\Carbon::parse($approval->date_to)->format('M d, Y')){
+                                        $date = 'from '.Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' to '.Carbon\Carbon::parse($approval->date_to)->format('M d, Y');
+                                    }
+                                @endphp
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#approval-modal-{{ $i }}" style="margin-bottom: 5px; text-decoration: none; text-transform: none; color: #000;">&nbsp;●&nbsp;{{ $approval->leave_type }} {{ $date }}</a> <br>
+
+                                <div class="modal fade" id="approval-modal-{{ $i }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ $approval->leave_type }} {{ $date }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        Type of Absence: <b>{{ $approval->leave_type }}</b><br/>
+                                                        Status: <b>{{ $approval->status }}</b>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        From: <b>{{ Carbon\Carbon::parse($approval->date_from)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_from)->format('h:i A') }}</b><br/>
+                                                        To: <b>{{ Carbon\Carbon::parse($approval->date_to)->format('M d, Y').' '.Carbon\Carbon::parse($approval->time_to)->format('h:i A') }}</b>
+                                                    </div>
+                                                    <div class="col-md-12" style="margin-top: 10px;">
+                                                        Reported to: <b>{{ $approval->info_by }}</b><br/>
+                                                        Reason: <b>{{ $approval->reason }}</b>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn bg-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="center" style="margin-bottom: 5px;">You have no pending for approval</p>
+                            @endforelse
+                            <hr>
+                            <div class="container-fluid" style="padding: 0 !important">
+                                <span style="font-size: 10pt; font-weight: 700 !important">My Leave Approver(s)</span>
+                                @foreach ($approvers as $approver)
+                                    @if ($approver->employee_id == Auth::user()->user_id)
+                                        @continue
+                                    @endif
+                                    @php
+                                        $image = $approver->image ? $approver->image : 'storage/img/user.png';
+                                        if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
+                                            $image = 'storage/img/user.png';
+                                        }
+                                    @endphp
+                                    <div class="row container-fluid d-flex justify-content-center align-items-center">
+                                        <div class="col-3 col-xl-2" style="padding: 5px !important">
+                                            <div class="profile-image" style="background-image: url({{ asset($image) }});"></div>
+                                        </div>
+                                        <div class="col-9 col-xl-9">
+                                            <span style="font-weight: 600; font-size: 9pt;">{{ $approver->employee_name }}</span><br>
+                                            <cite style="font-size: 8pt;">{{ $approver->designation }}</cite>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if (count($out_of_office_today) > 0)
+                    <div class="card portal-card mb-3 mb-xl-4" style="text-align: left; border-top: 3px solid #FFC414">
+                        <div class="card-header">
+                            <span class="fw-bold" style="font-size: 12pt;">Out of the Office</span>
+                        </div>
+                        <div class="card-body">
+                            @foreach ($out_of_office_today as $out_of_office)
+                                <div class="row" style="font-size: 9pt !important">
+                                    @php
+                                        $image = $out_of_office->image ? $out_of_office->image : '/storage/img/user.png';
+                                        if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
+                                            $image = 'storage/img/user.png';
+                                        }
+                                    @endphp
+                                    <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
+                                        <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                    </div>
+                                    <div class="col-7 col-xl-6 p-0 d-flex justify-content-center align-items-center">
+                                        <div class="container-fluid p-0">
+                                            <span style="font-size: 10pt;" class="fw-bold">{{ $out_of_office->employee_name }}</span><br>
+                                            <small class="text-muted">{{ $out_of_office->designation }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4 d-flex justify-content-center align-items-center text-muted p-0">
+                                        <i class="icon-clock"></i>&nbsp;{{ $out_of_office->time_from.' - '.$out_of_office->time_to }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <div class="card portal-card mb-0" style="text-align: left; border-top: 3px solid #FFC414">
+                    <div class="card-header">
+                        <span class="fw-bold" style="font-size: 12pt;">Need Support?</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="responsive-font mb-0">If you cannot find an answer in the knowledge base, email IT at <b>it@fumaco.com</b></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (count($videos_array) > 0)
+    <section id="videos-container" class="container-fluid px-3 px-xl-4 pb-4 pt-2" style="z-index: 999 !important">
+        <h2 class="portal-systems-title mb-3">IT videos</h2>
+        <div class="row">
+            @foreach ($videos_array as $video)
+                <div class="col-12 col-md-6 col-xl-4 p-2">
+                    <div class="card thumbnail h-100 portal-card" data-title="{{ $video['title'] }}" data-url="{{ asset($video['url']) }}">
+                        <div class="card-body p-0">
+                            <div class="h-100 position-relative rounded overflow-hidden" style="background-color: #000; min-height: 160px;">
+                                <img src="{{ $video['thumbnail'] }}" alt="" class="w-100 h-100" style="opacity: .9; object-fit: cover;">
+                                <i class="far fa-play-circle video-play-icon absolute-center"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+    @endif
+</div>
 
     <div class="modal fade" id="thumbnail-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl" role="document" style="width: 50% !important">
@@ -324,7 +324,7 @@
                     <video width="100%" controls>
                         <source src="" type="video/mp4">
                         Your browser does not support the video tag.
-                    </video> 
+                    </video>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn bg-secondary" data-bs-dismiss="modal"><i class="fa fa-close"></i>&nbsp;Close</button>
@@ -361,7 +361,7 @@
                 </div>
             </div>
             </div>
-        </div> 
+        </div>
     @endif
 
     <style>
@@ -390,7 +390,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .custom-badge{
             border-radius: 5px;
             padding: 5px;
@@ -434,7 +434,6 @@
             event.preventDefault();
             $('#editPostModal .post_id').val($(this).data('id'));
             $('#editPostModal .post_title').val($(this).data('title'));
-            // $('#editPostModal .post_content').val($(this).data('content'));
             $('#editPostModal .original_post_image').val($(this).data('image'));
             $('#editPostModal .original_post_title').val($(this).data('title'));
             $('#editPostModal .original_post_content').val($(this).data('content'));
@@ -448,7 +447,6 @@
         $('#deletePostModal .post_title').text($(this).data('title'));
         $('#deletePostModal').modal('show');
     });
-        {{-- $('textarea').ckeditor(); --}}
 
         CKEDITOR.config.height = 450;
 

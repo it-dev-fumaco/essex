@@ -1,7 +1,15 @@
 /* Revolution Slider
 ========================================================*/
 $(document).ready(function() {
- jQuery('.tp-banner').show().revolution({
+ try {
+  var $tp = jQuery('.tp-banner');
+  if (!$tp.length) {
+   return;
+  }
+  if (typeof jQuery.fn.revolution !== 'function') {
+   return;
+  }
+  $tp.show().revolution({
   dottedOverlay: "none",
   delay: 9000,
   startwidth: 1170,
@@ -56,6 +64,11 @@ $(document).ready(function() {
   startWithSlide: 0,
   fullScreenOffsetContainer: ""
   });
+ } catch (e) {
+  if (typeof console !== 'undefined' && console.warn) {
+   console.warn('Revolution slider skipped:', e);
+  }
+ }
 });
 /* Bootstrap Select
 ========================================================*/

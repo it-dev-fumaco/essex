@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="{{ asset('css/extras/nivo-lightbox.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/responsive.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ asset('css/css/bootstrap-select.min.css') }}">
+    @include('portal.partials.portal-theme-styles')
+    @stack('styles')
+</head>
 <style type="text/css">
     @font-face{
         font-family: 'Poppins-Regular';
@@ -123,7 +126,7 @@
 
     .carousel-search{
         border-radius: 25px 0 0 25px;
-        font-family: 'Trebuchet MS';
+        font-family: 'Poppins-Regular', 'Poppins', sans-serif;
         font-size: 17px;
     }
 
@@ -322,7 +325,7 @@
         6 => 'Sat',
     ];
 @endphp
-<div class="header">
+<div class="header portal-header-modern">
     <div class="top-bar">
         <div class="container-fluid">
             <div class="col-md-12">
@@ -395,18 +398,18 @@
 <script type="text/javascript" src="{{ asset('css/js/jquery-min.js') }}"></script>
 {{-- <script type="text/javascript" src="{{ asset('css/js/bootstrap.min.js') }}"></script> --}}
 <script type="text/javascript" src="{{ asset('bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('css/js/jquery.themepunch.tools.min.js') }}"></script>
+<script type="text/javascript" src="{{ asset('css/js/jquery.themepunch.revolution.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.parallax.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/owl.carousel.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/wow.js') }}"></script>
-<script type="text/javascript" src="{{ asset('css/js/main.js') }}"></script>
+<script type="text/javascript" src="{{ asset('css/js/main.js') }}?v={{ file_exists(public_path('css/js/main.js')) ? filemtime(public_path('css/js/main.js')) : 1 }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.mixitup.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/nivo-lightbox.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.counterup.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/waypoints.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/form-validator.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/contact-form-script.js') }}"></script>
-<script type="text/javascript" src="{{ asset('css/js/jquery.themepunch.revolution.min.js') }}"></script>
-<script type="text/javascript" src="{{ asset('css/js/jquery.themepunch.tools.min.js') }}"></script>
 <script type="text/javascript" src="{{ asset('css/js/jquery.slicknav.js') }}"></script>
 <script src="{{ asset('css/js/bootstrap-select.min.js') }}"></script>
 <script type = "text/javascript" src = "{{ asset('css/js/jquery-ui.min.js') }}"></script>

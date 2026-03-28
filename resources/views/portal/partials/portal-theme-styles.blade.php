@@ -1,0 +1,86 @@
+{{-- Inlined so styles load without a separate /css/... request (avoids nginx static 404s). --}}
+<style id="portal-theme-styles">
+:root {
+    --portal-gradient-start: #1a5fb4;
+    --portal-gradient-mid: #0f8f8a;
+    --portal-gradient-end: #159957;
+    --portal-header-glass: rgba(255, 255, 255, 0.88);
+}
+
+.header.portal-header-modern .top-bar {
+    background: linear-gradient(
+        90deg,
+        rgba(26, 95, 180, 0.92) 0%,
+        rgba(15, 143, 138, 0.88) 50%,
+        rgba(21, 153, 87, 0.9) 100%
+    );
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.header.portal-header-modern .navbar {
+    margin-bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(230, 245, 252, 0.97) 0%,
+        rgba(232, 248, 244, 0.98) 100%
+    );
+    font-size: 0.95rem;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 0;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+.header.portal-header-modern .navbar-nav .nav-link {
+    color: #1a1a2e !important;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.5rem 0.65rem !important;
+    border-radius: 0.5rem;
+    text-transform: none;
+}
+
+.header.portal-header-modern .navbar-nav .nav-link:hover {
+    color: var(--portal-gradient-start) !important;
+    background: rgba(26, 95, 180, 0.06);
+}
+
+.header.portal-header-modern .navbar-nav .nav-link.active {
+    color: var(--portal-gradient-start) !important;
+    box-shadow: inset 0 -3px 0 0 var(--portal-gradient-end);
+    background: transparent;
+}
+
+.header.portal-header-modern .navbar-nav .dropdown-toggle::after {
+    vertical-align: 0.15em;
+}
+
+.portal-nav-brand-text {
+    font-family: 'Poppins-Bold', 'Poppins-Regular', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    color: #1a1a2e;
+}
+
+.portal-nav-brand-sub {
+    font-size: 0.75rem;
+    color: #5c6370;
+    font-weight: 500;
+}
+
+.portal-nav-essex-logo {
+    display: block;
+    max-height: 44px;
+    width: auto;
+    object-fit: contain;
+}
+
+.portal-nav-fumaco-logo {
+    display: block;
+    max-height: 25px;
+    width: auto;
+    object-fit: contain;
+}
+
+</style>

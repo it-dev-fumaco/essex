@@ -1,71 +1,62 @@
 <div class="row">
-    <div class="col-12 d-block justify-content-start justify-content-xl-center align-items-center">
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid p-0">
-                <div class="col-2 col-xl-3">
-                    <div class="row" style="display: flex; justify-content: center; align-items: center;">
-                        <div class="col-md-6 col-xl-4 offset-xl-1" style="padding: 0;">
-                            <a href="/">
-                                <img src="{{ asset('storage/img/logo5.png') }}" style="width: 100%;">
-                            </a>
-                        </div>
-                        <div class="col-6 col-xl-7">
-                            <img src="{{ asset('storage/img/company_logo.png') }}" width="100">
-                            <br><span class="header-text">Employee Portal</span>
-                        </div>
-                    </div>
-                </div>
+    <div class="col-12">
+        <nav class="navbar navbar-expand-xl navbar-light w-100">
+            <div class="container-fluid align-items-center px-2 px-xl-3">
+                <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-2" href="{{ url('/') }}">
+                    <img src="{{ asset('storage/img/logo5.png') }}" alt="" class="portal-nav-essex-logo">
+                    <span class="d-none d-sm-inline-block text-start">
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('upcloud')->url('logo/fumaco-transparent.png') }}" alt="Fumaco" class="portal-nav-fumaco-logo d-block mb-1">
+                        <span class="portal-nav-brand-sub">Employee Portal</span>
+                    </span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 text-dark">
+                    <ul class="navbar-nav mx-xl-auto my-2 my-xl-0 text-dark align-items-xl-center">
                         <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="/" style="white-space: nowrap" ><i class="icon-home"></i> &nbsp;HOME</a>
+                            <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}"><i class="icon-home"></i> Home</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
-                                <i class="icon-info"></i> &nbsp;UPDATES
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="icon-info"></i> Updates
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/gallery" style="white-space: nowrap"><i class="icon-hourglass"></i> &nbsp;Gallery</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/gallery') }}"><i class="icon-hourglass"></i> Gallery</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/manuals" style="white-space: nowrap"><i class="icon-notebook"></i> &nbsp;MANUALS</a>
+                            <a class="nav-link {{ request()->is('manuals*') ? 'active' : '' }}" href="{{ url('/manuals') }}"><i class="icon-notebook"></i> Manuals</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
-                                <i class="icon-book-open"></i> &nbsp;SERVICES
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="icon-book-open"></i> Services
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/services/internet">Internet</a></li>
-                                <li><a class="dropdown-item" href="/services/email">Email</a></li>
-                                <li><a class="dropdown-item" href="/services/system">System</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/services/internet') }}">Internet</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/services/email') }}">Email</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/services/system') }}">System</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="white-space: nowrap">
-                                <i class="icon-briefcase"></i> &nbsp;POLICY
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="icon-briefcase"></i> Policy
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/policies">Operational Policies</a></li>
-                                <li><a class="dropdown-item" href="/itguidelines">IT Guidelines and Policy</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/policies') }}">Operational Policies</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/itguidelines') }}">IT Guidelines and Policy</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/services/directory" style="white-space: nowrap"><i class="icon-briefcase"></i> &nbsp;EMPLOYEE DIRECTORY</a>
+                            <a class="nav-link {{ request()->is('services/directory*') ? 'active' : '' }}" href="{{ url('/services/directory') }}"><i class="icon-briefcase"></i> Employee Directory</a>
                         </li>
                         @if(Auth::check())
                             <li class="nav-item">
-                                <a class="nav-link" href="/home" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
+                                <a class="nav-link {{ request()->is('home') ? 'active' : '' }}" href="{{ url('/home') }}"><i class="icon-user"></i> My profile</a>
                             </li>
                         @endif
                     </ul>
-                </div>
-                <div class="col-3 p-2 d-none d-xl-inline">
-                    
                 </div>
             </div>
         </nav>
@@ -73,6 +64,6 @@
 </div>
 <style>
     .nav-item{
-        margin: 0 6px 0 6px
+        margin: 0 4px;
     }
 </style>
