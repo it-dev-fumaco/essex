@@ -36,8 +36,34 @@
         font-family: 'Poppins-Light';
         src: url('{{ asset("fonts/Poppins/Poppins-Light.ttf") }}') format('truetype');
     }
-    html, body{
+    html {
         font-family: 'Poppins-Regular' !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        /* Fills any sub-pixel gap below body so a white block does not show under the footer */
+        background-color: #393939;
+    }
+    body.portal-app {
+        font-family: 'Poppins-Regular' !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: #f2f4f4;
+    }
+    .portal-app > .header {
+        flex-shrink: 0;
+    }
+    main.portal-main {
+        flex: 1 0 auto;
+        width: 100%;
+        min-width: 0;
+    }
+    #copyright {
+        flex-shrink: 0;
+        margin-bottom: 0;
     }
 
     h1, h2, h3, h4, h5, h6, p, span, b, a, small, cite{
@@ -284,6 +310,8 @@
 
     }
 </style>
+</head>
+<body class="portal-app">
 
 @include('portal.modals.login_modal')
 @php
@@ -348,7 +376,9 @@
     </div>
     @include('nav')
 </div>
+<main class="portal-main">
 @yield('content')
+</main>
 
 @include('portal.includes.footer')
 
@@ -485,17 +515,17 @@ $(document).ready(function(){
 });
 </script>
 
-</body>
-</html>
-
 <div id="copyright">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
                 <div class="site-info text-center">
-                    <p>&copy; All rights reserved 2023</p>
+                    <p>&copy; All rights reserved 2026</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+</body>
+</html>
