@@ -55,6 +55,9 @@ return [
             'strict' => true,
             'engine' => null,
             'timezone' => env('DB_TIMEZONE', '+08:00'),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 30),
+            ]) : [],
         ],
 
         // ERP Connection

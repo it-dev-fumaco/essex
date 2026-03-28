@@ -44,6 +44,17 @@
             <a href="#" data-id="{{ $notice_slip->notice_id }}" id="editAbsent" class="hover-icon text-decoration-none">
                <i class="fa fa-search" style="font-size: 18pt; color: #27AE60"></i>
             </a>
+            @if(strtolower($notice_slip->status) == 'for approval')
+            <button
+               type="button"
+               class="btn btn-link p-0 text-decoration-none notify-manager-btn"
+               data-id="{{ $notice_slip->notice_id }}"
+               title="Notify Manager"
+               aria-label="Notify Manager"
+            >
+               <i class="fa fa-bell" style="font-size: 16pt; color: #F1C40F"></i>
+            </button>
+            @endif
             @if(strtolower($notice_slip->status) == 'approved')
             <a href="#" data-id="{{ $notice_slip->notice_id }}" id="printAbsent" class="hover-icon text-decoration-none">
                <i class="fa fa-print" style="font-size: 18pt; color: #85929E"></i>

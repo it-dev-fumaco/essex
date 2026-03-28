@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KioskLoginRequest;
+use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
 use App\Models\Gatepass;
 use App\Traits\AttendanceTrait;
@@ -11,7 +12,9 @@ use Carbon\Carbon;
 use DateTime;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class KioskController extends Controller
 {
@@ -117,6 +120,8 @@ class KioskController extends Controller
 
     public function storenotice(Request $request)
     {
+        DB::beginTransaction();
+        try {
         if (in_array($request->absence_type, [1, 2, 3, 4, 7])) {
             $date_from = Carbon::parse($request->date_from);
             $date_to = Carbon::parse($request->date_to);
@@ -153,6 +158,8 @@ class KioskController extends Controller
                 ->update(['remaining' => $remaining]);
         }
 
+        $token = Str::random(64);
+
         $notice_slip = new AbsentNotice;
         $notice_slip->user_id = $request->user_id;
         $notice_slip->dept_id = $request->department;
@@ -170,9 +177,78 @@ class KioskController extends Controller
         $notice_slip->created_by = Auth::user()->employee_name;
         $notice_slip->last_modified_by = Auth::user()->employee_name;
         $notice_slip->duration = $duration;
+        $notice_slip->token = $token;
         $notice_slip->save();
 
+        // Notify department approver(s) by email (same flow as portal submission).
+        $viewdetails = DB::table('notice_slip')
+            ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+            ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
+            ->select('notice_slip.*', 'leave_types.leave_type', 'departments.department')
+            ->orderBy('notice_id', 'desc')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
+
+        $notice_id = $viewdetails?->notice_id ?? $notice_slip->notice_id;
+        $data = [
+            'employee_name' => Auth::user()->employee_name,
+            'year' => now()->format('Y'),
+            'slip_id' => $notice_id,
+            'reported_to' => $request->received_by,
+            'means' => $request->reported_through,
+            'reason' => $request->reason,
+            'token' => $token,
+            'leave_type' => $viewdetails?->leave_type ?? '',
+            'from' => Carbon::parse(($viewdetails?->date_from ?? $request->date_from).' '.($viewdetails?->time_from ?? $request->time_from))->format('M. d, Y h:i A'),
+            'to' => Carbon::parse(($viewdetails?->date_to ?? $request->date_to).' '.($viewdetails?->time_to ?? $request->time_to))->format('M. d, Y h:i A'),
+            'department' => $viewdetails?->department ?? '',
+        ];
+
+        $leave_approver = DB::table('department_approvers')
+            ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+            ->where('department_approvers.department_id', Auth::user()->department_id)
+            ->distinct()
+            ->pluck('users.email', 'users.user_id');
+
+        foreach ($leave_approver as $user_id => $email) {
+            $data['approver'] = $user_id;
+
+            $email_sent = 0;
+            try {
+                Mail::to($email)->queue(new SendMail_notice($data));
+                $email_sent = 1;
+            } catch (\Throwable $th) {
+                $email_sent = 0;
+                Log::warning('Failed queueing absent notice approver email (kiosk).', [
+                    'notice_id' => $notice_id,
+                    'approver_user_id' => $user_id,
+                    'recipient' => $email,
+                    'error' => $th->getMessage(),
+                ]);
+            }
+
+            DB::table('email_notifications')->insert([
+                'type' => 'Absent Notice Slip',
+                'recipient' => $email,
+                'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
+                'template' => 'kiosk.Mail.template.notice_template',
+                'template_data' => json_encode($data),
+                'user_id' => Auth::user()->user_id,
+                'email_sent' => $email_sent,
+            ]);
+        }
+
+        DB::commit();
         return redirect('/kiosk/notice/view');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Kiosk storenotice failed.', [
+                'user_id' => Auth::user()?->user_id,
+                'error' => $th->getMessage(),
+            ]);
+
+            return redirect()->back()->with('message', 'An error occured. Please try again.');
+        }
     }
 
     public function noticeView()
@@ -268,11 +344,19 @@ class KioskController extends Controller
 
     public function user_shift(Request $request)
     {
-        $dayOfWeek = date('l', strtotime($request->type));
-        $data = [];
+        $dayOfWeek = date('l', strtotime((string) $request->type));
         $user_shift = DB::table('users')->join('shifts', 'shifts.shift_group_id', '=', 'users.shift_group_id')
             ->where('users.user_id', Auth::user()->user_id)->where('shifts.day_of_week', $dayOfWeek)
             ->first();
+
+        if ($user_shift === null) {
+            return response()->json([
+                'shift_in' => null,
+                'shift_out' => null,
+                'day' => $dayOfWeek,
+                'date' => $request->type,
+            ]);
+        }
 
         $data = [
             'shift_in' => date('g:i A', strtotime($user_shift->time_in)),

@@ -1,35 +1,60 @@
-<div style="font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.6;">
-    <p>Good day,</p>
+@extends('emails.layouts.master')
 
-    <p>
-        Please initiate the standard offboarding procedure for the employee listed below. To maintain our security posture
-        and infrastructure integrity, ensure all account deactivations and hardware retrievals are completed by
-        <strong>{{ $data['last_working_date'] ?? ($data['last_day'] ?? '') }}</strong>.
+@section('title', 'Offboarding — ' . config('app.name'))
+
+@section('preheader')
+    Offboarding: revoke access and recover assets by {{ $data['last_working_date'] ?? ($data['last_day'] ?? '') }}.
+@endsection
+
+@section('header_tagline')
+    IT &amp; security notification
+@endsection
+
+@section('email_heading')
+    Employee offboarding — action required
+@endsection
+
+@section('content')
+    <p style="margin:0 0 16px;">Good day,</p>
+
+    <p style="margin:0 0 20px;">
+        Please begin the standard offboarding procedure for the employee below. Complete account deactivation and hardware recovery by
+        <strong style="color:#0f172a;">{{ $data['last_working_date'] ?? ($data['last_day'] ?? '') }}</strong>
+        to protect our security posture and infrastructure.
     </p>
 
-    <h3 style="margin: 18px 0 8px 0;">Employee Details</h3>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px; border-collapse:collapse;">
+        <tr>
+            <td style="padding:14px 16px; background-color:#f1f5f9; border-radius:6px; border:1px solid #e2e8f0;">
+                <p style="margin:0 0 10px; font-size:13px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:#64748b;">Employee details</p>
+                <p style="margin:0 0 6px;"><span style="display:inline-block; min-width:132px; color:#64748b; font-size:13px;">Name</span> <strong style="color:#0f172a;">{{ $data['full_name'] ?? ($data['name'] ?? '') }}</strong></p>
+                <p style="margin:0 0 6px;"><span style="display:inline-block; min-width:132px; color:#64748b; font-size:13px;">Position</span> <strong style="color:#0f172a;">{{ $data['job_title'] ?? ($data['role'] ?? '') }}</strong></p>
+                <p style="margin:0 0 6px;"><span style="display:inline-block; min-width:132px; color:#64748b; font-size:13px;">Department</span> <strong style="color:#0f172a;">{{ $data['department'] ?? '' }}</strong></p>
+                <p style="margin:0;"><span style="display:inline-block; min-width:132px; color:#64748b; font-size:13px;">Primary location</span> <strong style="color:#0f172a;">{{ $data['primary_location'] ?? '' }}</strong></p>
+            </td>
+        </tr>
+    </table>
 
-    <p><strong>Name:</strong> {{ $data['full_name'] ?? ($data['name'] ?? '') }}</p>
-    <p><strong>Position:</strong> {{ $data['job_title'] ?? ($data['role'] ?? '') }}</p>
-    <p><strong>Department:</strong> {{ $data['department'] ?? '' }}</p>
-    <p><strong>Primary Location:</strong> {{ $data['primary_location'] ?? '' }}</p>
+    <h2 style="margin:0 0 10px; font-family:Arial, Helvetica, sans-serif; font-size:16px; font-weight:700; line-height:1.35; color:#0f172a;">Access revocation &amp; deactivation</h2>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">Email</span> Disable Microsoft 365; set auto-reply if requested by manager.</p>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">ERPNext</span> Deactivate user; revoke module permissions.</p>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">AthenaERP / MES / Essex</span> Terminate sessions; disable login.</p>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">VPN / remote</span> Remove VPN access.</p>
+    <p style="margin:0 0 20px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">DL / groups</span> Remove from distribution lists and shared drives.</p>
 
-    <h3 style="margin: 18px 0 8px 0;">Access Revocation &amp; Deactivation</h3>
-    <p><strong>Email:</strong> Disable Microsoft 365 account and set an auto-reply (if requested by the Manager).</p>
-    <p><strong>ERPNext:</strong> Deactivate user account and revoke all module permissions.</p>
-    <p><strong>AthenaERP / MES / Essex:</strong> Terminate all active sessions and disable login access.</p>
-    <p><strong>VPN/Remote Access:</strong> Remove the user from VPN Access</p>
-    <p><strong>DL / Groups:</strong> Remove the user from all Distribution Lists and shared drive permissions.</p>
+    <h2 style="margin:0 0 10px; font-family:Arial, Helvetica, sans-serif; font-size:16px; font-weight:700; line-height:1.35; color:#0f172a;">Hardware &amp; asset recovery</h2>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">Workstation</span> Retrieve laptop/desktop and peripherals.</p>
+    <p style="margin:0 0 8px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">Mobile / other</span> Phone, tokens, RSA keys (if issued).</p>
+    <p style="margin:0 0 20px;"><span style="color:#64748b; font-size:13px; display:inline-block; min-width:140px;">Inspection</span> Check for damage or unauthorized software.</p>
 
-    <h3 style="margin: 18px 0 8px 0;">Hardware &amp; Asset Recovery</h3>
-    <p><strong>Workstation:</strong> Retrieve laptop/desktop and peripherals.</p>
-    <p><strong>Mobile/Other:</strong> Company phone, tokens, or RSA keys (if issued).</p>
-    <p><strong>Inspection:</strong> Verify the returned hardware for any physical damage or unauthorized software.</p>
+    <h2 style="margin:0 0 10px; font-family:Arial, Helvetica, sans-serif; font-size:16px; font-weight:700; line-height:1.35; color:#0f172a;">Security checklist</h2>
+    <p style="margin:0 0 6px;">[ ] MFA: disable for this user.</p>
+    <p style="margin:0 0 6px;">[ ] LMS: deactivate portal profile.</p>
+    <p style="margin:0;">[ ] Data: back up critical local data to shared drive before wipe.</p>
 
-    <h3 style="margin: 18px 0 8px 0;">Security Checklist</h3>
-    <p>[ ] MFA: Disable Multi-Factor Authentication for the user.</p>
-    <p>[ ] LMS: Deactivate the user profile on the LMS portal.</p>
-    <p>[ ] Data Backup: Ensure any critical local data is backed up to the department's shared drive before wiping the device.</p>
+    <p style="margin:24px 0 0;">Thank you.</p>
+@endsection
 
-    <p style="margin-top: 18px;">Thank you.</p>
-</div>
+@section('footer_line')
+    {{ config('app.name') }} — Internal use
+@endsection

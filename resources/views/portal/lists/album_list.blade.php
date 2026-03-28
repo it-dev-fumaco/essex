@@ -51,6 +51,6 @@
   @endforeach
 
   <div class="col-md-12" id="album_pagination">
-    <div class="pagination-bar center">{{ $albums->links()}}</div>
+    <div class="pagination-bar center">{{ $albums->links('vendor.pagination.bootstrap-4') }}</div>
   </div>
 </div>

@@ -1,57 +1,51 @@
-<div style="font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.6;">
-    <p>Hi {{ $data['name'] ?? 'Employee' }},</p>
+@extends('emails.layouts.master')
 
-    <p>
-        Welcome aboard to Fumaco! We are thrilled to have you with us and look forward to your contributions to the team.
+@section('title', 'Welcome — ' . config('app.name'))
+
+@section('preheader')
+    Your core systems access overview and quick links — welcome aboard.
+@endsection
+
+@section('header_tagline')
+    Employee onboarding
+@endsection
+
+@section('email_heading')
+    Welcome, {{ $data['name'] ?? 'Employee' }}
+@endsection
+
+@section('content')
+    <p style="margin:0 0 16px;">Welcome aboard to <strong style="color:#0f172a;">{{ config('app.name') }}</strong>! We are glad you are joining the team and look forward to your contributions.</p>
+
+    <p style="margin:0 0 20px;">
+        Below are the primary platforms you will use. Use the buttons to open each system (your network may require the LAN address).
     </p>
 
-    <p>
-        To help you get settled in and hit the ground running, we have prepared your access to our primary operational platforms.
-        Please see the list below for the systems you will be using:
-    </p>
+    <p style="margin:0 0 8px; font-size:13px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:#64748b;">ERP (Enterprise Resource Planning)</p>
+    <p style="margin:0 0 12px; font-size:14px; color:#475569;">Core system for company-wide data and business processes.</p>
+    @include('emails.partials.button', ['url' => 'http://erp.fumaco.com', 'label' => 'Open ERP (hostname)', 'marginBottom' => '8px'])
+    @include('emails.partials.button', ['url' => 'http://10.0.0.83', 'label' => 'Open ERP (10.0.0.83)', 'marginBottom' => '24px'])
 
-    <h3 style="margin: 18px 0 8px 0;">Core Systems Overview</h3>
+    <p style="margin:0 0 8px; font-size:13px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:#64748b;">AthenaERP</p>
+    <p style="margin:0 0 12px; font-size:14px; color:#475569;">Inventory and stock tracking.</p>
+    @include('emails.partials.button', ['url' => 'http://athena.fumaco.com', 'label' => 'Open AthenaERP (hostname)', 'marginBottom' => '8px'])
+    @include('emails.partials.button', ['url' => 'http://10.0.0.79', 'label' => 'Open AthenaERP (10.0.0.79)', 'marginBottom' => '24px'])
 
-    <p style="margin: 10px 0 4px 0;"><strong>ERP (Enterprise Resource Planning)</strong></p>
-    <p style="margin: 0 0 10px 0;">
-        Purpose: Our core system for managing company-wide data and business processes.<br>
-        Access: <a href="http://erp.fumaco.com">erp.fumaco.com</a> or
-        <a href="http://10.0.0.83">http://10.0.0.83</a>
-    </p>
+    <p style="margin:0 0 8px; font-size:13px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:#64748b;">MES (Manufacturing Execution System)</p>
+    <p style="margin:0 0 12px; font-size:14px; color:#475569;">Production orders and shop-floor monitoring.</p>
+    @include('emails.partials.button', ['url' => 'http://mes.fumaco.local', 'label' => 'Open MES (hostname)', 'marginBottom' => '8px'])
+    @include('emails.partials.button', ['url' => 'http://10.0.0.81', 'label' => 'Open MES (10.0.0.81)', 'marginBottom' => '24px'])
 
-    <p style="margin: 10px 0 4px 0;"><strong>AthenaERP</strong></p>
-    <p style="margin: 0 0 10px 0;">
-        Purpose: Our dedicated inventory system used for tracking and managing stock levels.<br>
-        Access: <a href="http://athena.fumaco.com">athena.fumaco.com</a> or
-        <a href="http://10.0.0.79">http://10.0.0.79</a>
-    </p>
+    <p style="margin:0 0 8px; font-size:13px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:#64748b;">Essex — Employee portal</p>
+    <p style="margin:0 0 12px; font-size:14px; color:#475569;">Leave credits, absence notices, and HR self-service.</p>
+    @include('emails.partials.button', ['url' => 'https://essex.fumaco.local', 'label' => 'Open Essex (hostname)', 'marginBottom' => '8px'])
+    @include('emails.partials.button', ['url' => 'https://10.0.0.5', 'label' => 'Open Essex (10.0.0.5)', 'marginBottom' => '20px'])
 
-    <p style="margin: 10px 0 4px 0;"><strong>MES (Manufacturing Execution System)</strong></p>
-    <p style="margin: 0 0 10px 0;">
-        Purpose: The platform used to process, monitor, and manage all production orders in real-time.<br>
-        Access: mes.fumaco.local or <a href="http://10.0.0.81">http://10.0.0.81</a>
-    </p>
+    <p style="margin:0 0 12px;">Our IT team will follow up with login credentials and initial password setup.</p>
 
-    <p style="margin: 10px 0 4px 0;"><strong>Essex</strong></p>
-    <p style="margin: 0 0 10px 0;">
-        Purpose: Our employee portal where you can view your leave credits or file absence notices.<br>
-        Access: <a href="https://essex.fumaco.local">https://essex.fumaco.local</a> or
-        <a href="https://10.0.0.5">https://10.0.0.5</a>
-    </p>
+    <p style="margin:0;">If you have immediate questions, reply to this message or contact IT.</p>
+@endsection
 
-    <p>
-        Our IT team will reach out shortly with your specific login credentials and instructions for your initial password setup.
-    </p>
-
-    <p>
-        In the meantime, please feel free to reach out if you have any immediate questions.
-        We look forward to working with you!
-    </p>
-
-    <p style="margin-top: 18px;">
-        Best regards,<br>
-        IT Department<br>
-        Fumaco, Inc.
-    </p>
-</div>
-
+@section('footer_line')
+    IT Department — {{ config('app.name') }}
+@endsection

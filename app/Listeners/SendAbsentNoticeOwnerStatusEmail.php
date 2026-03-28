@@ -30,6 +30,7 @@ final class SendAbsentNoticeOwnerStatusEmail
                 'ns.time_from',
                 'ns.time_to',
                 'ns.reason',
+                'u.user_id',
                 'u.employee_name',
                 'u.email',
                 'lt.leave_type',
@@ -62,7 +63,9 @@ final class SendAbsentNoticeOwnerStatusEmail
 
         $emailSent = 0;
         try {
-            Mail::to($recipient)->queue(new AbsentNoticeOwnerStatusMail($data));
+            // Use send() so mail goes out in this request. queue() requires a running worker
+            // (e.g. php artisan queue:work) when QUEUE_CONNECTION is redis — otherwise nothing is delivered.
+            Mail::to($recipient)->send(new AbsentNoticeOwnerStatusMail($data));
             $emailSent = 1;
         } catch (\Throwable $e) {
             Log::error('Failed sending absent notice owner email.', [
@@ -80,7 +83,7 @@ final class SendAbsentNoticeOwnerStatusEmail
                 'subject' => $data['subject'],
                 'template' => 'kiosk.Mail.template.notice_owner_status',
                 'template_data' => json_encode($data),
-                'user_id' => null,
+                'user_id' => (int) $notice->user_id,
                 'email_sent' => $emailSent,
             ]);
         } catch (\Throwable $e) {

@@ -1,8 +1,17 @@
 <div class="modal fade" id="editNoticeModal">
    <div class="modal-dialog modal-lg" style="min-width: 60%;">
       <div class="modal-content">
-         <div class="modal-header">
+         <div class="modal-header" style="position: relative;">
             <h5 class="modal-title">Absent Notice Details</h5>
+            <button
+               type="button"
+               class="btn btn-warning btn-sm me-2"
+               id="notify-manager-modal-btn"
+               title="Notify Manager"
+               style="display:none; position:absolute; right:48px; top:8px; z-index:2;"
+            >
+               <i class="fa fa-bell"></i> Notify Manager
+            </button>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          </div>
          <div class="modal-body">

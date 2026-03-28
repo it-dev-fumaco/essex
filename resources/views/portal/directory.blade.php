@@ -119,140 +119,205 @@
 	}
 
 	.employee-profile-modal .modal-dialog {
-		max-width: 760px;
-		margin: 1.2rem auto;
+		max-width: 640px;
+		margin: 1.25rem auto;
 	}
 
 	.employee-profile-modal .modal-content {
-		border-radius: 14px;
-		border: 0;
+		border-radius: 16px;
+		border: 1px solid rgba(16, 24, 40, 0.08);
+		box-shadow: 0 12px 40px rgba(16, 24, 40, 0.12);
 		overflow: hidden;
 	}
 
 	.employee-profile-modal .modal-header {
-		padding: 12px 18px;
-		border-bottom: 1px solid rgba(16, 24, 40, 0.08);
+		padding: 16px 22px;
+		border-bottom: 1px solid #e8ecf2;
+		background: #fff;
 	}
 
 	.employee-profile-modal .modal-title {
-		font-size: 20px;
+		font-size: 18px;
 		font-weight: 700;
-		color: #172b4d;
+		color: #0f172a;
+		letter-spacing: -0.02em;
 	}
 
 	.employee-profile-modal .modal-body {
-		background: #eef3f8;
-		padding: 12px 16px 16px;
+		background: #fff;
+		padding: 22px 24px 26px;
 	}
 
 	.employee-profile-panel {
 		background: #fff;
-		border: 1px solid #e3e9f2;
-		border-radius: 10px;
-		padding: 16px;
+		border: 1px solid #e8ecf2;
+		border-radius: 14px;
+		padding: 22px 24px;
+		box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
 	}
 
-	.employee-profile-main {
+	.employee-profile-summary {
 		display: flex;
-		gap: 16px;
+		gap: 18px;
 		align-items: flex-start;
-		padding-bottom: 12px;
-		margin-bottom: 12px;
-		border-bottom: 1px solid #edf1f7;
+		padding-bottom: 20px;
+		margin-bottom: 0;
+		border-bottom: 1px solid #eef1f6;
 	}
 
 	.employee-profile-avatar {
-		width: 116px;
-		height: 116px;
-		border: 1px solid #d5deea;
-		border-radius: 6px;
+		width: 108px;
+		height: 108px;
+		border: 1px solid #e2e8f0;
+		border-radius: 12px;
 		background: #f8fafc center/cover no-repeat;
 		flex: 0 0 auto;
+		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+	}
+
+	.employee-profile-summary-text {
+		min-width: 0;
+		flex: 1;
+	}
+
+	.employee-profile-name-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px 12px;
 	}
 
 	.employee-profile-name {
 		font-size: 22px;
-		line-height: 1.2;
+		line-height: 1.25;
 		font-weight: 700;
-		color: #132540;
+		color: #0f172a;
+		letter-spacing: -0.02em;
 		word-break: break-word;
 	}
 
 	.employee-profile-meta {
-		margin-top: 4px;
-		font-size: 15px;
-		font-weight: 600;
-		color: #44516a;
-		line-height: 1.35;
+		margin-top: 6px;
+		font-size: 14px;
+		font-weight: 500;
+		color: #64748b;
+		line-height: 1.45;
 		word-break: break-word;
 	}
 
-	.employee-profile-grid {
-		margin-top: 10px;
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 8px 16px;
+	.employee-profile-email-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		margin-top: 12px;
+		font-size: 14px;
+		font-weight: 500;
+		color: #334155;
+		line-height: 1.45;
 	}
 
-	.employee-profile-label {
-		font-size: 13px;
+	.employee-profile-email-row i {
+		margin-top: 3px;
+		color: #64748b;
+		font-size: 15px;
+		flex-shrink: 0;
+	}
+
+	.employee-profile-email-row span {
+		word-break: break-word;
+		overflow-wrap: anywhere;
+	}
+
+	.employee-profile-split {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0;
+		margin-top: 20px;
+		padding-top: 20px;
+		border-top: 1px solid #eef1f6;
+	}
+
+	.employee-profile-col {
+		padding: 0 20px 0 0;
+		min-width: 0;
+	}
+
+	.employee-profile-col + .employee-profile-col {
+		padding: 0 0 0 20px;
+		border-left: 1px solid #eef1f6;
+	}
+
+	.employee-profile-col-title {
+		font-size: 11px;
+		font-weight: 800;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: #475569;
+		margin: 0 0 12px;
+	}
+
+	.employee-profile-contact-line,
+	.employee-profile-emp-line {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		font-size: 15px;
 		font-weight: 600;
-		color: #41536f;
-		line-height: 1.3;
+		color: #1e293b;
+		line-height: 1.45;
+	}
+
+	.employee-profile-contact-line i,
+	.employee-profile-emp-line > i {
+		color: #64748b;
+		margin-top: 2px;
+		flex-shrink: 0;
+		font-size: 15px;
+	}
+
+	.employee-profile-emp-line + .employee-profile-emp-line {
+		margin-top: 12px;
+	}
+
+	.employee-profile-emp-line--tenure {
+		flex-wrap: wrap;
+		align-items: center;
+	}
+
+	.employee-profile-tenure-label {
+		font-weight: 700;
+		color: #475569;
+		margin-right: 6px;
 	}
 
 	.employee-profile-value {
-		font-size: 14px;
-		font-weight: 700;
-		color: #152c49;
-		line-height: 1.35;
+		font-size: 15px;
+		font-weight: 600;
+		color: #1e293b;
+		line-height: 1.45;
 		word-break: break-word;
 		overflow-wrap: anywhere;
 	}
 
 	.employee-profile-tenure-value {
-		font-style: italic;
-	}
-
-	.employee-profile-footer {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 10px;
-	}
-
-	.employee-profile-footer-item {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 16px;
+		font-style: normal;
 		font-weight: 600;
-		color: #1b2d4b;
-		min-width: 0;
-	}
-
-	.employee-profile-footer-item i {
-		color: #2f73b7;
-	}
-
-	.employee-profile-footer-item span {
-		white-space: normal;
-		word-break: break-word;
-		overflow-wrap: anywhere;
+		color: #0f172a;
 	}
 
 	.employee-profile-status-pill {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		padding: 3px 11px;
+		padding: 5px 12px;
 		border-radius: 999px;
-		font-size: 16px;
+		font-size: 13px;
 		font-weight: 700;
-		line-height: 1;
+		line-height: 1.2;
 	}
 
 	.employee-profile-status-pill i {
-		font-size: 12px;
+		font-size: 13px;
 	}
 
 	.employee-profile-status-pill.is-regular {
@@ -272,7 +337,7 @@
 
 	@media (max-width: 991.98px) {
 		.employee-profile-modal .modal-dialog {
-			max-width: 680px;
+			max-width: calc(100% - 1.5rem);
 		}
 
 		.employee-profile-name {
@@ -280,20 +345,16 @@
 		}
 
 		.employee-profile-meta {
-			font-size: 14px;
-		}
-
-		.employee-profile-label {
-			font-size: 12px;
-		}
-
-		.employee-profile-value {
 			font-size: 13px;
 		}
 
-		.employee-profile-footer-item,
-		.employee-profile-status-pill {
+		.employee-profile-value {
 			font-size: 14px;
+		}
+
+		.employee-profile-status-pill {
+			font-size: 12px;
+			padding: 4px 10px;
 		}
 	}
 
@@ -304,36 +365,44 @@
 		}
 
 		.employee-profile-modal .modal-header {
-			padding: 10px 12px;
+			padding: 12px 16px;
 		}
 
 		.employee-profile-modal .modal-body {
-			padding: 10px 10px 12px;
+			padding: 16px;
 		}
 
 		.employee-profile-panel {
-			padding: 12px;
+			padding: 16px 18px;
 		}
 
-		.employee-profile-main {
+		.employee-profile-summary {
 			flex-direction: column;
 			align-items: flex-start;
 		}
 
-		.employee-profile-grid {
+		.employee-profile-split {
 			grid-template-columns: 1fr;
+			padding-top: 16px;
+			margin-top: 16px;
 		}
 
-		.employee-profile-footer {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+		.employee-profile-col {
+			padding: 0 !important;
+		}
+
+		.employee-profile-col:first-child {
+			padding-bottom: 4px !important;
+		}
+
+		.employee-profile-col + .employee-profile-col {
+			padding: 16px 0 0 !important;
+			border-left: 0;
+			border-top: 1px solid #eef1f6;
 		}
 	}
 
-	@media (max-width: 575.98px) {
-		.employee-profile-footer {
-			grid-template-columns: 1fr;
-		}
-	}
+	@media (max-width: 575.98px) { }
 </style>
 
 <!-- Employee Profile Modal -->
@@ -354,53 +423,43 @@
 
 				<div id="employeeProfileContent" class="d-none">
 					<div class="employee-profile-panel">
-						<div class="employee-profile-main">
-							<div id="employeeProfileAvatar" class="employee-profile-avatar"></div>
-							<div class="employee-profile-details flex-grow-1">
-								<div id="employeeProfileName" class="employee-profile-name"></div>
+						<div class="employee-profile-summary">
+							<div id="employeeProfileAvatar" class="employee-profile-avatar" role="img" aria-label="Profile photo"></div>
+							<div class="employee-profile-summary-text">
+								<div class="employee-profile-name-row">
+									<span id="employeeProfileName" class="employee-profile-name"></span>
+									<span id="employeeProfileStatusPill" class="employee-profile-status-pill is-other">
+										<i class="fa fa-check-circle" aria-hidden="true"></i>
+										<span id="employeeProfileEmploymentStatus"></span>
+									</span>
+								</div>
 								<div class="employee-profile-meta">
 									<span id="employeeProfileRole"></span>
 									<span id="employeeProfileDeptWrap" class="d-none">
 										&nbsp;•&nbsp;<span id="employeeProfileDept"></span>
 									</span>
 								</div>
-								<div class="employee-profile-grid">
-									<div>
-										<div class="employee-profile-label">Email</div>
-										<div id="employeeProfileEmail" class="employee-profile-value"></div>
-									</div>
-									<div>
-										<div class="employee-profile-label">Contact Information</div>
-										<div id="employeeProfilePhone" class="employee-profile-value"></div>
-									</div>
-									<div>
-										<div class="employee-profile-label">Employment Status</div>
-										<div id="employeeProfileEmploymentStatus" class="employee-profile-value"></div>
-									</div>
-									<div>
-										<div class="employee-profile-label">Tenure</div>
-										<div id="employeeProfileTenure" class="employee-profile-value employee-profile-tenure-value"></div>
-									</div>
+								<div class="employee-profile-email-row">
+									<i class="fas fa-envelope" aria-hidden="true"></i>
+									<span id="employeeProfileEmail"></span>
 								</div>
 							</div>
 						</div>
-						<div class="employee-profile-footer">
-							<div class="employee-profile-footer-item">
-								<i class="fa fa-envelope-o" aria-hidden="true"></i>
-								<span id="employeeProfileEmailFooter"></span>
+						<div class="employee-profile-split">
+							<div class="employee-profile-col employee-profile-col--contact">
+								<h3 class="employee-profile-col-title">Contact</h3>
+								<div class="employee-profile-contact-line">
+									<i class="fa fa-phone" aria-hidden="true"></i>
+									<span id="employeeProfilePhone" class="employee-profile-value"></span>
+								</div>
 							</div>
-							<div class="employee-profile-footer-item">
-								<i class="fa fa-phone" aria-hidden="true"></i>
-								<span id="employeeProfilePhoneFooter"></span>
-							</div>
-							<div class="employee-profile-footer-item">
-								<span id="employeeProfileStatusPill" class="employee-profile-status-pill is-other">
-									<i class="fa fa-check-circle" aria-hidden="true"></i>
-									<span id="employeeProfileEmploymentStatusFooter"></span>
-								</span>
-							</div>
-							<div class="employee-profile-footer-item">
-								<span id="employeeProfileTenureFooter"></span>
+							<div class="employee-profile-col employee-profile-col--employment">
+								<h3 class="employee-profile-col-title">Employment</h3>
+								<div class="employee-profile-emp-line employee-profile-emp-line--tenure">
+									<i class="fa fa-hourglass-half" aria-hidden="true"></i>
+									<span class="employee-profile-tenure-label">Tenure</span>
+									<span id="employeeProfileTenure" class="employee-profile-value employee-profile-tenure-value"></span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -462,11 +521,8 @@
 			$('#employeeProfileEmail').text(email);
 			$('#employeeProfilePhone').text(phone);
 			$('#employeeProfileEmploymentStatus').text(status);
+			$('#employeeProfileEmploymentStatusText').text(status);
 			$('#employeeProfileTenure').text(tenure);
-			$('#employeeProfileEmailFooter').text(email);
-			$('#employeeProfilePhoneFooter').text(phone);
-			$('#employeeProfileEmploymentStatusFooter').text(status);
-			$('#employeeProfileTenureFooter').text(tenure);
 
 			var normalizedStatus = (status || '').toString().toLowerCase();
 			var statusPill = $('#employeeProfileStatusPill');
@@ -536,31 +592,39 @@
 
 		$(document).on('keyup', '#search-bar', function (e){
 			e.preventDefault();
-			load_tbl();
+			if (window.__directorySearchTimer) {
+				clearTimeout(window.__directorySearchTimer);
+			}
+			window.__directorySearchTimer = setTimeout(function () {
+				load_tbl(1);
+			}, 250);
 		});
 
-		load_tbl();
-		function load_tbl(){
-			$.ajax({
-				type:'GET',
-				data: {
-					search: $('#search-bar').val()
-				},
-				url: '/services/directory',
-				success: function (response) {
-					$('#directory-container').html(response);
-				}
-			});
+		$(document).on('click', '#directory-container .pagination a', function (e) {
+			e.preventDefault();
+			var href = $(this).attr('href') || '';
+			var match = href.match(/[?&]page=(\d+)/);
+			var page = match ? parseInt(match[1], 10) : 1;
+			load_tbl(page);
+		});
 
+		load_tbl(1);
+		function load_tbl(page){
 			$.ajax({
 				type:'GET',
+				dataType: 'json',
 				data: {
 					search: $('#search-bar').val(),
-					total: 1,
+					page: page
 				},
 				url: '/services/directory',
 				success: function (response) {
-					$('#total-employee').text(response);
+					if (response && response.html !== undefined) {
+						$('#directory-container').html(response.html);
+					}
+					if (response && response.total !== undefined) {
+						$('#total-employee').text(response.total);
+					}
 				}
 			});
 		}

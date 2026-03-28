@@ -24,6 +24,7 @@ use App\Repositories\SessionDetailRepository;
 use App\Repositories\ShiftRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -36,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(2000);
+        Paginator::defaultView('vendor.pagination.bootstrap-4');
+        Paginator::defaultSimpleView('vendor.pagination.simple-bootstrap-4');
 
         // Force HTTP when HTTPS is disabled (Docker without SSL, local dev)
         if (! config('app.force_https', false)) {

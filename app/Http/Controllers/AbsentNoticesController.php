@@ -18,6 +18,83 @@ use Illuminate\Support\Str;
 
 class AbsentNoticesController extends Controller
 {
+    /**
+     * Resend approval notifications to department approvers.
+     */
+    private function sendApprovalNotificationToManagers(AbsentNotice $noticeSlip, array $data): array
+    {
+        $leaveApprovers = DB::table('department_approvers')
+            ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
+            ->where('department_approvers.department_id', $noticeSlip->dept_id)
+            ->distinct()
+            ->pluck('users.email', 'users.user_id');
+
+        $owner = DB::table('users')
+            ->select('user_id', 'reporting_to')
+            ->where('user_id', $noticeSlip->user_id)
+            ->first();
+
+        $manager = null;
+        if ($owner && $owner->reporting_to) {
+            $manager = DB::table('users')
+                ->select('user_id', 'email')
+                ->where('user_id', $owner->reporting_to)
+                ->first();
+        }
+
+        $recipients = [];
+        foreach ($leaveApprovers as $userId => $email) {
+            if ($email) {
+                $recipients[(string) $userId] = $email;
+            }
+        }
+
+        if ($manager && $manager->email) {
+            $recipients[(string) $manager->user_id] = $manager->email;
+        }
+
+        $emailSent = 0;
+        $hasRecipient = false;
+
+        foreach ($recipients as $userId => $email) {
+            $hasRecipient = true;
+            $data['approver'] = $userId;
+
+            $sent = 0;
+            try {
+                // Send immediately so resend works even when queue workers are unavailable.
+                Mail::to($email)->send(new SendMail_notice($data));
+                $sent = 1;
+            } catch (\Throwable $th) {
+                $sent = 0;
+                Log::error('Failed sending absent notice approval email.', [
+                    'notice_id' => $noticeSlip->notice_id ?? null,
+                    'recipient' => $email,
+                    'error' => $th->getMessage(),
+                ]);
+            }
+
+            if ($sent) {
+                $emailSent = 1;
+            }
+
+            DB::table('email_notifications')->insert([
+                'type' => 'Absent Notice Slip',
+                'recipient' => $email,
+                'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
+                'template' => 'kiosk.Mail.template.notice_template',
+                'template_data' => json_encode($data),
+                'user_id' => Auth::user()->user_id,
+                'email_sent' => $sent,
+            ]);
+        }
+
+        return [
+            'has_recipient' => $hasRecipient,
+            'email_sent' => $emailSent,
+        ];
+    }
+
     public function noticesForApproval(Request $request)
     {
         if ($request->ajax()) {
@@ -154,36 +231,15 @@ class AbsentNoticesController extends Controller
                 'department' => $viewdetails->department,
             ];
 
-            $leave_approver = DB::table('department_approvers')
-                ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
-                ->where('department_approvers.department_id', Auth::user()->department_id)
-                ->distinct()->pluck('users.email', 'users.user_id');
-
-            foreach ($leave_approver as $user_id => $email) {
-                $data['approver'] = $user_id;
-
-                $email_sent = 0;
-                try {
-                    Mail::to($email)->queue(new SendMail_notice($data));
-                    $email_sent = 1;
-                } catch (\Throwable $th) {
-                    $email_sent = 0;
-                }
-
-                DB::table('email_notifications')->insert([
-                    'type' => 'Absent Notice Slip',
-                    'recipient' => $email,
-                    'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
-                    'template' => 'kiosk.Mail.template.notice_template',
-                    'template_data' => json_encode($data),
-                    'user_id' => Auth::user()->id,
-                    'email_sent' => $email_sent,
-                ]);
-            }
+            $notificationResult = $this->sendApprovalNotificationToManagers($notice_slip, $data);
 
             DB::commit();
 
-            return response()->json(['success' => 1, 'message' => 'Please wait for the approved absent notice form.<br/>Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b>', 'email_sent' => $email_sent]);
+            return response()->json([
+                'success' => 1,
+                'message' => 'Please wait for the approved absent notice form.<br/>Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b>',
+                'email_sent' => $notificationResult['email_sent'],
+            ]);
         } catch (\Throwable $th) {
             DB::rollback();
 
@@ -245,6 +301,93 @@ class AbsentNoticesController extends Controller
             return response()->json(['message' => 'An error occured. Please try again.']);
         }
 
+    }
+
+    public function resendManagerNotification(Request $request)
+    {
+        $noticeId = (int) $request->input('notice_id');
+
+        $noticeSlip = AbsentNotice::query()
+            ->where('notice_id', $noticeId)
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
+
+        if (! $noticeSlip) {
+            return response()->json([
+                'success' => 0,
+                'message' => 'Leave request not found.',
+            ], 404);
+        }
+
+        if (strtoupper((string) $noticeSlip->status) !== 'FOR APPROVAL') {
+            return response()->json([
+                'success' => 0,
+                'message' => 'Only submitted leave requests can notify managers.',
+            ], 422);
+        }
+
+        $viewDetails = DB::table('notice_slip')
+            ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
+            ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
+            ->select('notice_slip.*', 'leave_types.leave_type', 'departments.department')
+            ->where('notice_slip.notice_id', $noticeSlip->notice_id)
+            ->first();
+
+        if (! $viewDetails) {
+            return response()->json([
+                'success' => 0,
+                'message' => 'Leave request details are unavailable.',
+            ], 404);
+        }
+
+        $data = [
+            'employee_name' => Auth::user()->employee_name,
+            'year' => now()->format('Y'),
+            'slip_id' => $noticeSlip->notice_id,
+            'reported_to' => $viewDetails->info_by,
+            'means' => $viewDetails->means,
+            'reason' => $viewDetails->reason,
+            'token' => $viewDetails->token,
+            'leave_type' => $viewDetails->leave_type,
+            'from' => Carbon::parse($viewDetails->date_from.' '.$viewDetails->time_from)->format('M. d, Y h:i A'),
+            'to' => Carbon::parse($viewDetails->date_to.' '.$viewDetails->time_to)->format('M. d, Y h:i A'),
+            'department' => $viewDetails->department,
+        ];
+
+        try {
+            $notificationResult = $this->sendApprovalNotificationToManagers($noticeSlip, $data);
+
+            if (! $notificationResult['has_recipient']) {
+                return response()->json([
+                    'success' => 0,
+                    'message' => 'No assigned manager found for this leave request.',
+                ], 422);
+            }
+
+            if (! $notificationResult['email_sent']) {
+                return response()->json([
+                    'success' => 0,
+                    'message' => 'Notification could not be sent. Please check mail settings and try again.',
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => 1,
+                'email_sent' => $notificationResult['email_sent'],
+                'message' => 'Manager notification resent for Absent Notice Slip no. <b>'.$noticeSlip->notice_id.'</b>.',
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('Failed to resend absent notice manager notification.', [
+                'notice_id' => $noticeSlip->notice_id,
+                'user_id' => Auth::user()->user_id,
+                'error' => $th->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => 0,
+                'message' => 'Unable to resend manager notification. Please try again.',
+            ], 500);
+        }
     }
 
     public function cancelNotice(Request $request)

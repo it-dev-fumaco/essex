@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Image;
@@ -17,6 +18,140 @@ use Image;
 class PortalController extends Controller
 {
     use EmailsTrait;
+
+    /**
+     * Resolve an employee avatar URL for both the directory cards and the profile modal.
+     *
+     * Priority (per request):
+     * 1) employees/{filename or id}.(jpg|png)
+     * 2) employees/profile/{filename or id}.(jpg|png)
+     *
+     * Falls back to storage/img/user.png when nothing is found.
+     */
+    private function resolveEmployeeAvatarUrl(?string $imageValue, ?string $userId = null, bool $skipExistsCheck = false): string
+    {
+        $default = asset('storage/img/user.png');
+
+        $image = $imageValue ? trim((string) $imageValue) : '';
+        if ($image === '') {
+            return $default;
+        }
+
+        // If DB contains a full URL, only keep it when it's truly an external URL.
+        // Many older rows stored local public URLs like "http://essex.local/storage/employees/123.jpg"
+        // which should now be resolved from UpCloud instead.
+        if (Str::startsWith($image, ['http://', 'https://'])) {
+            try {
+                $parts = parse_url($image);
+                $imageHost = strtolower((string) ($parts['host'] ?? ''));
+                $imagePath = (string) ($parts['path'] ?? '');
+
+                $appHost = strtolower((string) (parse_url((string) config('app.url'), PHP_URL_HOST) ?: ''));
+                $assetHost = strtolower((string) (parse_url((string) config('app.asset_url'), PHP_URL_HOST) ?: ''));
+
+                $isLocalHost = ($imageHost !== '' && ($imageHost === $appHost || ($assetHost !== '' && $imageHost === $assetHost)));
+
+                // If it's a local host URL pointing to /storage/..., treat it like a legacy local path.
+                if ($isLocalHost && Str::startsWith($imagePath, ['/storage/', 'storage/'])) {
+                    $image = ltrim($imagePath, '/');
+                } else {
+                    return $image;
+                }
+            } catch (\Throwable $e) {
+                return $image;
+            }
+        }
+
+        // If DB has a local "storage/..." path, don't trust it for rendering the directory.
+        // We migrated employee images to UpCloud, so we always resolve via the `upcloud` disk below.
+        if (Str::startsWith($image, ['/storage/', 'storage/'])) {
+            $image = str_replace(['storage/', '/storage/'], '', $image);
+        }
+
+        // Normalize to remove leading slash
+        $normalized = ltrim($image, '/');
+        $basename = pathinfo($normalized, PATHINFO_BASENAME);
+        $basenameNoExt = pathinfo($basename, PATHINFO_FILENAME);
+        $ext = strtolower((string) pathinfo($basename, PATHINFO_EXTENSION));
+
+        $id = $userId ? trim((string) $userId) : null;
+        if ($id === '' || $id === null) {
+            $id = $basenameNoExt;
+        }
+
+        $candidateKeys = [];
+
+        // Prefer "employees/profile" first (current UpCloud layout for directory/profile photos),
+        // then fall back to "employees/" for older uploads.
+        if ($basename !== '' && $ext !== '') {
+            $candidateKeys[] = 'employees/profile/' . $basename;
+        }
+        if ($id) {
+            $candidateKeys[] = 'employees/profile/' . $id . '.jpg';
+            $candidateKeys[] = 'employees/profile/' . $id . '.jpeg';
+            $candidateKeys[] = 'employees/profile/' . $id . '.png';
+        }
+
+        if ($basename !== '' && $ext !== '') {
+            $candidateKeys[] = 'employees/' . $basename;
+        }
+        if ($id) {
+            $candidateKeys[] = 'employees/' . $id . '.jpg';
+            $candidateKeys[] = 'employees/' . $id . '.jpeg';
+            $candidateKeys[] = 'employees/' . $id . '.png';
+        }
+
+        // De-dupe while keeping order.
+        $candidateKeys = array_values(array_unique($candidateKeys));
+
+        if ($skipExistsCheck) {
+            // Directory listing can include many employees; avoid N remote HEAD/exists calls.
+            // We'll return the first "best guess" URL. The profile modal still does strict resolution.
+            try {
+                $disk = Storage::disk('upcloud');
+                foreach ($candidateKeys as $key) {
+                    $url = $disk->url($key);
+                    if ($url) {
+                        return $url;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+
+            return $default;
+        }
+
+        // Attempt existence checks on the upcloud disk first (matches other profile photo logic)
+        try {
+            $disk = Storage::disk('upcloud');
+            foreach ($candidateKeys as $key) {
+                if ($disk->exists($key)) {
+                    return $disk->url($key);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore and fall back to generic storage URL
+        }
+
+        // Last-resort: even if existence checks fail (permissions/HEAD issues),
+        // still generate URLs from the candidate keys in priority order.
+        try {
+            if (! empty($candidateKeys)) {
+                $disk = Storage::disk('upcloud');
+                foreach ($candidateKeys as $key) {
+                    $url = $disk->url($key);
+                    if ($url) {
+                        return $url;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return $default;
+    }
 
     public function index()
     {
@@ -150,63 +285,87 @@ class PortalController extends Controller
     public function phoneEmailDirectory(Request $request)
     {
         if ($request->ajax()) {
-            $employees = DB::table('users')->where('user_type', 'Employee')
-                ->join('designation', 'designation.des_id', 'users.designation_id')
-                ->join('departments', 'departments.department_id', 'users.department_id')
+            $search = trim((string) $request->input('search', ''));
+            $perPage = (int) $request->input('per_page', 60);
+            $perPage = max(1, min($perPage, 200));
+
+            $query = DB::table('users')
+                ->where('users.user_type', 'Employee')
+                ->join('designation', 'designation.des_id', '=', 'users.designation_id')
+                ->join('departments', 'departments.department_id', '=', 'users.department_id')
                 ->where('users.status', 'Active')
-                ->whereIn('employment_status', ['Regular', 'Probationary'])
+                ->whereIn('users.employment_status', ['Regular', 'Probationary'])
                 ->where(function ($q) {
-                    return $q->where('users.email', '!=', 'essex.admin@fumaco.local')->orWhereNull('users.email');
-                })
+                    $q->where('users.email', '!=', 'essex.admin@fumaco.local')
+                        ->orWhereNull('users.email');
+                });
 
-                ->when($request->search, function ($q) use ($request) {
-                    return $q->where('users.employee_name', 'LIKE', '%'.$request->search.'%')
-                        ->orWhere('users.nick_name', 'LIKE', '%'.$request->search.'%')
-                        ->orWhere('users.telephone', 'LIKE', '%'.$request->search.'%')
-                        ->orWhere('designation.designation', 'LIKE', '%'.$request->search.'%')
-                        ->orWhere('departments.department', 'LIKE', '%'.$request->search.'%')
-                        ->orWhere('users.email', 'LIKE', '%'.$request->search.'%');
-                })
-                ->select('users.user_id', 'users.employee_id', 'users.image', 'users.employee_name', 'users.nick_name', 'users.telephone', 'users.email', 'users.telephone', 'departments.department', 'designation.designation', 'users.branch', 'users.company')->orderByRaw('ISNULL(departments.order_no), departments.order_no ASC')
-                ->get();
+            if ($search !== '') {
+                $term = preg_replace('/\s+/', ' ', $search) ?? $search;
+                $term = trim($term);
 
-            $employees = collect($employees)->map(function ($employee) {
-                $employee->avatar_url = asset('storage/img/user.png');
+                // Prefer prefix matches for indexed columns; use contains for phone (often mid-string).
+                $likePrefix = $term.'%';
+                $likeContains = '%'.$term.'%';
 
-                try {
-                    $image = $employee->image ? trim((string) $employee->image) : '';
-                    if ($image === '') {
-                        return $employee;
-                    }
+                $query->where(function ($q) use ($likePrefix, $likeContains) {
+                    $q->where('users.employee_name', 'LIKE', $likePrefix)
+                        ->orWhere('users.nick_name', 'LIKE', $likePrefix)
+                        ->orWhere('users.email', 'LIKE', $likePrefix)
+                        ->orWhere('designation.designation', 'LIKE', $likePrefix)
+                        ->orWhere('departments.department', 'LIKE', $likePrefix)
+                        ->orWhere('users.telephone', 'LIKE', $likeContains);
+                });
+            }
 
-                    if (Str::startsWith($image, ['http://', 'https://'])) {
-                        $employee->avatar_url = $image;
-
-                        return $employee;
-                    }
-
-                    if (Str::startsWith($image, ['/storage/', 'storage/'])) {
-                        $employee->avatar_url = asset(ltrim($image, '/'));
-
-                        return $employee;
-                    }
-
-                    // Treat non-storage relative values as disk keys.
-                    $employee->avatar_url = Storage::url(ltrim($image, '/'));
-                } catch (\Throwable $e) {
-                    // Keep default fallback avatar to avoid breaking directory render.
+            if ($request->boolean('total') || $request->boolean('total_only')) {
+                // Count in SQL (do NOT load rows / resolve avatars).
+                $cacheKey = null;
+                if ($search === '') {
+                    $cacheKey = 'directory:total:active-regular-probationary';
                 }
 
+                $total = $cacheKey
+                    ? Cache::remember($cacheKey, now()->addMinutes(5), fn () => (int) $query->count('users.user_id'))
+                    : (int) $query->count('users.user_id');
+
+                return response()->json(['total' => $total]);
+            }
+
+            $paginator = $query
+                ->select(
+                    'users.user_id',
+                    'users.image',
+                    'users.employee_name',
+                    'users.telephone',
+                    'users.email',
+                    'departments.department',
+                    'departments.order_no',
+                    'designation.designation'
+                )
+                ->orderByRaw('departments.order_no IS NULL, departments.order_no ASC')
+                ->orderBy('departments.department')
+                ->orderBy('users.employee_name')
+                ->paginate($perPage);
+
+            $employees = collect($paginator->items())->map(function ($employee) {
+                $employee->avatar_url = $this->resolveEmployeeAvatarUrl(
+                    $employee->image ?? null,
+                    (string) ($employee->user_id ?? ''),
+                    true // skip remote exists checks for listing
+                );
                 return $employee;
             });
 
-            if ($request->total) {
-                return collect($employees)->count();
-            }
+            $html = view('portal.tbl_directory', [
+                'employees' => $employees,
+                'paginator' => $paginator,
+            ])->render();
 
-            $employees = collect($employees)->groupBy('department');
-
-            return view('portal.tbl_directory', compact('employees'));
+            return response()->json([
+                'html' => $html,
+                'total' => (int) $paginator->total(),
+            ]);
         }
 
         return view('portal.directory');
@@ -294,28 +453,10 @@ class PortalController extends Controller
             }
         }
 
-        $image = $employee->image ? (string) $employee->image : 'storage/img/user.png';
-
-        $avatarUrl = null;
-        if (Str::startsWith($image, ['http://', 'https://'])) {
-            $avatarUrl = $image;
-        } elseif (Str::startsWith($image, ['/storage/', 'storage/'])) {
-            $publicRelative = str_replace(['storage/', '/storage/'], '', $image);
-            if (Storage::disk('public')->exists($publicRelative)) {
-                $avatarUrl = asset(ltrim($image, '/'));
-            }
-        } else {
-            // Treat as a disk key (e.g. "employees/123.jpg" or "uploads/...").
-            try {
-                $avatarUrl = Storage::disk(config('filesystems.default'))->url(ltrim($image, '/'));
-            } catch (\Throwable $e) {
-                // ignore, fallback below
-            }
-        }
-
-        if (! $avatarUrl) {
-            $avatarUrl = asset('storage/img/user.png');
-        }
+        $avatarUrl = $this->resolveEmployeeAvatarUrl(
+            $employee->image ?? null,
+            (string) ($employee->user_id ?? $user_id)
+        );
 
         $contact = $employee->telephone ?: ($employee->contact_no ?: null);
 

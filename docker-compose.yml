@@ -1,31 +1,9 @@
-# Production Docker Compose - Laravel (Nginx, PHP-FPM, Redis)
-# Usage: docker compose up -d
+# Essex: PHP-FPM only + shared Redis; HTTP/static is handled by athenaerp-nginx (FastCGI to this container on :9000).
+# Usage:
+#   docker compose up -d --build
+# Athena: mount ESSEX_PATH and server_name essex.local → fastcgi_pass essex-app:9000 (see athenaerp-1 docker/nginx/default.conf)
 
 services:
-  nginx:
-    build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
-    image: essex-nginx:latest
-    container_name: essex-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      # Static assets shipped inside nginx image; only mount uploads
-      - storage_public:/var/www/html/public/storage:ro
-    depends_on:
-      app:
-        condition: service_healthy
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
   app:
     build:
       context: .
@@ -33,29 +11,28 @@ services:
     image: essex-app:latest
     container_name: essex-app
     restart: unless-stopped
+    command: ["php-fpm"]
+    expose:
+      - "9000"
     volumes:
-      # Persist only public uploads; do NOT mount the whole app code in production
       - storage_public:/var/www/html/storage/app/public
       - storage_logs:/var/www/html/storage/logs
     environment:
       - APP_ENV=production
-      # Use HTTP - Docker setup has no SSL. HTTPS would cause ERR_CONNECTION_REFUSED on port 443.
-      - APP_URL=http://essex.local
-      - ASSET_URL=http://essex.local
+      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
+      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
       - HTTPS=false
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${SHARED_REDIS_HOST:-athenaerp-redis}
+      - REDIS_PORT=${SHARED_REDIS_PORT:-6379}
       - REDIS_CLIENT=phpredis
       - CACHE_DRIVER=redis
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
     env_file:
       - .env
-    depends_on:
-      redis:
-        condition: service_healthy
     networks:
       - app_network
+      - shared_network
     healthcheck:
       test: ["CMD", "/usr/local/bin/php-fpm-healthcheck"]
       interval: 15s
@@ -63,26 +40,8 @@ services:
       retries: 5
       start_period: 45s
 
-  redis:
-    image: redis:7-alpine
-    container_name: essex-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
 volumes:
   storage_public:
-    driver: local
-  redis_data:
     driver: local
   storage_logs:
     driver: local
@@ -90,3 +49,6 @@ volumes:
 networks:
   app_network:
     driver: bridge
+  shared_network:
+    external: true
+    name: ${SHARED_NETWORK_NAME:-athenaerp-1_athenaerp}

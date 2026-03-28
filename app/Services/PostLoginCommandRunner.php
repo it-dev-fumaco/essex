@@ -8,7 +8,8 @@ final class PostLoginCommandRunner
 {
     public function runForUser(int $userId): void
     {
-        $path = env('BASE_PATH', base_path());
+        $path = env('BASE_PATH');
+        $path = ($path !== null && $path !== '') ? $path : base_path();
 
         try {
             $id = (string) $userId;

@@ -1,4 +1,4 @@
-<div class="col-7">
+<div class="col-12">
     <div class="d-flex flex-row pt-3">
         <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2">
             <button type="button" class="data-entry-btn btn btn-secondary btn-sm px-xl-3 py-xl-2 w-100 h-100" data-bs-toggle="modal" data-bs-target="#absentNoticeModal" id="notice-modal">
@@ -49,6 +49,25 @@
 
     <div class="card mb-3">
         <div class="card-body p-2">
+            <h3 class="widget-title" style="font-size: 12px !important;">My Leave Balances</h3>
+            <div class="row text-center">
+                @forelse($leave_types as $leave_type)
+                <div class="col-md-4">
+                    <span style="font-size: 18pt;">{{ $leave_type->remaining }}</span>
+                    <span class="d-block text-muted" style="font-size: 10px;">remaining</span>
+                    <span style="font-size: 11px;"><b>{{ $leave_type->leave_type }}</b></span>
+                </div>
+                @empty
+                <div class="col-12 text-center text-uppercase text-muted">
+                    Employee Leave Allowance not set
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body p-2">
             <h3 class="widget-title mb-2" style="font-size: 12px !important;">
                 <div class="d-flex">
                     <span class="d-inline-block">Pending Exam Schedule</span>
@@ -63,7 +82,7 @@
                     <col style="width: 25%;">
                     <col style="width: 25%;">
                      <thead>
-                         <th class="text-center text-uppercase p-1">Exam Title</th>
+                         <th class="text-center text-uppercase p-1">Assessment</th>
                          <th class="text-center text-uppercase p-1">Validity Date</th>
                          <th class="text-center text-uppercase p-1">Action</th>
                      </thead>
@@ -159,94 +178,6 @@
                 <li class="list-group-item text-center text-muted">No Pending Absent Notice Slip(s)</li>
                 @endforelse
             </ul>
-        </div>
-    </div>
-</div>
-<div class="col-5">
-    <div class="card mb-3">
-        <div class="card-body p-2">
-            <h3 class="widget-title" style="font-size: 12px !important;">My Leave Balances</h3>
-            <div class="row text-center">
-                @forelse($leave_types as $leave_type)
-                <div class="col-md-4">
-                    <span style="font-size: 18pt;">{{ $leave_type->remaining }}</span>
-                    <span class="d-block text-muted" style="font-size: 10px;">remaining</span>
-                    <span style="font-size: 11px;"><b>{{ $leave_type->leave_type }}</b></span>
-                </div>
-                @empty
-                <div class="col-12 text-center text-uppercase text-muted">
-                    Employee Leave Allowance not set
-                </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-body p-2">
-            <h3 class="widget-title mb-2" style="font-size: 12px !important;">Reporting to</h3>
-            <div class="d-flex align-items-center px-2">
-                @php
-                    $img = $reports_to ? $reports_to->image : '/storage/img/user.png';
-                @endphp
-                @if ($reports_to)
-                <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
-                <div class="p-2">
-                    <span class="approver-name d-block">{{ $reports_to->employee_name }}</span>
-                    <small class="d-block fst-italic text-muted">{{ $reports_to->designation }}</small>
-                </div>
-                @else
-                <div class="col-12 p-2 text-center text-uppercase text-muted">
-                    Immediate Supervisor not set
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
-    <div class="card mb-3">
-        <div class="card-body p-2">
-            <h3 class="widget-title mb-2" style="font-size: 12px !important;">My Leave Approver(s)</h3>
-            <table class="table m-0 remove-last-row-border">
-                <tbody class="table-body">
-                    @forelse($approvers as $approver)
-                    <tr>
-                        @if ($approver->employee_id != Auth::user()->user_id)
-                        <td>
-                            @php
-                                $img = $approver->image ? $approver->image : '/storage/img/user.png';
-                            @endphp
-                            <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
-                            <span class="approver-name d-block">{{ $approver->employee_name }}</span>
-                            <small class="d-block fst-italic text-muted">{{ $approver->designation }}</small>
-                        </td>
-                        @endif
-                    </tr>
-                    @empty
-                    <tr>
-                        <td class="text-center text-uppercase text-muted">Leave Approver not found</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-body p-2">
-            <div class="widget property-agent">
-                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Calendar</h3>
-                <div class="agent-info p-2">
-                    <div class="calendar calendar-first" id="calendar_first">
-                        <div class="calendar_header">
-                            <button class="switch-month switch-left"> <i class="icon-arrow-left" style="color: #87b633;"></i></button>
-                            <a href="/calendar"><h2></h2></a>
-                            <button class="switch-month switch-right pull-right"> <i class="icon-arrow-right" style="color: #87b633;"></i></button>
-                        </div>
-                        <div class="calendar_weekdays"></div>
-                        <div class="calendar_content"></div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

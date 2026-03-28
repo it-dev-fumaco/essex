@@ -62,8 +62,21 @@
 
 	$(document).on('click', '#album_pagination a', function(e){
 		e.preventDefault();
-		var page = $(this).attr('href').split('page=')[1];
-		loadAlbums(page);
+		var href = $(this).attr('href');
+		if (!href) {
+			return;
+		}
+
+		try {
+			var url = new URL(href, window.location.origin);
+			var page = url.searchParams.get('page') || 1;
+			loadAlbums(page);
+		} catch (err) {
+			// fallback: try original split behavior
+			var parts = href.split('page=');
+			var pageFallback = parts.length > 1 ? parts[1] : 1;
+			loadAlbums(pageFallback);
+		}
 	});
 
 	$('#selectActivity').on("change", function(e){

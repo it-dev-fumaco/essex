@@ -59,7 +59,7 @@
 </div>
 
 </section>
-<center>{{ $images->links() }}</center>
+<center>{{ $images->links('vendor.pagination.bootstrap-4') }}</center>
 @endsection
 
 @section('script')

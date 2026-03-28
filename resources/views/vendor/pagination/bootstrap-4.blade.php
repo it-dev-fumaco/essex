@@ -1,4 +1,15 @@
 @if ($paginator->hasPages())
+    @php
+        $toRelativeUrl = function ($url) {
+            if (! $url) {
+                return $url;
+            }
+
+            // Force pagination links to be relative so they always stay on the current host
+            // (prevents navigation to a wrong APP_URL domain like "posse.local").
+            return preg_replace('#^https?://[^/]+#', '', $url) ?: $url;
+        };
+    @endphp
     <ul class="pagination" role="navigation">
         {{-- Previous Page Link --}}
         @if ($paginator->onFirstPage())
@@ -8,7 +19,7 @@
             </li>
         @else
             <li class="page-item">
-                <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</a>
+                <a class="page-link" href="{{ $toRelativeUrl($paginator->previousPageUrl()) }}" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</a>
             </li>
         @endif
 
@@ -31,7 +42,7 @@
                             <a class="page-link">{{ $page }}</a>
                         </li>
                     @else
-                        <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                        <li class="page-item"><a class="page-link" href="{{ $toRelativeUrl($url) }}">{{ $page }}</a></li>
                     @endif
                 @endforeach
             @endif
@@ -40,7 +51,7 @@
         {{-- Next Page Link --}}
         @if ($paginator->hasMorePages())
             <li class="page-item">
-                <a class="page-link" href="{{ $paginator->nextPageUrl() }}" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</a>
+                <a class="page-link" href="{{ $toRelativeUrl($paginator->nextPageUrl()) }}" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</a>
             </li>
         @else
             <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.next')">

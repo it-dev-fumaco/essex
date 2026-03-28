@@ -180,6 +180,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/notice_slip/fetch', [AbsentNoticesController::class, 'fetchNotices']);
     Route::get('/notice_slip/getDetails', [AbsentNoticesController::class, 'getNoticeDetails']);
     Route::post('/notice_slip/create', [AbsentNoticesController::class, 'store']);
+    Route::post('/notice_slip/resend-manager-notification', [AbsentNoticesController::class, 'resendManagerNotification']);
     Route::post('/notice_slip/updateDetails', [AbsentNoticesController::class, 'updateNoticeDetails']);
     Route::post('/notice_slip/cancelNotice', [AbsentNoticesController::class, 'cancelNotice']);
     Route::get('/notice_slip/absentToday', [AbsentNoticesController::class, 'getAbsentToday']);
@@ -473,7 +474,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     // Exam Identification
     Route::post('/exam/identif/save', [ExamsController::class, 'saveIdentif'])->name('admin.exam_identif_save');
     Route::post('/exam/identif/update', [ExamsController::class, 'updateIdentif'])->name('admin.exam_identif_update');
-    Route::post('/exam/identif/delete', [ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_essay_delete');
+    Route::post('/exam/identif/delete', [ExamsController::class, 'deleteExamQuestion'])->name('admin.exam_identif_delete');
 
     // Examinees
     Route::get('/examinees/index', [ExamineesController::class, 'index'])->name('admin.examinees_index');

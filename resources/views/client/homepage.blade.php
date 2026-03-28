@@ -187,62 +187,56 @@
                         <small class="text-muted text-center d-block d-xl-none"><em>{{ $designation }}</em></small>
                         <small class="d-block text-muted text-center text-uppercase">{{ $department }}</small>
                         <small class="text-muted text-center d-block" style="margin-top: -2px;"><em>{{ $tenureText }}</em></small>
-                        <ul class="list-group list-group-unbordered mt-3 mb-3 responsive-font">
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Access ID</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->user_id }}</a></div>
+                        <div class="card mb-3 mt-3">
+                            <div class="card-body p-2">
+                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">My Leave Approver(s)</h3>
+                                <table class="table m-0 remove-last-row-border">
+                                    <tbody class="table-body">
+                                        @forelse($approvers as $approver)
+                                        <tr>
+                                            @if ($approver->employee_id != Auth::user()->user_id)
+                                            <td>
+                                                @php
+                                                    $img = $approver->image ? $approver->image : '/storage/img/user.png';
+                                                @endphp
+                                                <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                                <span class="approver-name d-block">{{ $approver->employee_name }}</span>
+                                                <small class="d-block fst-italic text-muted">{{ $approver->designation }}</small>
+                                            </td>
+                                            @endif
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td class="text-center text-uppercase text-muted">Leave Approver not found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card mb-3">
+                            <div class="card-body p-2">
+                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Reporting to</h3>
+                                <div class="d-flex align-items-center px-2">
+                                    @php
+                                        $img = $reports_to ? $reports_to->image : '/storage/img/user.png';
+                                    @endphp
+                                    @if ($reports_to)
+                                    <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                    <div class="p-2">
+                                        <span class="approver-name d-block">{{ $reports_to->employee_name }}</span>
+                                        <small class="d-block fst-italic text-muted">{{ $reports_to->designation }}</small>
+                                    </div>
+                                    @else
+                                    <div class="col-12 p-2 text-center text-uppercase text-muted">
+                                        Immediate Supervisor not set
+                                    </div>
+                                    @endif
                                 </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Employment Status</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->employment_status }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Birthdate</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ \Carbon\Carbon::parse(Auth::user()->birth_date)->format('M. d, Y') }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Civil Status</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->civil_status }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Contact No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none" id="sidebarContactNo">{{ Auth::user()->contact_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">TIN No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->tin_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">SSS No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->sss_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Company</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->company }}</a></div>
-                                </div>
-                            </li>
-                        </ul>
-                        <a href="#" class="btn btn-secondary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
-                            <i class="fas fa-cog"></i> Change Password</b></a>
+                            </div>
+                        </div>
+
                         @include('client.modals.change_password')
-                        <a href="#" class="btn btn-secondary d-block btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#updateDetails"><b>
-                            <i class="fas fa-user-edit"></i> Update Details</b></a>
-                        @include('client.modals.update_details')
                     </div>
                 </div>
             </div>
@@ -294,16 +288,77 @@
                             <div class="tabs-section">
                                 <ul class="nav nav-pills" id="profile-tabs">
                                     <li class="nav-item"><a href="#tab-overview" class="nav-link active border rounded border-success"> Overview</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-personal-info" class="nav-link">Personal Info</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-leaves" class="nav-link">My Leave History</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-gatepasses" class="nav-link">My Gatepasses</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-itinerary" class="nav-link">My Itinerary</a></li>
-                                    <li class="nav-item border rounded border-success"><a href="#tab-my-exam-history" class="nav-link">My Exam History</a></li>
-                                    <li class="nav-item border rounded border-success"><a href="#tab-my-evaluations" class="nav-link">My Evaluation(s)</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-exam-history" class="nav-link">Assessments</a></li>
                                 </ul>
                                 <div class="tab-content">
                                     <div class="tab-pane in active" id="tab-overview">
                                         <div class="row" id="overview-tab">
                                             @include('client.overview_tab')
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-personal-info">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="d-flex justify-content-end mb-2">
+                                                    <a href="#" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#updateDetails"><b>
+                                                        <i class="fas fa-user-edit"></i> Update Details</b></a>
+                                                </div>
+                                                <ul class="list-group list-group-unbordered mt-2 mb-3 responsive-font">
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Access ID</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->user_id }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Employment Status</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->employment_status }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Birthdate</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ \Carbon\Carbon::parse(Auth::user()->birth_date)->format('M. d, Y') }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Civil Status</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->civil_status }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Contact No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none" id="sidebarContactNo">{{ Auth::user()->contact_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">TIN No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->tin_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">SSS No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->sss_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Company</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->company }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                @include('client.modals.update_details')
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="tab-pane" id="tab-my-exam-history">
@@ -360,11 +415,6 @@
                                             <div class="col-sm-12">
                                                 <div id="my-itinerary"></div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane" id="tab-my-evaluations">
-                                        <div class="row">
-                                            <div class="col-sm-12" id="appraisal-table"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -466,6 +516,9 @@
                                         <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
                                             <span class="col-12">My Attendance</span>
                                         </div>
+                                        <small class="d-block text-muted mt-1" style="font-size: 10px;">
+                                            Note: Attendance data is synced every 15 minutes.
+                                        </small>
                                     </h3>
                                 </div>
                                 <div class="agent-info">
@@ -631,82 +684,6 @@
         overflow-y: scroll
     }
 
-            
-    .calendar, .calendar_weekdays, .calendar_content {
-        max-width: 300px;
-    }
-    .calendar {
-        margin: auto;
-        font-family:'Muli', sans-serif;
-        font-weight: 400;
-    }
-    .calendar_content, .calendar_weekdays, .calendar_header {
-        position: relative;
-        overflow: hidden;
-    }
-    .calendar_weekdays div {
-        display:inline-block;
-        vertical-align:top;
-    }
-    .calendar_weekdays div, .calendar_content div {
-        width: 14.28571%;
-        overflow: hidden;
-        text-align: center;
-        background-color: transparent;
-        color: #6f6f6f;
-        font-size: 14px;
-    }
-    .calendar_content div {
-        border: 1px solid transparent;
-        float: left;
-    }
-    .calendar_content div:hover {
-        border: 1px solid #dcdcdc;
-        cursor: default;
-    }
-    .calendar_content div.blank:hover {
-        cursor: default;
-        border: 1px solid transparent;
-    }
-    .calendar_content div.past-date {
-        color: #d5d5d5;
-    }
-    .calendar_content div.today {
-        font-weight: bold;
-        font-size: 14px;
-        color: #87b633;
-        border: 1px solid #dcdcdc;
-    }
-    .calendar_content div.selected {
-        background-color: #f0f0f0;
-    }
-    .calendar_header {
-        width: 100%;
-        text-align: center;
-    }
-    .calendar_header h2 {
-        padding: 0 10px;
-        font-family:'Muli', sans-serif;
-        font-weight: 300;
-        font-size: 18px;
-        color: #87b633;
-        float:left;
-        width:70%;
-        margin: 0 0 10px;
-    }
-    button.switch-month {
-        background-color: transparent;
-        padding: 0;
-        outline: none;
-        border: none;
-        color: #dcdcdc;
-        float: left;
-        width:15%;
-        transition: color .2s;
-    }
-    button.switch-month:hover {
-        color: #87b633;
-    }
     .remove-last-row-border tbody > tr:last-child > td {
         border-bottom: 0;
     }
@@ -861,7 +838,6 @@
 @endsection
 
 @section('script')
-<script src="{{ asset('css/js/calendar.js') }}"></script>
     <script type="text/javascript" src="{{ asset('css/js/datepicker/jquery.timepicker.js') }}"></script>
     <link rel="stylesheet" type="text/css" href="{{ asset('css/js/datepicker/jquery.timepicker.css') }}" />
     <script type="text/javascript" src="{{ asset('css/js/datepicker/datepair.js') }}"></script>
@@ -1858,6 +1834,103 @@
                 });
             });
 
+            function resendManagerNotice(btn, noticeId) {
+                if (btn.prop('disabled')) {
+                    return;
+                }
+
+                var icon = btn.find('i');
+                var originalIconClass = icon.attr('class');
+                var originalTitle = btn.attr('title');
+                var originalBtnText = btn.text();
+                var isModalButton = btn.attr('id') === 'notify-manager-modal-btn';
+
+                btn.prop('disabled', true).attr('title', 'Sending...');
+                icon.removeClass().addClass('fa fa-spinner fa-spin');
+                if (isModalButton) {
+                    btn.contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).remove();
+                    btn.append(' Sending...');
+                }
+
+                $.ajax({
+                    url: "/notice_slip/resend-manager-notification",
+                    type: "POST",
+                    data: {
+                        notice_id: noticeId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            if (typeof showNotification === 'function') {
+                                showNotification("fa fa-check-circle-o", data.message, 'success', 'Manager notified');
+                            } else {
+                                $.bootstrapGrowl(
+                                    "<center><i class=\"fa fa-check-square-o\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">" +
+                                    data.message + "</span></center>", {
+                                        type: 'success',
+                                        align: 'center',
+                                        delay: 4000,
+                                        width: 450,
+                                        offset: {
+                                            from: 'top',
+                                            amount: 300
+                                        },
+                                        stackup_spacing: 20
+                                    });
+                            }
+                        } else {
+                            if (typeof showNotification === 'function') {
+                                showNotification("fa fa-exclamation-triangle", data.message || 'Unable to notify manager.', 'danger');
+                            } else {
+                                $.bootstrapGrowl(data.message || 'Unable to notify manager.', {
+                                    type: 'danger',
+                                    align: 'center',
+                                    delay: 3500
+                                });
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Unable to notify manager. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        if (typeof showNotification === 'function') {
+                            showNotification("fa fa-exclamation-triangle", message, 'danger');
+                        } else {
+                            $.bootstrapGrowl(message, {
+                                type: 'danger',
+                                align: 'center',
+                                delay: 3500
+                            });
+                        }
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).attr('title', originalTitle || 'Notify Manager');
+                        icon.removeClass().addClass(originalIconClass || 'fa fa-bell');
+                        if (isModalButton) {
+                            btn.contents().filter(function() {
+                                return this.nodeType === 3;
+                            }).remove();
+                            btn.append(originalBtnText);
+                        }
+                    }
+                });
+            }
+
+            $(document).on('click', '.notify-manager-btn', function(event) {
+                event.preventDefault();
+                resendManagerNotice($(this), $(this).data('id'));
+            });
+
+            $(document).on('click', '#notify-manager-modal-btn', function(event) {
+                event.preventDefault();
+                resendManagerNotice($(this), $('#edit-notice-form .notice_id').val());
+            });
+
             $(document).on('click', '#printGatepass', function(event) {
                 event.preventDefault();
                 var id = $(this).data('id');
@@ -1921,12 +1994,14 @@
                         console.log(totaldays);
 
                         var status = data.status;
+                        $('#notify-manager-modal-btn').hide().prop('disabled', false).removeData('id');
                         if (status.toLowerCase() != 'for approval') {
                             $("#cancel-notice").hide();
                             $("#update-notice").hide();
                         } else {
                             $("#cancel-notice").show();
                             $("#update-notice").show();
+                            $('#notify-manager-modal-btn').show().data('id', data.notice_id);
                         }
                         if (status.toLowerCase() != 'cancelled') {
 
@@ -2292,6 +2367,10 @@
                 $('#notice-slip-submit-btn').removeAttr('disabled');
             });
 
+            $('#editNoticeModal').on('hidden.bs.modal', function() {
+                $('#notify-manager-modal-btn').hide().prop('disabled', false).removeData('id');
+            });
+
             function getDeductions() {
                 var employee = '{{ Auth::user()->user_id }}';
 
@@ -2430,19 +2509,6 @@
                     }
                 });
             });
-
-            loadAppraisal();
-
-            function loadAppraisal(page) {
-                var user_id = {{ Auth::user()->user_id }};
-
-                $.ajax({
-                    url: "/getEmpAppraisal/" + user_id + "?page=" + page,
-                    success: function(data) {
-                        $('#appraisal-table').html(data);
-                    }
-                });
-            }
 
             $(document).on('submit', '#edit-evaluation-file-form', function(e) {
                 e.preventDefault();
