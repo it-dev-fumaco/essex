@@ -17,31 +17,22 @@
     min-height: 60vh;
 }
 
-/* No top padding on wrapper — it showed as a gray/white band above the hero */
 .portal-home-main {
     padding-top: 0;
 }
 
-/* Offset for fixed header; padding is ON the hero so the gradient fills the gap (no strip above banner) */
 .portal-hero {
     background: var(--portal-gradient);
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     width: 100vw;
     max-width: 100vw;
-    padding-top: 88px;
     margin-top: 0;
-}
-
-@@media (max-width: 1199.98px) {
-    .portal-hero {
-        padding-top: 80px;
-    }
 }
 
 .portal-hero-title {
     font-family: 'Poppins-Bold', 'Poppins-Regular', sans-serif;
-    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-size: clamp(1.45rem, 3.2vw, 1.85rem);
     font-weight: 700;
     color: #fff;
     letter-spacing: 0.02em;
@@ -58,6 +49,16 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.portal-hero-search-wrap {
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .portal-hero-search-wrap {
+        margin-left: auto;
+    }
 }
 
 .portal-hero .input-group {
@@ -219,22 +220,14 @@
     background-position: center;
 }
 
-.portal-vision-card .portal-vision-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        125deg,
-        rgba(26, 95, 180, 0.85) 0%,
-        rgba(15, 143, 138, 0.75) 45%,
-        rgba(21, 153, 87, 0.82) 100%
-    );
-}
-
 .portal-vision-card .portal-vision-body {
     position: relative;
     z-index: 1;
     padding: 1.25rem;
     color: #fff;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.85),
+        0 2px 16px rgba(0, 0, 0, 0.45);
 }
 
 .portal-vision-card h2 {

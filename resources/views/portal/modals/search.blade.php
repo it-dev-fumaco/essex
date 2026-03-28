@@ -38,20 +38,45 @@
               <div class="row">
                 @foreach($searchResults as $searchResult)
                   @php
-                    if(is_object($searchResult)){
-                      $url = $searchResult->url;
-                      $title = $searchResult->title;
-                      $category = $searchResult->category;
-                      $description = $searchResult->description;
-                      $phone = $searchResult->phone;
-                      $type = $searchResult->type;
-                    }else{
-                      $url = $searchResult['url'];
-                      $title = $searchResult['title'];
-                      $category = $searchResult['category'];
-                      $description = $searchResult['description'];
-                      $phone = $searchResult['phone'];
-                      $type = $searchResult['type'];
+                    if ($searchResult instanceof \Spatie\Searchable\SearchResult) {
+                        $url = $searchResult->url ?? '#';
+                        $title = $searchResult->title ?? '';
+                        $type = $searchResult->type ?? '';
+                        $category = $type;
+                        $description = '';
+                        $phone = null;
+                        $model = $searchResult->searchable;
+                        if ($model instanceof \Illuminate\Database\Eloquent\Model) {
+                            if ($model->getTable() === 'users' && isset($model->email)) {
+                                $description = (string) $model->email;
+                            }
+                            if (isset($model->telephone)) {
+                                $phone = $model->telephone;
+                            }
+                            if ($description === '' && isset($model->short_text) && $model->short_text !== '') {
+                                $description = (string) $model->short_text;
+                            }
+                            if ($description === '' && isset($model->content) && $model->content !== '') {
+                                $description = (string) $model->content;
+                            }
+                            if ($description === '' && isset($model->description) && $model->description !== '') {
+                                $description = (string) $model->description;
+                            }
+                        }
+                    } elseif (is_array($searchResult)) {
+                        $url = $searchResult['url'] ?? '#';
+                        $title = $searchResult['title'] ?? '';
+                        $category = $searchResult['category'] ?? '';
+                        $description = $searchResult['description'] ?? '';
+                        $phone = $searchResult['phone'] ?? null;
+                        $type = $searchResult['type'] ?? '';
+                    } else {
+                        $url = '#';
+                        $title = '';
+                        $category = '';
+                        $description = '';
+                        $phone = null;
+                        $type = '';
                     }
 
                     switch ($type) {
@@ -88,70 +113,12 @@
                           </p>
                         @else
                           {{-- <p>{{ Illuminate\Support\Str::limit(strip_tags($description), 100, '...') }}</p> --}}
-                          <p class="one-line ellipsis responsive-font">{{ strip_tags($description) }}</p>
+                          <p class="one-line ellipsis responsive-font">{{ strip_tags((string) ($description ?? '')) }}</p>
                         @endif
                       </div>
                     </div>
                 </div>
                 @endforeach
-                {{-- @foreach($searchResults as $searchResult)
-                <div class="col-6">
-                  @php
-                    if(is_object($searchResult)){
-                      $url = $searchResult->url;
-                      $title = $searchResult->title;
-                      $category = $searchResult->category;
-                      $description = $searchResult->description;
-                      $phone = $searchResult->phone;
-                      $type = $searchResult->type;
-                    }else{
-                      $url = $searchResult['url'];
-                      $title = $searchResult['title'];
-                      $category = $searchResult['category'];
-                      $description = $searchResult['description'];
-                      $phone = $searchResult['phone'];
-                      $type = $searchResult['type'];
-                    }
-
-                    switch ($type) {
-                      case 'users':
-                        $icon = 'fa fa-user';
-                        break;
-                      case 'Files':
-                        $icon = 'fa fa-file-pdf';
-                        break;
-                      default:
-                        $icon = 'icon-info';
-                        break;
-                    }
-                  @endphp
-                  <div class="row" style="margin: 20px 0 20px 0;">
-                    <div class="col-md-1 text-center">
-                      <i class="{{ $icon }}" style="font-size: 25pt;"></i>
-                    </div>
-                    <div class="col-md-11" style="padding: 0;">
-                      <a href="{{ $url }}" class="url text-primary">
-                        <h5>{{ $title }}</h5>
-                      </a>
-                      <span class="text-muted" style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span>
-                      @if ($type == 'users')
-                        <p>
-                          @if ($description)
-                            <i class="fa fa-envelope"></i>&nbsp;{{ $description }}
-                          @endif
-                          @if ($phone)
-                            <br/>
-                            <i class="fa fa-phone"></i>&nbsp;{{ $phone }}
-                          @endif
-                        </p>
-                      @else
-                        <p>{{ Illuminate\Support\Str::limit(strip_tags($description), 100, '...') }}</p>
-                      @endif
-                    </div>
-                  </div>
-                  <hr style="border: 1px solid rgba(0,0,0,.1)">
-                </div>
-                  @endforeach --}}
               </div>
             </div>
           </div>

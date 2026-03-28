@@ -38,7 +38,7 @@
                     <h1 class="portal-hero-title">Welcome to Essex!</h1>
                 </div>
                 <div class="col-lg-7">
-                    <div class="portal-hero-glass">
+                    <div class="portal-hero-glass portal-hero-search-wrap">
                         <form action="{{ route('search') }}" id="searh-form" method="get" class="m-0">
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="fas fa-search text-muted" aria-hidden="true"></i></span>
@@ -84,7 +84,7 @@
 
             {{-- Center: systems --}}
             <div class="col-12 col-xl-6">
-                <h2 class="portal-systems-title">Systems Access</h2>
+                <h2 class="portal-systems-title">FUMACO Systems</h2>
                 <div class="row g-3">
                     @foreach ($portalSystems as $idx => $sys)
                         <div class="col-md-6">
@@ -106,7 +106,6 @@
             <div class="col-12 col-xl-3">
                 <div class="portal-vision-card mb-3 mb-xl-4">
                     <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
-                    <div class="portal-vision-overlay"></div>
                     <div class="portal-vision-body">
                         <h2>Vision</h2>
                         <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>

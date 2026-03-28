@@ -10,8 +10,11 @@ use App\Models\Poste;
 use Auth;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Spatie\Searchable\Search;
 use Storage;
+use Throwable;
 
 class SearchController extends Controller
 {
@@ -77,10 +80,42 @@ class SearchController extends Controller
                 $extension_key = count(explode('.', $file)) > 0 ? count(explode('.', $file)) - 1 : 0;
                 $extension = isset(explode('.', $file)[$extension_key]) ? strtolower(explode('.', $file)[$extension_key]) : null;
 
-                $pdf_text = $extension == 'pdf' ? $parser->parseFile($path)->getText() : null;
+                $pdf_text = null;
+                if ($extension === 'pdf') {
+                    $pathStr = (string) $path;
+                    try {
+                        if (preg_match('#^https?://#i', $pathStr)) {
+                            // Remote KB URL: avoid Parser::parseFile() (uses file_get_contents + can surface
+                            // ErrorException on "Connection refused"). Fetch with HTTP client instead.
+                            $response = Http::timeout(12)
+                                ->connectTimeout(5)
+                                ->get($pathStr);
+                            if ($response->successful()) {
+                                $body = $response->body();
+                                if ($body !== '') {
+                                    $pdf_text = $parser->parseContent($body)->getText();
+                                }
+                            }
+                        } elseif (is_readable($pathStr)) {
+                            $pdf_text = $parser->parseFile($pathStr)->getText();
+                        }
+                    } catch (Throwable $e) {
+                        Log::warning('Search PDF parse skipped', [
+                            'path' => $pathStr,
+                            'message' => $e->getMessage(),
+                        ]);
+                        $pdf_text = null;
+                    }
+                }
 
                 $is_pdf = $extension && ! in_array($extension, ['gif', 'png', 'jpg', 'jpeg', 'mp4', 'db']) ? 1 : 0;
-                $contains_search = strpos($pdf_text, $search_term) || strpos($path, $search_term) ? 1 : 0;
+                $haystackPath = (string) $path;
+                $haystackFile = is_string($file) ? $file : '';
+                $contains_search = (
+                    (is_string($pdf_text) && stripos($pdf_text, $search_term) !== false)
+                    || stripos($haystackPath, $search_term) !== false
+                    || stripos($haystackFile, $search_term) !== false
+                ) ? 1 : 0;
                 if ($is_pdf && $contains_search) {
                     return [
                         'searchable' => [],

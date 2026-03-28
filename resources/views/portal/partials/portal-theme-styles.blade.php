@@ -69,4 +69,18 @@
     font-weight: 500;
 }
 
+.portal-nav-essex-logo {
+    display: block;
+    max-height: 44px;
+    width: auto;
+    object-fit: contain;
+}
+
+.portal-nav-fumaco-logo {
+    display: block;
+    max-height: 25px;
+    width: auto;
+    object-fit: contain;
+}
+
 </style>

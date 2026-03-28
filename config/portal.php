@@ -16,7 +16,7 @@ return [
     */
     'systems' => [
         [
-            'name' => 'NextERP',
+            'name' => 'ERPNExt',
             'label' => 'Enterprise Resource Planning',
             'url' => '10.0.0.83:8000',
             'icon' => 'fa-building',

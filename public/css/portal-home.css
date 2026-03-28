@@ -18,15 +18,8 @@
     min-height: 60vh;
 }
 
-/* Offset fixed header (top bar + navbar) */
 .portal-home-main {
-    padding-top: 118px;
-}
-
-@media (max-width: 1199.98px) {
-    .portal-home-main {
-        padding-top: 100px;
-    }
+    padding-top: 0;
 }
 
 .portal-hero {

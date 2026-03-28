@@ -3,9 +3,9 @@
         <nav class="navbar navbar-expand-xl navbar-light w-100">
             <div class="container-fluid align-items-center px-2 px-xl-3">
                 <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-2" href="{{ url('/') }}">
-                    <img src="{{ asset('storage/img/logo5.png') }}" alt="" style="max-height: 44px; width: auto;">
+                    <img src="{{ asset('storage/img/logo5.png') }}" alt="" class="portal-nav-essex-logo">
                     <span class="d-none d-sm-inline-block text-start">
-                        <span class="portal-nav-brand-text d-block">Essex Fumaco</span>
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('upcloud')->url('logo/fumaco-transparent.png') }}" alt="Fumaco" class="portal-nav-fumaco-logo d-block mb-1">
                         <span class="portal-nav-brand-sub">Employee Portal</span>
                     </span>
                 </a>
