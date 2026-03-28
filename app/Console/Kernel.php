@@ -19,7 +19,6 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -28,7 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('emails:worksary')->everyMinute();
         // $schedule->command('emails:birthday')->dailyAt('00:00');
         // $schedule->command('emails:worksary')->dailyAt('00:00');
-        if(env('DB_HOST') == '10.0.0.73'){
+        if (config('database.connections.mysql.host') === '10.0.0.73') {
             echo "NOTE: Currently connected to Live DB\n";
         }
     }

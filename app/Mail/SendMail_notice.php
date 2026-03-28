@@ -5,11 +5,11 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Auth;
+
 class SendMail_notice extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $data;
 
     /**
@@ -29,6 +29,6 @@ class SendMail_notice extends Mailable
      */
     public function build()
     {
-        return $this->from(env('MAIL_FROM_ADDRESS'))->subject('Absent Notice Slip - FOR YOUR APPROVAL')->view('kiosk.Mail.template.notice_template')->with('data', $this->data);   
-     }
+        return $this->from(env('MAIL_FROM_ADDRESS'))->subject('Absent Notice Slip - FOR YOUR APPROVAL')->view('kiosk.Mail.template.notice_template')->with('data', $this->data);
+    }
 }

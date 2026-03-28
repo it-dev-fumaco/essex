@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateUsersTable extends Migration
 {
@@ -28,7 +28,7 @@ class CreateUsersTable extends Migration
             $table->enum('user_group', ['Manager', 'Employee', 'HR Personnel'])->nullable();
             $table->string('birth_date')->nullable();
             $table->integer('phone_local_no')->nullable();
-            $table->enum('status', ['Active',['Inactive']])->nullable();
+            $table->enum('status', ['Active', ['Inactive']])->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

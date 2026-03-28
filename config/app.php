@@ -56,6 +56,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | When true, ForceHttps middleware redirects HTTP to HTTPS and generates
+    | https:// URLs for assets. Set to false for local/Docker without SSL.
+    |
+    */
+    'force_https' => filter_var(env('HTTPS', false), FILTER_VALIDATE_BOOLEAN),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notice Slip / Mail link base URL
+    |--------------------------------------------------------------------------
+    |
+    | Base URL used in notice slip approval emails (Approve/Disapprove links).
+    | Set to an internal URL (e.g. https://10.0.0.5) if emails must open on
+    | the internal network. Leave null to use APP_URL.
+    |
+    */
+    'notice_slip_base_url' => env('NOTICE_SLIP_BASE_URL', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -159,9 +182,6 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-        \Ecrmnn\LaravelHttps\Providers\ServiceProvider::class,
-        \ZoiloMora\AccessServiceProvider::class,
-        Unisharp\Ckeditor\ServiceProvider::class,
 
         /*
          * Package Service Providers...
@@ -227,7 +247,6 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'Form' => Collective\Html\FormFacade::class,
         'Html' => Collective\Html\HtmlFacade::class,
-        'Input' => Illuminate\Support\Facades\Input::class,
 
     ],
 

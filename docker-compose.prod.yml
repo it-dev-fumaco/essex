@@ -1,0 +1,52 @@
+# Production (shared infra): PHP-FPM only; edge NGINX + Redis from athenaerp-1.
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+  app:
+    image: ${ESSEX_APP_IMAGE:-devfumaco/essex-app:v4}
+    container_name: essex-app
+    restart: unless-stopped
+    command: ["php-fpm"]
+    expose:
+      - "9000"
+    volumes:
+      - storage_public:/var/www/html/storage/app/public
+      - storage_logs:/var/www/html/storage/logs
+    environment:
+      - APP_ENV=production
+      - HTTPS=false
+      # Use APP_URL / ASSET_URL from project .env (Compose interpolates from .env).
+      # Optional legacy: ESSEX_APP_URL / ESSEX_ASSET_URL if APP_URL is unset.
+      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
+      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
+      - REDIS_HOST=${SHARED_REDIS_HOST:-athenaerp-redis}
+      - REDIS_PORT=${SHARED_REDIS_PORT:-6379}
+      - REDIS_CLIENT=phpredis
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+    env_file:
+      - .env
+    networks:
+      - app_network
+      - shared_network
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/php-fpm-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+volumes:
+  storage_public:
+    driver: local
+  storage_logs:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
+  shared_network:
+    external: true
+    name: ${SHARED_NETWORK_NAME:-athenaerp-1_athenaerp}

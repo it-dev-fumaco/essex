@@ -2,22 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Traits\AttendanceTrait;
 use Carbon\Carbon;
-use Auth;
 use DB;
-use DateTime;
-use DatePeriod;
-use DateInterval;
-use App\Http\Traits\AttendanceTrait;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminController extends Controller
 {
     use AttendanceTrait;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:admin');
     }
 
@@ -26,15 +22,18 @@ class AdminController extends Controller
         return view('admin.panel');
     }
 
-    public function addShiftForm(){
+    public function addShiftForm()
+    {
         return view('admin.forms.add_shift_form');
     }
 
-    public function addDepartmentForm(){
+    public function addDepartmentForm()
+    {
         return view('admin.forms.add_department_form');
     }
 
-    public function addApplicantForm(){
+    public function addApplicantForm()
+    {
         return view('admin.forms.add_applicant_form');
     }
 
@@ -55,8 +54,6 @@ class AdminController extends Controller
     //         $c_logs[] = ['date' => Carbon::parse($d)->format('Y-m-d H:i:s')];
     //     }
 
-    //     $biometrics = DB::connection('access')->select("SELECT Transactions.[pin], Transactions.[date], MAX(iif (Transactions.[TransType] = 7, Transactions.[time], 0)) AS time_in, MAX(iif (Transactions.[TransType] = 8, Transactions.[time], 0)) AS time_out, MAX(iif (Transactions.[TransType] = 7, UnitSiteQuery.[UnitName], 0)) AS loc_in, MAX(iif (Transactions.[TransType] = 8, UnitSiteQuery.[UnitName], 0)) AS loc_out FROM (Transactions LEFT JOIN UnitSiteQuery ON Transactions.Address = UnitSiteQuery.Address) LEFT JOIN templates ON (Transactions.pin = templates.pin) AND (Transactions.finger = templates.finger) WHERE Transactions.[ID] > 704020 AND Transactions.[pin] = ".$employee." GROUP BY Transactions.[date], Transactions.[pin]");
-
     //     $biometrics = collect($biometrics)->whereNotIn('date', array_column($c_logs, 'date'));
 
     //     $logs = [];
@@ -72,11 +69,12 @@ class AdminController extends Controller
     //     }
 
     //     DB::table('biometric_logs')->insert($logs);
-        
+
     //     return response()->json(['success' => 'Updated: Biometric Logs']);
     // }
 
-    public function employeeAttendanceHistory(Request $request, $employee){
+    public function employeeAttendanceHistory(Request $request, $employee)
+    {
         $employee_logs = $this->attendanceLogs($employee, $request->start, $request->end);
 
         $working_days = $this->getWorkingDays($request->start, $request->end);
@@ -88,11 +86,12 @@ class AdminController extends Controller
             'working_days' => $working_days,
             'reqHrs' => $reqHrs,
         ];
-        
+
         return view('client.tables.attendance_history_table', compact('employee_logs', 'summary_details'));
     }
 
-    public function employeeAttendanceDashboard(Request $request, $employee){
+    public function employeeAttendanceDashboard(Request $request, $employee)
+    {
         $employee_logs = $this->attendanceLogs($employee, $request->start, $request->end);
 
         // Get current page form url e.x. &page=1
@@ -104,7 +103,7 @@ class AdminController extends Controller
         // Slice the collection to get the items to display in current page
         $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->all();
         // Create our paginator and pass it to the view
-        $paginatedItems= new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
+        $paginatedItems = new LengthAwarePaginator($currentPageItems, count($itemCollection), $perPage);
         // set url path for generted links
         $paginatedItems->setPath($request->url());
 
@@ -113,7 +112,8 @@ class AdminController extends Controller
         return view('client.tables.attendance_table', compact('logs'));
     }
 
-    public function employeeLateDeductions($employee){
+    public function employeeLateDeductions($employee)
+    {
         $date_from = Carbon::parse('first day of this month')->format('Y-m-d');
         $date_to = Carbon::parse('last day of this month')->format('Y-m-d');
 
@@ -121,5 +121,4 @@ class AdminController extends Controller
 
         return collect($emp_lates)->sum('late_in_minutes');
     }
-
 }

@@ -1,0 +1,55 @@
+# Git and IDE
+.git
+.gitignore
+.gitattributes
+.cursor
+.idea
+.vscode
+*.md
+!README.md
+
+# Dependencies (reinstalled in image)
+/vendor
+/node_modules
+
+# Build and env (inject at runtime)
+.env
+.env.*
+!.env.example
+
+# Logs and cache
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!bootstrap/cache/.gitkeep
+
+# Test and docs
+/tests
+/phpunit.xml
+.phpunit.result.cache
+*.md
+DATABASE_*.md
+*_REPORT.md
+*_PLAN.md
+*_ROADMAP.md
+*_SUMMARY.md
+*_ANALYSIS.md
+*_STATUS*.md
+UPGRADE_*.md
+REFACTOR_*.md
+FORM_*.md
+LARAVEL_*.md
+PERFORMANCE_*.md
+THIN_*.md
+ENTERPRISE_*.md
+
+# Misc
+*.log
+*.mdb
+.DS_Store

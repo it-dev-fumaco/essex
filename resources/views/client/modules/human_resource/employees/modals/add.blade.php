@@ -16,30 +16,34 @@
                            <div class="col-md-4">
                               <div class="form-group">
                                  <label>Access ID:</label>
-                                 <input type="text" name="user_id" placeholder="Enter Access ID" required>
+                                 <input type="text" name="user_id" placeholder="Enter Access ID" maxlength="10" required>
                               </div>
                               <div class="form-group">
-                                 <label>Employee Name:</label>
-                                 <input type="text" name="employee_name" placeholder="Enter Employee Name" required>
+                                 <label>First name:</label>
+                                 <input type="text" name="employee_first_name" class="employee_first_name" placeholder="Given name" required>
+                              </div>
+                              <div class="form-group">
+                                 <label>Middle name:</label>
+                                 <input type="text" name="employee_middle_name" class="employee_middle_name" placeholder="Optional">
+                              </div>
+                              <div class="form-group">
+                                 <label>Last name:</label>
+                                 <input type="text" name="employee_last_name" class="employee_last_name" placeholder="Family name" required>
                               </div>
                               <div class="form-group">
                                  <label>Birthdate:</label>
-                                 <input type="date" name="birthdate" placeholder="Enter Birthdate" required>
+                                 <input type="date" name="birth_date" class="birth_date" placeholder="Enter Birthdate" required>
                               </div>
                               <div class="form-group">
                                  <label>Contact No.:</label>
                                  <input type="text" name="contact_no" placeholder="Contact No." required>
-                              </div>
-                              <div class="form-group">
-                                 <label>Address:</label>
-                                 <textarea name="address" rows="2" placeholder="Enter Address" required></textarea>
                               </div>
                               
                            </div>
                            <div class="col-md-4">
                               <div class="form-group">
                                  <label>Nickname:</label>
-                                 <input type="text" name="nickname" placeholder="Enter Nickname" required>
+                                 <input type="text" name="nick_name" class="nick_name" placeholder="Enter Nickname" maxlength="100" required>
                               </div>
                               <div class="form-group">
                                  <label>Gender:</label>
@@ -79,7 +83,7 @@
                                     </div>
                                     <div class="fileUpload btn btn-primary upload-btn">
                                        <span>Choose File..</span>
-                                       <input type="file" name="empImage" class="upload" />
+                                       <input type="file" name="image" class="upload" accept="image/jpeg,image/png,image/gif,image/webp" />
                                     </div>
                                  </div>
                               </div>
@@ -98,6 +102,34 @@
                               </div>
                            </div>
                         </div>
+                        <div class="row" style="padding-top: 8px;">
+                           <div class="col-md-12">
+                              <h3 class="title-2" style="font-size: 12pt; margin-top: 0;">Residential address</h3>
+                              <p style="font-size: 11px; color: #666; margin: 0 0 8px 0;">Enter street or building first, then barangay and city. The preview shows how the full address will read.</p>
+                              <div class="form-group">
+                                 <label>Street, building, unit / subdivision</label>
+                                 <textarea name="address" class="address-street" rows="2" placeholder="House no., street, building, subdivision, etc." maxlength="190" required style="min-height: 54px;"></textarea>
+                              </div>
+                              <div class="row">
+                                 <div class="col-sm-6">
+                                    <div class="form-group">
+                                       <label>Barangay</label>
+                                       <input type="text" name="barangay" class="address-barangay" placeholder="Barangay" required>
+                                    </div>
+                                 </div>
+                                 <div class="col-sm-6">
+                                    <div class="form-group">
+                                       <label>City / municipality</label>
+                                       <input type="text" name="city" class="address-city" placeholder="City or municipality" maxlength="2000" required>
+                                    </div>
+                                 </div>
+                              </div>
+                              <div class="form-group" style="margin-bottom: 0;">
+                                 <label style="font-weight: normal; color: #666;">Formatted address</label>
+                                 <div id="add-employee-address-preview" class="add-address-preview" style="padding: 10px 12px; font-size: 13px; line-height: 1.45; background: #f8f9fa; border: 1px solid #e2e6ea; border-radius: 4px; min-height: 42px; color: #333;">—</div>
+                              </div>
+                           </div>
+                        </div>
                      </div>
                   </div>
                   <div class="col-md-12">
@@ -107,14 +139,14 @@
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Employee ID:</label>
-                                 <input type="text" name="employee_id" placeholder="Enter Employee ID" required>
+                                 <input type="text" name="employee_id" placeholder="Enter Employee ID" maxlength="20" required>
                               </div>
                            </div>
 
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>ID Security Key:</label>
-                                 <input type="password" name="id_key" placeholder="Enter ID Security Key">
+                                 <input type="password" name="id_security_key" placeholder="Enter ID Security Key">
                               </div>
                            </div>
 
@@ -168,7 +200,7 @@
                               <div class="form-group">
                                  <label>Department:</label>
                                  @if(isset($departments))
-                                 <select name="department" required>
+                                 <select name="department_id" class="department_id" required>
                                     <option value="">Select Department</option>
                                     @forelse($departments as $department)
                                     <option value="{{ $department->department_id }}">{{ $department->department }}</option>
@@ -185,7 +217,7 @@
                               <div class="form-group">
                                  <label>Designation:</label>
                                  @if(isset($designations))
-                                 <select name="designation" class="designation" required>
+                                 <select name="designation_id" class="designation_id" required>
                                     <option value="">Select Designation</option>
                                     @forelse($designations as $designation)
                                     <option value="{{ $designation->des_id }}">{{ $designation->designation }}</option>
@@ -212,7 +244,7 @@
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Shift:</label>
-                                 <select name="shift" required>
+                                 <select name="shift_group_id" class="shift_group_id" required>
                                     <option value="">Select Shift</option>
                                     @forelse($shifts as $shift)
                                     <option value="{{ $shift->id }}">{{ $shift->shift_group_name }}</option>
@@ -249,7 +281,7 @@
                            <div class="col-sm-4">
                               <div class="form-group">
                                  <label>Telephone (Local No.):</label>
-                                 <input type="number" name="telephone" placeholder="Enter Local No.">
+                                 <input type="text" name="telephone" placeholder="Enter Local No." maxlength="30">
                               </div>
                            </div>
 
@@ -257,8 +289,8 @@
 
                            <div class="col-sm-4">
                               <div class="form-group">
-                                 <label>Local Email:</label>
-                                 <input type="text" name="email" placeholder="Enter Email" required>
+                                 <label>Personal Email:</label>
+                                 <input type="text" name="email" placeholder="Enter Personal Email" required>
                               </div>
                            </div>
 

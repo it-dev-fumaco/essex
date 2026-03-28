@@ -1,43 +1,45 @@
-<?php namespace App\Traits;
+<?php
 
-use Auth;
-use DB;
-use Carbon\Carbon;
-use Exception;
-use App\User;
-use Illuminate\Support\Facades\Mail;
+namespace App\Traits;
+
 use App\Mail\SendMail_General;
-trait EmailsTrait{
-    private function send_mail($subject, $template, $recipient, $data_arr, $log = []){
+use DB;
+use Illuminate\Support\Facades\Mail;
+
+trait EmailsTrait
+{
+    private function send_mail($subject, $template, $recipient, $data_arr, $log = [])
+    {
         try {
             $data['mail_config'] = [
                 'subject' => $subject,
-                'template' => $template
+                'template' => $template,
             ];
-    
+
             $data['data'] = $data_arr;
-            
+
             Mail::to($recipient)->send(new SendMail_General($data));
             $success = 1;
-            if(Mail::failures()){
+            if (Mail::failures()) {
                 $success = 0;
             }
-            
-            if($log){
+
+            if ($log) {
                 DB::table('email_notifications')->insert([
                     'type' => $log['type'],
                     'recipient' => $log['recipient'],
                     'subject' => $log['subject'],
                     'template' => $log['template'],
                     'template_data' => $log['template_data'],
-                    'email_sent' => $success
+                    'email_sent' => $success,
                 ]);
             }
 
-            return ['success' => $success , 'message' => $success ? 'email sent!' : 'An error occured. Please try again.'];
+            return ['success' => $success, 'message' => $success ? 'email sent!' : 'An error occured. Please try again.'];
         } catch (\Throwable $e) {
             // return $e->getMessage();
             throw $e;
+
             return ['success' => 0, 'message' => $e->getMessage()];
         }
     }

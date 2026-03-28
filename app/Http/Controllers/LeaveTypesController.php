@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaveType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
-use App\LeaveType;
 
 class LeaveTypesController extends Controller
 {
@@ -27,10 +26,11 @@ class LeaveTypesController extends Controller
     {
         $leave_types = LeaveType::all();
 
-        return view('admin.leave_types')->with("leave_types", $leave_types);
+        return view('admin.leave_types')->with('leave_types', $leave_types);
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $leave_type = new LeaveType;
         $leave_type->leave_type = $request->leave_type;
         $leave_type->color_legend = $request->color_legend;
@@ -41,7 +41,8 @@ class LeaveTypesController extends Controller
         return redirect('/admin/leave_types')->with('message', 'Leave Type successfully added');
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $leave_type = LeaveType::find($id);
         $leave_type->leave_type = $request->leave_type;
         $leave_type->color_legend = $request->color_legend;
@@ -52,8 +53,10 @@ class LeaveTypesController extends Controller
         return redirect('/admin/leave_types')->with('message', 'Leave Type successfully updated');
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         LeaveType::destroy($id);
+
         return redirect('/admin/leave_types')->with('message', 'Leave Type successfully deleted');
     }
 }

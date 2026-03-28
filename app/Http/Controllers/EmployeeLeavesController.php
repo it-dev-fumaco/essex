@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
-use App\EmployeeLeave;
-use DB;
+use App\Models\EmployeeLeave;
 use Auth;
 use Carbon\Carbon;
+use DB;
+use Illuminate\Http\Request;
 
 class EmployeeLeavesController extends Controller
 {
@@ -29,17 +28,18 @@ class EmployeeLeavesController extends Controller
     public function index()
     {
         $employee_leaves = DB::table('employee_leaves')
-                            ->join('users', 'employee_leaves.employee_id', '=', 'users.user_id')
-                            ->join('leave_types', 'employee_leaves.leave_type_id', '=', 'leave_types.leave_type_id')
-                            ->select('employee_leaves.*', 'users.employee_name', 'leave_types.leave_type')
-                            ->get();
+            ->join('users', 'employee_leaves.employee_id', '=', 'users.user_id')
+            ->join('leave_types', 'employee_leaves.leave_type_id', '=', 'leave_types.leave_type_id')
+            ->select('employee_leaves.*', 'users.employee_name', 'leave_types.leave_type')
+            ->get();
         $employees = DB::table('users')->get();
         $leave_types = DB::table('leave_types')->get();
 
-        return view('admin.employee_leaves', ["employees" => $employees, "employee_leaves" => $employee_leaves, "leave_types" => $leave_types]);
+        return view('admin.employee_leaves', ['employees' => $employees, 'employee_leaves' => $employee_leaves, 'leave_types' => $leave_types]);
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $employee_leave = new EmployeeLeave;
         $employee_leave->employee_id = $request->employee;
         $employee_leave->leave_type_id = $request->leave_type;
@@ -51,7 +51,8 @@ class EmployeeLeavesController extends Controller
         return redirect('/admin/employee_leaves')->with('message', 'Employee Leave successfully added');
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $employee_leave = EmployeeLeave::find($id);
         $employee_leave->employee_id = $request->employee;
         $employee_leave->leave_type_id = $request->leave_type;
@@ -64,35 +65,39 @@ class EmployeeLeavesController extends Controller
         return redirect('/admin/employee_leaves')->with('message', 'Employee Leave successfully updated');
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         EmployeeLeave::destroy($id);
-        
+
         return redirect('/admin/employee_leaves')->with('message', 'Employee Leave successfully deleted');
     }
 
-    public function leaveBalances(){
+    public function leaveBalances()
+    {
         $employee_leaves = DB::table('employee_leaves')
-                            ->join('users', 'employee_leaves.employee_id', '=', 'users.user_id')
-                            ->join('leave_types', 'employee_leaves.leave_type_id', '=', 'leave_types.leave_type_id')
-                            ->select('employee_leaves.*', 'users.employee_name', 'leave_types.leave_type')
-                            ->get();
+            ->join('users', 'employee_leaves.employee_id', '=', 'users.user_id')
+            ->join('leave_types', 'employee_leaves.leave_type_id', '=', 'leave_types.leave_type_id')
+            ->select('employee_leaves.*', 'users.employee_name', 'leave_types.leave_type')
+            ->get();
         $employees = DB::table('users')->get();
         $leave_types = DB::table('leave_types')->get();
 
-        return view('admin.leave_balances', ["employees" => $employees, "employee_leaves" => $employee_leaves, "leave_types" => $leave_types]);
+        return view('admin.leave_balances', ['employees' => $employees, 'employee_leaves' => $employee_leaves, 'leave_types' => $leave_types]);
     }
 
-    public function sessionDetails($column){
+    public function sessionDetails($column)
+    {
         $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('departments', 'users.department_id', '=', 'departments.department_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
 
         return $detail->$column;
     }
 
-    public function showLeaveBalances(){
+    public function showLeaveBalances()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -107,7 +112,8 @@ class EmployeeLeavesController extends Controller
         return view('client.modules.absent_notice_slip.leave_balances.index', compact('employees', 'employee_leaves', 'leave_types', 'designation', 'department'));
     }
 
-    public function leaveBalanceCreate(Request $request){
+    public function leaveBalanceCreate(Request $request)
+    {
         $employee_leave = new EmployeeLeave;
         $employee_leave->employee_id = $request->employee;
         $employee_leave->leave_type_id = $request->leave_type;
@@ -119,7 +125,8 @@ class EmployeeLeavesController extends Controller
         return redirect('/module/absent_notice_slip/leave_balances')->with('message', 'Employee Leave successfully added');
     }
 
-    public function leaveBalanceUpdate(Request $request, $id){
+    public function leaveBalanceUpdate(Request $request, $id)
+    {
         $employee_leave = EmployeeLeave::find($id);
         $employee_leave->employee_id = $request->employee;
         $employee_leave->leave_type_id = $request->leave_type;
@@ -132,16 +139,18 @@ class EmployeeLeavesController extends Controller
         return redirect('/module/absent_notice_slip/leave_balances')->with('message', 'Employee Leave successfully updated');
     }
 
-    public function leaveBalanceDelete($id){
+    public function leaveBalanceDelete($id)
+    {
         EmployeeLeave::destroy($id);
-        
+
         return redirect('/module/absent_notice_slip/leave_balances')->with('message', 'Employee Leave successfully deleted');
     }
 
-    public function employeeLeaveBalanceCreate(Request $request){
+    public function employeeLeaveBalanceCreate(Request $request)
+    {
         DB::beginTransaction();
         try {
-             // get employee leaves
+            // get employee leaves
             return $query = DB::table('employee_leaves as el')->join('users as u', 'el.employee_id', 'u.user_id')
                 ->join('leave_types as lt', 'el.leave_type_id', 'lt.leave_type_id')
                 ->where('u.status', 'Active')->where('u.user_type', 'Employee')->where('u.employment_status', 'Regular')
@@ -150,9 +159,9 @@ class EmployeeLeavesController extends Controller
                 ->orderBy('u.user_id', 'desc')->get();
 
             $values = [];
-            foreach($query as $r) {
+            foreach ($query as $r) {
                 $existing = DB::table('employee_leaves')->where('employee_id', $r->employee_id)->where('leave_type_id', $r->leave_type_id)->where('year', $request->next_year)->exists();
-                if (!$existing) {
+                if (! $existing) {
                     $values[] = [
                         'employee_id' => $r->employee_id,
                         'leave_type_id' => $r->leave_type_id,
@@ -168,12 +177,13 @@ class EmployeeLeavesController extends Controller
             }
 
             DB::table('employee_leaves')->insert($values);
-            
+
             // DB::commit();
 
             return redirect()->back()->with('message', 'Employee Leave successfully updated.');
         } catch (Exception $e) {
             DB::rollback();
+
             return 0;
 
             return redirect()->back()->with('message', 'Something went wrong. Please try again.');

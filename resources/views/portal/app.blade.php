@@ -162,6 +162,81 @@
         font-size: 2.5rem;
     }
 
+    .account-setting {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .account-setting .account-menu-toggle {
+        color: #ffffff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background-color: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        min-height: 44px;
+        transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .account-setting .account-menu-toggle:hover,
+    .account-setting .account-menu-toggle:focus {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.35);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+    }
+
+    .account-setting .account-menu-toggle::after {
+        margin-left: 2px;
+        vertical-align: middle;
+    }
+
+    .account-setting .account-welcome {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: #ffffff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        max-width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-setting .account-gear-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        background-color: rgba(0, 0, 0, 0.14);
+    }
+
+    .account-setting .dropdown-menu {
+        min-width: 210px;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(18, 38, 63, 0.18);
+        border: 1px solid rgba(17, 112, 60, 0.18);
+        padding: 6px;
+    }
+
+    .account-setting .dropdown-menu .dropdown-item {
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .account-setting .dropdown-menu .dropdown-item i {
+        width: 18px;
+        text-align: center;
+    }
+
     @media (max-width: 1199.98px) {
         .nav li a{
             padding: 5px !important;
@@ -195,6 +270,16 @@
             font-size: 1.5rem;
         }
 
+        .account-setting .account-menu-toggle {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .account-setting .account-welcome {
+            max-width: 210px;
+            font-size: 13px;
+        }
+
     }
 </style>
 
@@ -222,10 +307,32 @@
                     <div class="col-md-5 col-sm-6">
                         <div class="account-setting">
                             @if(Auth::user())
-                            <strong>Welcome, {{ Auth::user()->employee_name }}!</strong>
-                            <a href="{{ url('/userLogout') }}">
-                                <i class="icon-logout" style="font-size: 15px;"></i><span>Logout</span>
-                            </a>
+                            <div class="dropdown d-inline-block">
+                                <a href="#"
+                                   class="account-menu-toggle dropdown-toggle"
+                                   id="accountActionDropdown"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    <span class="account-welcome">Welcome, {{ Auth::user()->employee_name }}!</span>
+                                    <span class="account-gear-icon" aria-hidden="true">
+                                        <i class="fas fa-cog"></i>
+                                    </span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountActionDropdown">
+                                    <li>
+                                        <a class="dropdown-item header-change-password" href="/home" data-bs-toggle="modal" data-bs-target="#changePassword">
+                                            <i class="fas fa-key me-2" aria-hidden="true"></i>Change Password
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url('/userLogout') }}">
+                                            <i class="icon-logout me-2" aria-hidden="true"></i>Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                             @else
                             <a href="#"  data-bs-toggle="modal" data-bs-target="#loginModal">
                                 <i class="icon-login"></i> <span>Login</span>
@@ -282,7 +389,10 @@
 <script>
 $(document).ready(function(){
     $('.modal').on('hidden.bs.modal', function(){
-        $(this).find('form')[0].reset();
+        var form = $(this).find('form').get(0);
+        if (form && typeof form.reset === 'function') {
+            form.reset();
+        }
     });
     
     /* Get iframe src attribute value i.e. YouTube video url
@@ -348,6 +458,16 @@ $(document).ready(function(){
 
         $($(this).data('target')).addClass('active');
         $(this).addClass('active');
+    });
+
+    $(document).on('click', '.header-change-password', function (e) {
+        var modalEl = document.getElementById('changePassword');
+        if (!modalEl) {
+            return;
+        }
+        e.preventDefault();
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
     });
 
     load_time();

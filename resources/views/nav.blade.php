@@ -59,7 +59,7 @@
                         </li>
                         @if(Auth::check())
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url('/home') }}" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
+                                <a class="nav-link" href="/home" style="white-space: nowrap"><i class="icon-user"></i> &nbsp;MY PROFILE</a>
                             </li>
                         @endif
                     </ul>

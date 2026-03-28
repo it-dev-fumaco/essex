@@ -44,8 +44,8 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'essex'),
-            'username' => env('DB_USERNAME', 'erp'),
+            'database' => env('DB_DATABASE', 'forge'),
+            'username' => env('DB_USERNAME', 'forge'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
@@ -54,6 +54,10 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone' => env('DB_TIMEZONE', '+08:00'),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 30),
+            ]) : [],
         ],
 
         // ERP Connection
@@ -61,9 +65,9 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_ERP', '_3f2ec5a818bccb73'),
-            'username' => env('DB_USERNAME', 'erp'),
-            'password' => env('DB_PASSWORD', 'fumaco'),
+            'database' => env('DB_DATABASE_1', 'forge'),
+            'username' => env('DB_USERNAME_1', 'forge'),
+            'password' => env('DB_PASSWORD_1', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -78,9 +82,9 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '10.0.0.83'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_KB', 'knowledgebase'),
-            'username' => env('DB_USERNAME', 'erp'),
-            'password' => env('DB_PASSWORD', 'fumaco'),
+            'database' => env('DB_DATABASE_2', 'forge'),
+            'username' => env('DB_USERNAME_2', 'forge'),
+            'password' => env('DB_PASSWORD_2', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -115,20 +119,8 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
-        'access' => [
-            'driver' => 'pdo_access',
-            'connection_string' => 'dsn=essex',
-            'username' => '',
-            'password' => '',
-            'table_prefix' => '',
-        ]
 
     ],
-
-    'mysql' => [
-    // ...
-    'timezone' => '+08:00',
-],
 
     /*
     |--------------------------------------------------------------------------
@@ -156,7 +148,7 @@ return [
 
     'redis' => [
 
-        'client' => 'predis',
+        'client' => env('REDIS_CLIENT', 'predis'),
 
         'default' => [
             'host' => env('REDIS_HOST', '127.0.0.1'),

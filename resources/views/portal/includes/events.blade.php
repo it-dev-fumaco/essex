@@ -3,12 +3,38 @@
         <h3 class="section-title center">Company Events</h3>
     </div>
     <div class="album-container mx-auto p-3">
+        @php
+        $featuredBg = 'img/featured/1.jpg';
+        $featuredBgPath = ltrim((string) $featuredBg, '/');
+        $featuredBgUrl = null;
+
+        try {
+            if (\Illuminate\Support\Facades\Storage::disk('upcloud')->exists($featuredBgPath)) {
+                $featuredBgUrl = \Illuminate\Support\Facades\Storage::disk('upcloud')->url($featuredBgPath);
+            }
+        } catch (\Throwable $e) {
+            // ignore and fall back below
+        }
+
+        $featuredBgUrl = $featuredBgUrl ?: asset('storage/'.$featuredBg);
+        @endphp
         @foreach($albums->take(5) as $album)
             @php
             $img = $album->featured_image ? $album->featured_image : 'img/notfound.png';
+            $imgPath = ltrim((string) $img, '/');
+            if (\Illuminate\Support\Str::startsWith($imgPath, 'storage/')) {
+                $imgPath = \Illuminate\Support\Str::after($imgPath, 'storage/');
+            }
+            // Album images are stored under `uploads/...` in UpCloud.
+            // If it's not an uploads path (e.g., local placeholder), fall back to local `asset('storage/...')`.
+            if (\Illuminate\Support\Str::startsWith($imgPath, 'uploads/')) {
+                $imgUrl = \Illuminate\Support\Facades\Storage::disk('upcloud')->url($imgPath);
+            } else {
+                $imgUrl = asset('storage/'.$img);
+            }
             @endphp
             <a href="/gallery/album/{{ $album->id }}" class="album-card" style="position: relative !important">
-                <img src="{{ asset('storage/'.$img) }}" />
+                <img src="{{ $imgUrl }}" />
                 <div class="p-3 w-100 text-light" style="position: absolute; bottom: 0; left: 0; background-color:rgba(0, 0, 0, .65)">
                     <h6 class="responsive-font">
                         {{ $album->name }}
@@ -19,7 +45,7 @@
         <a href="/gallery" class="album-card">
             <div class="p-3 w-100 h-100 text-light d-flex justify-content-center align-items-center" style="
             background-color:rgba(0, 0, 0, .3);
-            background: url('{{ asset('storage/img/featured/1.jpg') }}') no-repeat;
+            background: url('{{ $featuredBgUrl }}') no-repeat;
             background-size: cover;
             ">
                 <h6 class="responsive-font">

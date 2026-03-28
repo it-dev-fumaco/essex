@@ -292,6 +292,47 @@
                         </div>
                      </div>
                   </div>
+                  <div class="col-md-12">
+                     <div class="inner-box featured" style="padding: 2px 10px 2px 10px;">
+                        <h2 class="title-2" style="font-size: 12pt;">Separation Details</h2>
+                        <div class="row" style="padding-top: 0; padding-bottom: 0;">
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Separation Date:</label>
+                                 <input type="date" name="separation_date" class="separation_date">
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Separation Type:</label>
+                                 <select name="separation_type" class="separation_type">
+                                    <option value="">Select Separation Type</option>
+                                    <option value="Resigned">Resigned</option>
+                                    <option value="Terminated">Terminated</option>
+                                    <option value="End of Contract">End of Contract</option>
+                                 </select>
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Clearance Status:</label>
+                                 <select name="clearance_status" class="clearance_status">
+                                    <option value="">Select Clearance Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Cleared">Cleared</option>
+                                 </select>
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Reason:</label>
+                                 <textarea name="separation_reason" rows="2" class="separation_reason"
+                                    placeholder="Enter reason"></textarea>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
                   <div style="font-size: 8pt;float: right;padding-right: 2%;">
                      <i>Last modified: <b><label class="modified_date" style="font-size: 8pt;"></label> </b> -<label
                            class="modified_name" style="font-size: 8pt;"></label> </i>

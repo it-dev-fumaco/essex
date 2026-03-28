@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DRIVER', 'local'),
+    // Prefer Laravel's modern FILESYSTEM_DISK, but keep backward compatibility.
+    'default' => env('FILESYSTEM_DISK', env('FILESYSTEM_DRIVER', 'local')),
 
     /*
     |--------------------------------------------------------------------------
@@ -62,6 +63,20 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
+        ],
+
+        'upcloud' => [
+            'driver' => 's3',
+            'key' => env('UPCLOUD_ACCESS_KEY_ID'),
+            'secret' => env('UPCLOUD_SECRET_ACCESS_KEY'),
+            'region' => env('UPCLOUD_DEFAULT_REGION'),
+            'bucket' => env('UPCLOUD_BUCKET'),
+            'endpoint' => env('UPCLOUD_ENDPOINT'),
+            'use_path_style_endpoint' => (bool) env('UPCLOUD_USE_PATH_STYLE_ENDPOINT', true),
+            // Build a usable public base URL when UPCLOUD_URL isn't explicitly set.
+            // With `use_path_style_endpoint=true`, URLs are typically: {endpoint}/{bucket}/{key}
+            'url' => env('UPCLOUD_URL') ?: rtrim((string) env('UPCLOUD_ENDPOINT'), '/').'/'.(string) env('UPCLOUD_BUCKET'),
+            'throw' => false,
         ],
 
     ],

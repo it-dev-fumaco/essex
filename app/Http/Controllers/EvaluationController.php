@@ -2,156 +2,148 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Validator;
-use Carbon\Carbon;
+use App\Http\Requests\EditEvaluationRequest;
+use App\Http\Requests\StoreEvaluationRequest;
+use App\Models\DataInputModel;
+use App\Models\KPIResult;
+use App\Pipelines\AddEvaluation\AddEvaluationPayload;
+use App\Pipelines\AddEvaluation\AddEvaluationPipeline;
+use App\Traits\AttendanceTrait;
+use App\Traits\KpiTrait;
 use Auth;
-use DB;
-use DateTime;
-use DatePeriod;
+use Carbon\Carbon;
 use DateInterval;
-use App\DataInputKPI;
-use App\KPIResult;
-use App\DataInputModel;
-use App\Http\Traits\KpiTrait;
-use App\Http\Traits\AttendanceTrait;
-use Illuminate\Support\Str;
+use DatePeriod;
+use DateTime;
+use DB;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EvaluationController extends Controller
 {
-    use KpiTrait;
     use AttendanceTrait;
+    use KpiTrait;
 
-    public function addEvaluation(Request $request){
+    public function __construct(
+        private readonly AddEvaluationPipeline $addEvaluationPipeline
+    ) {}
 
-        $validator = Validator::make($request->all(), [
-           'employee_id' => 'required',
-           'title' => 'required',
-           'evaluation_file' => 'required|mimes:pdf',
-           'evaluation_date' => 'required'
+    public function addEvaluation(StoreEvaluationRequest $request)
+    {
+        $payload = new AddEvaluationPayload(
+            employeeId: $request->input('employee_id'),
+            title: $request->input('title'),
+            evaluationFile: $request->file('evaluation_file'),
+            evaluationDate: $request->input('evaluation_date'),
+            evaluatedBy: Auth::user()->user_id,
+            remarks: $request->input('remarks'),
+        );
+
+        $this->addEvaluationPipeline->run($payload);
+
+        return response()->json([
+            'message' => ['Evaluation <b>'.$request->title.'</b> has been added.'],
+            'class_name' => 'success',
+            'icon' => 'fa-check-square-o',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message'   => $validator->errors()->all(),
-                'class_name'  => 'danger',
-                'icon' => 'fa-times-circle-o'
-            ]);
-        }else{
-            $filenametostore = null;
-            if($request->hasFile('evaluation_file')){
-                $file = $request->file('evaluation_file');
-
-                //get filename with extension
-                $filenamewithextension = $file->getClientOriginalName();
-         
-                //get filename without extension
-                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-         
-                //get file extension
-                $extension = $file->getClientOriginalExtension();
-         
-                //filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
-         
-                Storage::put('public/uploads/evaluations/'. $filenametostore, fopen($file, 'r+'));
-            }
-
-            $data[] = [
-                'employee_id' => $request->employee_id,
-                'title' => $request->title,
-                'evaluation_file' => $filenametostore,
-                'evaluation_date' => $request->evaluation_date,
-                'evaluated_by' => Auth::user()->user_id,
-                'remarks' => $request->remarks
-            ];
-
-            $evaluation = DB::table('evaluation_files')->insert($data);
-
-            return response()->json([
-                'message'   => ['Evaluation <b>' . $request->title . '</b> has been added.'],
-                'class_name'  => 'success',
-                'icon' => 'fa-check-square-o'
-            ]);
-        }
     }
 
-    public function editEvaluation(Request $request){
-        $validator = Validator::make($request->all(), [
-           'employee_id' => 'required',
-           'title' => 'required',
-           'evaluation_file' => 'mimes:pdf',
-           'evaluation_date' => 'required'
-        ]);
+    public function editEvaluation(EditEvaluationRequest $request)
+    {
+        $filenametostore = $request->eval_file;
+        if ($request->hasFile('evaluation_file')) {
+            $file = $request->file('evaluation_file');
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message'   => $validator->errors()->all(),
-                'class_name'  => 'danger',
-                'icon' => 'fa-times-circle-o'
-            ]);
-        }else{
-            $filenametostore = $request->eval_file;
-            if($request->hasFile('evaluation_file')){
-                $file = $request->file('evaluation_file');
+            // get filename with extension
+            $filenamewithextension = $file->getClientOriginalName();
 
-                //get filename with extension
-                $filenamewithextension = $file->getClientOriginalName();
-         
-                //get filename without extension
-                $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
-         
-                //get file extension
-                $extension = $file->getClientOriginalExtension();
-         
-                //filename to store
-                $filenametostore = $filename.'_'.uniqid().'.'.$extension;
-         
-                Storage::put('public/uploads/evaluations/'. $filenametostore, fopen($file, 'r+'));
+            // get filename without extension
+            $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+
+            // get file extension
+            $extension = $file->getClientOriginalExtension();
+
+            // filename to store
+            $safeBase = Str::slug($filename) ?: 'evaluation';
+            $filenametostore = $safeBase.'_'.Str::uuid().'.'.$extension;
+
+            try {
+                Storage::disk('upcloud')->put('uploads/evaluations/'.$filenametostore, fopen($file->getRealPath(), 'r'), [
+                    'visibility' => 'public',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud upload failed (edit evaluation)', [
+                    'evaluation_id' => $request->id ?? null,
+                    'original_name' => $filenamewithextension,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'message' => ['Upload failed. Please try again.'],
+                    'class_name' => 'danger',
+                    'icon' => 'fa-exclamation-triangle',
+                ], 422);
             }
-
-            $data = [
-                'employee_id' => $request->employee_id,
-                'title' => $request->title,
-                'evaluation_file' => $filenametostore,
-                'evaluation_date' => $request->evaluation_date,
-                'remarks' => $request->remarks,
-                'last_modified_by' => Auth::user()->employee_name
-            ];
-
-            $evaluation = DB::table('evaluation_files')->where('id', $request->id)->update($data);
-
-            return response()->json([
-                'message'   => ['Evaluation <b>' . $request->title . '</b> has been updated.'],
-                'class_name'  => 'success',
-                'icon' => 'fa-check-square-o'
-            ]);
         }
+
+        $data = [
+            'employee_id' => $request->employee_id,
+            'title' => $request->title,
+            'evaluation_file' => $filenametostore,
+            'evaluation_date' => $request->evaluation_date,
+            'remarks' => $request->remarks,
+            'last_modified_by' => Auth::user()->employee_name,
+        ];
+
+        $evaluation = DB::table('evaluation_files')->where('id', $request->id)->update($data);
+
+        return response()->json([
+            'message' => ['Evaluation <b>'.$request->title.'</b> has been updated.'],
+            'class_name' => 'success',
+            'icon' => 'fa-check-square-o',
+        ]);
     }
 
-    public function deleteEvaluation(Request $request){
+    public function deleteEvaluation(Request $request)
+    {
+        $row = DB::table('evaluation_files')->where('id', $request->id)->first();
+        if ($row && ! empty($row->evaluation_file)) {
+            try {
+                Storage::disk('upcloud')->delete('uploads/evaluations/'.(string) $row->evaluation_file);
+            } catch (\Throwable $e) {
+                Log::error('UpCloud delete failed (evaluation file)', [
+                    'evaluation_id' => $request->id,
+                    'file' => $row->evaluation_file,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         DB::table('evaluation_files')->where('id', $request->id)->delete();
 
         return response()->json([
-                'message'   => ['Evaluation <b>' . $request->evaluation_title . '</b> has been deleted.'],
-                'class_name'  => 'success',
-                'icon' => 'fa-check-square-o'
-            ]);
+            'message' => ['Evaluation <b>'.$request->evaluation_title.'</b> has been deleted.'],
+            'class_name' => 'success',
+            'icon' => 'fa-check-square-o',
+        ]);
     }
 
-    public function sessionDetails($column){
+    public function sessionDetails($column)
+    {
         $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('departments', 'users.department_id', '=', 'departments.department_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
 
         return $detail->$column;
     }
 
-    public function showObjectives(){
+    public function showObjectives()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -160,19 +152,22 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.objective.index', compact('designation', 'department', 'department_list'));
     }
 
-    public function getObjectives(Request $request){
+    public function getObjectives(Request $request)
+    {
         $objectives = DB::table('objective')->paginate(10);
 
         return view('client.modules.evaluation.objective.tables.objective_table', compact('objectives'))->render();
     }
 
-    public function getObjectiveDetails($id){
+    public function getObjectiveDetails($id)
+    {
         $objective = DB::table('objective')->where('obj_id', $id)->first();
 
         return response()->json($objective);
     }
 
-    public function createObjective(Request $request){
+    public function createObjective(Request $request)
+    {
         $data = [
             'obj_description' => $request->objective,
             'target' => $request->target,
@@ -182,13 +177,14 @@ class EvaluationController extends Controller
 
         $result = [
             'id' => $id,
-            'message' => 'Objective <b>' . $request->objective . '</b> has been created.',
+            'message' => 'Objective <b>'.$request->objective.'</b> has been created.',
         ];
 
         return response()->json($result);
     }
 
-    public function updateObjective(Request $request){
+    public function updateObjective(Request $request)
+    {
         $data = [
             'obj_description' => $request->objective,
             'target' => $request->target,
@@ -199,41 +195,46 @@ class EvaluationController extends Controller
 
         $result = [
             'id' => $request->id,
-            'message' => 'Objective <b>' . $request->objective . '</b> has been updated.',
+            'message' => 'Objective <b>'.$request->objective.'</b> has been updated.',
         ];
 
         return response()->json($result);
     }
 
-    public function deleteObjective(Request $request){
+    public function deleteObjective(Request $request)
+    {
         $id = DB::table('objective')->where('obj_id', $request->id)->delete();
 
         $result = [
             'id' => $request->id,
-            'message' => 'Objective <b>' . $request->objective . '</b> has been deleted.',
+            'message' => 'Objective <b>'.$request->objective.'</b> has been deleted.',
         ];
 
         return response()->json($result);
     }
 
     // ajax
-    public function getDesignations(Request $request){
+    public function getDesignations(Request $request)
+    {
         return DB::table('designation')
-                ->when($request->department, function($query) use ($request){
-                    return $query->where('department_id', $request->department);
-                })->get();
-    }
-    // ajax
-    public function getEmployees(Request $request){
-        return DB::table('users')
-                ->where('status', 'Active')
-                ->where('user_type', 'Employee')
-                ->when($request->department, function($query) use ($request){
-                    return $query->where('department_id', $request->department);
-                })->get();
+            ->when($request->department, function ($query) use ($request) {
+                return $query->where('department_id', $request->department);
+            })->get();
     }
 
-    public function showKPI(){
+    // ajax
+    public function getEmployees(Request $request)
+    {
+        return DB::table('users')
+            ->where('status', 'Active')
+            ->where('user_type', 'Employee')
+            ->when($request->department, function ($query) use ($request) {
+                return $query->where('department_id', $request->department);
+            })->get();
+    }
+
+    public function showKPI()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -244,28 +245,30 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.kpi.index', compact('designation', 'department', 'department_list', 'objective_list'));
     }
 
-    public function getKPI(Request $request){
+    public function getKPI(Request $request)
+    {
         $kpi = DB::table('kpi')
-                ->join('objective', 'objective.obj_id', 'kpi.objective_id')
-                ->select('objective.obj_description', 'kpi.*')
-                ->where('category', 'Quantitative')
-                ->when($request->department, function($query) use ($request){
-                    return $query->where('kpi.department_id', $request->department);
-                })
-                ->when($request->objective, function($query) use ($request){
-                    return $query->where('kpi.objective_id', $request->objective);
-                })
-                ->orderBy('kpi_id', 'desc')
-                ->paginate(10);
+            ->join('objective', 'objective.obj_id', 'kpi.objective_id')
+            ->select('objective.obj_description', 'kpi.*')
+            ->where('category', 'Quantitative')
+            ->when($request->department, function ($query) use ($request) {
+                return $query->where('kpi.department_id', $request->department);
+            })
+            ->when($request->objective, function ($query) use ($request) {
+                return $query->where('kpi.objective_id', $request->objective);
+            })
+            ->orderBy('kpi_id', 'desc')
+            ->paginate(10);
 
         return view('client.modules.evaluation.kpi.tables.kpi_designation_table', compact('kpi'))->render();
     }
 
-    public function getKpiDetails($id){
+    public function getKpiDetails($id)
+    {
         $kpi_details = DB::table('kpi')->where('kpi_id', $id)->first();
         $kpi_designations = DB::table('kpi_per_designation')
-                    ->join('designation', 'kpi_per_designation.designation_id', 'designation.des_id')
-                    ->where('kpi_id', $id)->get();
+            ->join('designation', 'kpi_per_designation.designation_id', 'designation.des_id')
+            ->where('kpi_id', $id)->get();
 
         $data = [
             'kpi_details' => $kpi_details,
@@ -275,13 +278,15 @@ class EvaluationController extends Controller
         return response()->json($data);
     }
 
-    public function getMetricDetails($id){
+    public function getMetricDetails($id)
+    {
         $metric_details = DB::table('metrics')->where('metric_id', $id)->first();
 
         return response()->json($metric_details);
     }
 
-    public function createKPI(Request $request){
+    public function createKPI(Request $request)
+    {
         $data = [
             'objective_id' => $request->objective,
             'department_id' => $request->department,
@@ -300,13 +305,13 @@ class EvaluationController extends Controller
 
         if ($request->set_kpi_perdepartment == 0) {
             if ($request->kpi_designation_new) {
-                foreach($request->kpi_designation_new as $i => $row){
-                      $kpi_designation[] = [
+                foreach ($request->kpi_designation_new as $i => $row) {
+                    $kpi_designation[] = [
                         'kpi_id' => $id,
                         'designation_id' => $request->kpi_designation_new[$i],
-                        'created_by' => Auth::user()->employee_name
+                        'created_by' => Auth::user()->employee_name,
                     ];
-                } 
+                }
                 DB::table('kpi_per_designation')->insert($kpi_designation);
             }
         }
@@ -314,8 +319,9 @@ class EvaluationController extends Controller
         return response()->json(['message' => 'New KPI has been created.', 'id' => $id, 'description' => $request->kpi_description]);
     }
 
-    public function updateKPI(Request $request){
-        
+    public function updateKPI(Request $request)
+    {
+
         $data = [
             'objective_id' => $request->objective,
             'category' => $request->category,
@@ -340,11 +346,10 @@ class EvaluationController extends Controller
                 ->whereNotIn('id', $kpi_designation_id)
                 ->delete();
         }
-        
 
         // for insert
         if ($request->kpi_designation_new) {
-            foreach($request->kpi_designation_new as $i => $row){
+            foreach ($request->kpi_designation_new as $i => $row) {
                 $kpi_designation_new[] = [
                     'kpi_id' => $request->id,
                     'designation_id' => $request->kpi_designation_new[$i],
@@ -353,13 +358,13 @@ class EvaluationController extends Controller
 
             DB::table('kpi_per_designation')->insert($kpi_designation_new);
         }
-        
+
         // for update
         if ($request->kpi_designation_id) {
-            foreach($request->kpi_designation_id as $i => $row){
+            foreach ($request->kpi_designation_id as $i => $row) {
                 $kpi_designation_update = [
                     'designation_id' => $request->kpi_designation_old[$i],
-                    'last_modified_by' => Auth::user()->employee_name
+                    'last_modified_by' => Auth::user()->employee_name,
                 ];
 
                 DB::table('kpi_per_designation')->where('id', $request->kpi_designation_id[$i])->update($kpi_designation_update);
@@ -368,17 +373,19 @@ class EvaluationController extends Controller
 
         DB::table('kpi')->where('kpi_id', $request->id)->update($data);
 
-        return response()->json(['message' => 'KPI <b>' . $request->kpi_description . '</b> has been updated.']);
+        return response()->json(['message' => 'KPI <b>'.$request->kpi_description.'</b> has been updated.']);
     }
 
-    public function deleteKPI(Request $request){
+    public function deleteKPI(Request $request)
+    {
         DB::table('kpi')->where('kpi_id', $request->id)->delete();
         DB::table('kpi_per_designation')->where('kpi_id', $request->id)->delete();
 
-        return response()->json(['message' => 'KPI <b>' . $request->kpi_description . '</b> has been deleted.']);
+        return response()->json(['message' => 'KPI <b>'.$request->kpi_description.'</b> has been deleted.']);
     }
 
-    public function createMetrics(Request $request){
+    public function createMetrics(Request $request)
+    {
         $data = [];
         foreach ($request->metric as $i => $row) {
             $data[] = [
@@ -397,7 +404,8 @@ class EvaluationController extends Controller
         return response()->json(['message' => 'Metrics has been created.']);
     }
 
-    public function updateMetric(Request $request){
+    public function updateMetric(Request $request)
+    {
         $data = [
             'metric_name' => $request->metric_name,
             'metric_description' => $request->metric,
@@ -411,13 +419,15 @@ class EvaluationController extends Controller
         return response()->json(['message' => 'Metrics has been updated.']);
     }
 
-    public function deleteMetric(Request $request){
+    public function deleteMetric(Request $request)
+    {
         DB::table('metrics')->where('metric_id', $request->id)->delete();
 
-        return response()->json(['message' => 'Metric <b>' . $request->metric_description . '</b> has been deleted.']);
+        return response()->json(['message' => 'Metric <b>'.$request->metric_description.'</b> has been deleted.']);
     }
 
-    public function getHandledDepts($user_id){
+    public function getHandledDepts($user_id)
+    {
         $depts = [];
         $departments = DB::table('department_approvers')->where('employee_id', $user_id)->get();
         foreach ($departments as $row) {
@@ -428,7 +438,8 @@ class EvaluationController extends Controller
         return $depts;
     }
 
-    public function kpiPerDept(){
+    public function kpiPerDept()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -439,7 +450,7 @@ class EvaluationController extends Controller
         // }
 
         $department_list = $department_list->get();
-        
+
         $dept_list = [];
         foreach ($department_list as $row) {
             $kpi_count = DB::table('kpi')->where('department_id', $row->department_id)->count();
@@ -453,7 +464,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.setup.index', compact('designation', 'department', 'dept_list'));
     }
 
-    public function setupKPI($department_id){
+    public function setupKPI($department_id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -468,40 +480,50 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.setup.kpi_setup', compact($data));
     }
 
-    public function kpiTree($department){
+    public function kpiTree($department)
+    {
         $kpi_list = DB::table('kpi')->where('department_id', $department)->get();
+        if ($kpi_list->isEmpty()) {
+            $tree = [];
+
+            return view('client.modules.evaluation.setup.kpi_tree', compact('tree'));
+        }
+        $kpi_ids = $kpi_list->pluck('kpi_id')->all();
+        $all_metrics = DB::table('metrics')->whereIn('kpi_id', $kpi_ids)->get();
+        $metric_ids = $all_metrics->pluck('metric_id')->all();
+        $all_data_inputs = $metric_ids === []
+            ? collect()
+            : DB::table('data_input')->whereIn('metric_id', $metric_ids)->get();
+        $data_inputs_by_metric = $all_data_inputs->groupBy('metric_id');
+
+        $metrics_by_kpi = $all_metrics->groupBy('kpi_id');
         $tree = [];
         foreach ($kpi_list as $lvl1) {
-            $metrics = DB::table('metrics')->where('kpi_id', $lvl1->kpi_id)->get();
             $metric_list = [];
-            foreach ($metrics as $lvl2) {
-                $data_inputs = DB::table('data_input')->where('metric_id', $lvl2->metric_id)->get();
-                $input_list = [];
-                foreach ($data_inputs as $lvl3) {
-                    $input_list[] = [
-                        'input_id' => $lvl3->input_id,
-                        'data_input' => $lvl3->data_input
-                    ];
-                }
+            foreach ($metrics_by_kpi->get($lvl1->kpi_id, []) as $lvl2) {
+                $input_list = collect($data_inputs_by_metric->get($lvl2->metric_id, []))
+                    ->map(fn ($lvl3) => ['input_id' => $lvl3->input_id, 'data_input' => $lvl3->data_input])
+                    ->values()
+                    ->all();
                 $metric_list[] = [
                     'metric_id' => $lvl2->metric_id,
                     'metric_name' => $lvl2->metric_name,
                     'metric_description' => $lvl2->metric_description,
-                    'input_list' => $input_list
+                    'input_list' => $input_list,
                 ];
             }
-
             $tree[] = [
                 'kpi_id' => $lvl1->kpi_id,
                 'kpi_description' => $lvl1->kpi_description,
-                'metric_list' => $metric_list
+                'metric_list' => $metric_list,
             ];
         }
 
         return view('client.modules.evaluation.setup.kpi_tree', compact('tree'));
     }
 
-    public function createDataInputs(Request $request){
+    public function createDataInputs(Request $request)
+    {
         $data = [];
         foreach ($request->data_input as $i => $row) {
             $data[] = [
@@ -516,11 +538,12 @@ class EvaluationController extends Controller
         return response()->json(['message' => 'Data Input has been created.']);
     }
 
-    public function updateDataInput(Request $request){
+    public function updateDataInput(Request $request)
+    {
         $data = [
             'data_input' => $request->input,
             'remarks' => $request->remarks,
-            'last_modified_by' => Auth::user()->employee_name
+            'last_modified_by' => Auth::user()->employee_name,
         ];
 
         DB::table('data_input')->where('input_id', $request->id)->update($data);
@@ -528,13 +551,15 @@ class EvaluationController extends Controller
         return response()->json(['message' => 'Data Input has been updated.']);
     }
 
-    public function deleteDataInput(Request $request){
+    public function deleteDataInput(Request $request)
+    {
         DB::table('data_input')->where('input_id', $request->id)->delete();
 
         return response()->json(['message' => 'Data Input has been deleted.']);
     }
 
-    public function showEvalSchedules(){
+    public function showEvalSchedules()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -544,9 +569,10 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.evaluation_schedule.index', compact('designation', 'department', 'eval_scheds', 'year_list'));
     }
 
-    public function getSubmissionSchedules($period, $start_date, $year){
+    public function getSubmissionSchedules($period, $start_date, $year)
+    {
         $d1 = Carbon::parse($start_date)->format('Y-m-d');
-        $d2 = Carbon::parse('last day of December'. $year)->format('Y-m-d');
+        $d2 = Carbon::parse('last day of December'.$year)->format('Y-m-d');
 
         $s_date = new DateTime($d1);
         $e_date = new DateTime($d2);
@@ -554,11 +580,11 @@ class EvaluationController extends Controller
 
         if ($period == 'Monthly') {
             $interval = 'P1M';
-        }elseif ($period == 'Quarterly') {
+        } elseif ($period == 'Quarterly') {
             $interval = 'P3M';
-        }elseif ($period == 'Semi-Annual') {
+        } elseif ($period == 'Semi-Annual') {
             $interval = 'P6M';
-        }elseif ($period == 'Annual') {
+        } elseif ($period == 'Annual') {
             $interval = 'P1Y';
         }
 
@@ -567,19 +593,20 @@ class EvaluationController extends Controller
         $schedules = [];
         foreach ($date_period as $date) {
             $schedules[] = [
-                'scheduled_date' => $date->format('Y-m-d')
+                'scheduled_date' => $date->format('Y-m-d'),
             ];
         }
 
         return $schedules;
     }
 
-    public function addEvalSchedule(Request $request){
+    public function addEvalSchedule(Request $request)
+    {
         $requestedData = [
             'period' => $request->period,
             'start_date' => $request->start_date,
             'year' => $request->year,
-            'is_active' => $request->is_active ? 1 : 0
+            'is_active' => $request->is_active ? 1 : 0,
         ];
 
         DB::table('evaluation_schedule')->insert($requestedData);
@@ -587,7 +614,8 @@ class EvaluationController extends Controller
         return redirect()->back()->with(['message' => 'Evaluation Schedule has been created.']);
     }
 
-    public function updateEvalSchedule(Request $request, $id){
+    public function updateEvalSchedule(Request $request, $id)
+    {
         $requestedData = [
             'period' => $request->period,
             'start_date' => $request->start_date,
@@ -601,47 +629,51 @@ class EvaluationController extends Controller
         return redirect()->back()->with(['message' => 'Evaluation Schedule has been updated.']);
     }
 
-    public function deleteEvalSchedule($id){
+    public function deleteEvalSchedule($id)
+    {
 
         DB::table('evaluation_schedule')->where('eval_sched_id', $id)->delete();
 
         return redirect()->back()->with(['message' => 'Evaluation Schedule has been deleted.']);
     }
 
-    public function viewEvalSchedule($id){
+    public function viewEvalSchedule($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $schedule_details = DB::table('evaluation_schedule')->where('eval_sched_id', $id)->first();
 
         $kpi_list = DB::table('kpi')->where('evaluation_period', $schedule_details->period)->get();
-                        // ->where('category', 'Quantitative')
+        // ->where('category', 'Quantitative')
 
         $schedules = $this->getSubmissionSchedules($schedule_details->period, $schedule_details->start_date, $schedule_details->year);
 
         return view('client.modules.evaluation.evaluation_schedule.view', compact('designation', 'department', 'schedule_details', 'kpi_list', 'schedules'));
     }
 
-    public function showAppraisal(){
+    public function showAppraisal()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
         $employee_list = DB::table('users');
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
+        if (! in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
             $employee_list = $employee_list->whereIn('department_id', $handledDepts);
         }
 
         $employee_list = $employee_list->orderBy('employee_name', 'asc')->get();
 
         $performance_appraisal = DB::table('appraisal_result')
-                    ->join('users', 'users.user_id', 'appraisal_result.employee_id')
-                    ->select(DB::raw('(SELECT employee_name FROM users WHERE user_id = appraisal_result.evaluated_by) as evaluator'), 'users.employee_name', 'appraisal_result.status', 'appraisal_result.evaluation_date', 'appraisal_result.appraisal_result_id')->get();
+            ->join('users', 'users.user_id', 'appraisal_result.employee_id')
+            ->select(DB::raw('(SELECT employee_name FROM users WHERE user_id = appraisal_result.evaluated_by) as evaluator'), 'users.employee_name', 'appraisal_result.status', 'appraisal_result.evaluation_date', 'appraisal_result.appraisal_result_id')->get();
 
         return view('client.modules.evaluation.appraisal.index', compact('designation', 'department', 'employee_list', 'performance_appraisal'));
     }
 
-    public function viewAppraisal($id){
+    public function viewAppraisal($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -650,46 +682,48 @@ class EvaluationController extends Controller
         $employee_id = $appraisal_result->employee_id;
 
         $employee_details = DB::table('users')
-                ->join('departments', 'departments.department_id', 'users.department_id')
-                ->join('designation', 'designation.des_id', 'users.designation_id')
-                ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
-                ->select('users.*', 'designation.designation', 'departments.department','shift_groups.shift_group_name')
-                ->where('users.user_id', $employee_id)->first();
+            ->join('departments', 'departments.department_id', 'users.department_id')
+            ->join('designation', 'designation.des_id', 'users.designation_id')
+            ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
+            ->select('users.*', 'designation.designation', 'departments.department', 'shift_groups.shift_group_name')
+            ->where('users.user_id', $employee_id)->first();
 
         $ratee = DB::table('users')->join('designation', 'users.designation_id', 'designation.des_id')
-                    ->where('user_id', $appraisal_result->evaluated_by)
-                    ->select('users.employee_name', 'designation.designation')->first();
+            ->where('user_id', $appraisal_result->evaluated_by)
+            ->select('users.employee_name', 'designation.designation')->first();
 
         $last_evaluation_date = DB::table('appraisal_result')
-                ->where('employee_id', $employee_id)
-                ->where('status', 'Submitted')
-                ->max('evaluation_date');
+            ->where('employee_id', $employee_id)
+            ->where('status', 'Submitted')
+            ->max('evaluation_date');
 
         $appraisal_details = [
             'evaluation_period_from' => $appraisal_result->evaluation_period_from,
             'evaluation_period_to' => $appraisal_result->evaluation_period_to,
             'purpose' => $appraisal_result->purpose_type,
-            'last_evaluation_date' => $last_evaluation_date
+            'last_evaluation_date' => $last_evaluation_date,
         ];
 
         $qualitative_kpi = DB::table('kpi')->where('category', 'Qualitative')->get();
 
         $qualitative_kpi_set = DB::table('qualitative_kpi_result')
-                ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
-                ->where('qualitative_kpi_result.appraisal_result_id', $id)
-                ->where('category', 'Qualitative')->get();
+            ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
+            ->where('qualitative_kpi_result.appraisal_result_id', $id)
+            ->where('category', 'Qualitative')->get();
 
         return view('client.modules.evaluation.appraisal.view', compact('designation', 'department', 'employee_details', 'appraisal_details', 'qualitative_kpi', 'qualitative_kpi_set', 'appraisal_result', 'ratee'));
     }
 
-    public function deleteAppraisal(Request $request, $id){
+    public function deleteAppraisal(Request $request, $id)
+    {
         DB::table('appraisal_result')->where('appraisal_result_id', $id)->delete();
         DB::table('qualitative_kpi_result')->where('appraisal_result_id', $id)->delete();
 
         return redirect('/evaluation/appraisal')->with(['message' => 'Performance Appraisal for <b>'.$request->employee_name.'</b> been deleted.']);
     }
 
-    public function createAppraisal(Request $request){
+    public function createAppraisal(Request $request)
+    {
         $user_id = $request->employee;
         $purpose = $request->purpose;
         $from_month = $request->period_from_month;
@@ -700,41 +734,43 @@ class EvaluationController extends Controller
         return redirect('/evaluation/appraisal/form/'.$user_id.'/'.$from_month.'/'.$from_year.'/'.$to_month.'/'.$to_year.'/'.$purpose);
     }
 
-    public function showAppraisalForm($user_id, $from_month, $from_year, $to_month, $to_year, $purpose){
+    public function showAppraisalForm($user_id, $from_month, $from_year, $to_month, $to_year, $purpose)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $eval_period_from = date("F", mktime(0, 0, 0, $from_month, 10)) .' '. $from_year;
-        $eval_period_to = date("F", mktime(0, 0, 0, $to_month, 10)) .' '. $to_year;
+        $eval_period_from = date('F', mktime(0, 0, 0, $from_month, 10)).' '.$from_year;
+        $eval_period_to = date('F', mktime(0, 0, 0, $to_month, 10)).' '.$to_year;
 
         $period_from = new Carbon('first day of '.$eval_period_from.'');
         $period_to = new Carbon('last day of '.$eval_period_to.'');
 
         $last_evaluation_date = DB::table('appraisal_result')
-                ->where('employee_id', $user_id)
-                ->where('status', 'Submitted')
-                ->max('evaluation_date');
+            ->where('employee_id', $user_id)
+            ->where('status', 'Submitted')
+            ->max('evaluation_date');
 
         $appraisal_details = [
             'evaluation_period_from' => $period_from,
             'evaluation_period_to' => $period_to,
             'purpose' => $purpose,
-            'last_evaluation_date' => $last_evaluation_date
+            'last_evaluation_date' => $last_evaluation_date,
         ];
 
         $employee_details = DB::table('users')
-                ->join('departments', 'departments.department_id', 'users.department_id')
-                ->join('designation', 'designation.des_id', 'users.designation_id')
-                ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
-                ->select('users.*', 'designation.designation', 'departments.department','shift_groups.shift_group_name')
-                ->where('users.user_id', $user_id)->first();
+            ->join('departments', 'departments.department_id', 'users.department_id')
+            ->join('designation', 'designation.des_id', 'users.designation_id')
+            ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
+            ->select('users.*', 'designation.designation', 'departments.department', 'shift_groups.shift_group_name')
+            ->where('users.user_id', $user_id)->first();
 
         $qualitative_kpi = DB::table('kpi')->where('category', 'Qualitative')->get();
 
         return view('client.modules.evaluation.appraisal.form', compact('designation', 'department', 'employee_details', 'appraisal_details', 'qualitative_kpi'));
     }
 
-    public function printAppraisal($id){
+    public function printAppraisal($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -743,39 +779,40 @@ class EvaluationController extends Controller
         $employee_id = $appraisal_result->employee_id;
 
         $employee_details = DB::table('users')
-                ->join('departments', 'departments.department_id', 'users.department_id')
-                ->join('designation', 'designation.des_id', 'users.designation_id')
-                ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
-                ->select('users.*', 'designation.designation', 'departments.department','shift_groups.shift_group_name')
-                ->where('users.user_id', $employee_id)->first();
+            ->join('departments', 'departments.department_id', 'users.department_id')
+            ->join('designation', 'designation.des_id', 'users.designation_id')
+            ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
+            ->select('users.*', 'designation.designation', 'departments.department', 'shift_groups.shift_group_name')
+            ->where('users.user_id', $employee_id)->first();
 
         $ratee = DB::table('users')->join('designation', 'users.designation_id', 'designation.des_id')
-                    ->where('user_id', $appraisal_result->evaluated_by)
-                    ->select('users.employee_name', 'designation.designation')->first();
+            ->where('user_id', $appraisal_result->evaluated_by)
+            ->select('users.employee_name', 'designation.designation')->first();
 
         $last_evaluation_date = DB::table('appraisal_result')
-                ->where('employee_id', $employee_id)
-                ->where('status', 'Submitted')
-                ->max('evaluation_date');
+            ->where('employee_id', $employee_id)
+            ->where('status', 'Submitted')
+            ->max('evaluation_date');
 
         $appraisal_details = [
             'evaluation_period_from' => $appraisal_result->evaluation_period_from,
             'evaluation_period_to' => $appraisal_result->evaluation_period_to,
             'purpose' => $appraisal_result->purpose_type,
-            'last_evaluation_date' => $last_evaluation_date
+            'last_evaluation_date' => $last_evaluation_date,
         ];
 
         $qualitative_kpi = DB::table('kpi')->where('category', 'Qualitative')->get();
 
         $qualitative_kpi_set = DB::table('qualitative_kpi_result')
-                ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
-                ->where('qualitative_kpi_result.appraisal_result_id', $id)
-                ->where('category', 'Qualitative')->get();
+            ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
+            ->where('qualitative_kpi_result.appraisal_result_id', $id)
+            ->where('category', 'Qualitative')->get();
 
         return view('client.modules.evaluation.appraisal.print', compact('designation', 'department', 'employee_details', 'appraisal_details', 'qualitative_kpi', 'qualitative_kpi_set', 'appraisal_result', 'ratee'));
     }
 
-    public function saveAppraisal(Request $request){
+    public function saveAppraisal(Request $request)
+    {
         $appraisal_result = [
             'employee_id' => $request->employee_id,
             'overall_ratings' => $request->overall_rating,
@@ -800,22 +837,23 @@ class EvaluationController extends Controller
                 'appraisal_result_id' => $appraisal_id,
                 'kpi_id' => $request->kpi[$i],
                 'rating' => $request->$rating,
-                'comment' => $request->comment[$i]
+                'comment' => $request->comment[$i],
             ];
         }
 
         DB::table('qualitative_kpi_result')->insert($qualitative_result);
 
-        return redirect('/evaluation/appraisal/view/'.$appraisal_id)->with(['message' => 'Performance Appraisal has been saved as Draft.']);                    
+        return redirect('/evaluation/appraisal/view/'.$appraisal_id)->with(['message' => 'Performance Appraisal has been saved as Draft.']);
     }
 
-    public function empStats(Request $request, $employee_id){
+    public function empStats(Request $request, $employee_id)
+    {
         $evaluation_period_from = $request->evaluation_period_from;
-        $evaluation_period_to = $request->evaluation_period_to; 
+        $evaluation_period_to = $request->evaluation_period_to;
 
         $unfiled_absences = $this->getUnfiledAbsences($employee_id, $evaluation_period_from, $evaluation_period_to);
         $working_days = $this->getWorkingDays($evaluation_period_from, $evaluation_period_to);
-        
+
         $logs = $this->attendanceLogs($employee_id, $evaluation_period_from, $evaluation_period_to);
         $days_present = $this->getTotalDaysPresent($employee_id, $evaluation_period_from, $evaluation_period_to);
 
@@ -832,7 +870,8 @@ class EvaluationController extends Controller
         return response()->json($stats);
     }
 
-    public function empDataInputsERP(Request $request, $employee_id){
+    public function empDataInputsERP(Request $request, $employee_id)
+    {
         $employee_details = DB::table('users')->where('user_id', $employee_id)->first();
         $evaluation_period_from = $request->evaluation_period_from;
         $evaluation_period_to = $request->evaluation_period_to;
@@ -845,7 +884,8 @@ class EvaluationController extends Controller
         return $result;
     }
 
-    public function empKpiManualEntry($employee_id, $evaluation_period_from, $evaluation_period_to){
+    public function empKpiManualEntry($employee_id, $evaluation_period_from, $evaluation_period_to)
+    {
         $employee_details = DB::table('users')->where('user_id', $employee_id)->first();
 
         $from_date_filter = new DateTime($evaluation_period_from);
@@ -875,9 +915,9 @@ class EvaluationController extends Controller
         }
 
         $kpi_list = DB::table('kpi')
-                ->whereIn('kpi_id',function($query) use ($employee_details){
-                    $query->select('kpi_id')->from('kpi_per_designation')->where('designation_id', $employee_details->designation_id);
-                })->get();
+            ->whereIn('kpi_id', function ($query) use ($employee_details) {
+                $query->select('kpi_id')->from('kpi_per_designation')->where('designation_id', $employee_details->designation_id);
+            })->get();
 
         $quantitative_kpi_result = [];
         foreach ($kpi_list as $kpi) {
@@ -887,20 +927,20 @@ class EvaluationController extends Controller
                 $metrics_per_month = [];
                 foreach ($period as $m) {
                     $metrics_per_emp = DB::table('kpi_datainput_result')
-                            ->join('data_input', 'data_input.input_id', 'kpi_datainput_result.data_input_id')
-                            ->where('kpi_datainput_result.user_id', $employee_id)->where('month', (int)$m->format('m'))
-                            ->where('year', $m->format('Y'))->where('data_input.metric_id', $metric->metric_id)->get();
+                        ->join('data_input', 'data_input.input_id', 'kpi_datainput_result.data_input_id')
+                        ->where('kpi_datainput_result.user_id', $employee_id)->where('month', (int) $m->format('m'))
+                        ->where('year', $m->format('Y'))->where('data_input.metric_id', $metric->metric_id)->get();
 
                     if (count($metrics_per_emp) <= 0) {
                         $metrcis_all = DB::table('kpi_datainput_result')
                             ->join('data_input', 'data_input.input_id', 'kpi_datainput_result.data_input_id')
-                            ->where('kpi_datainput_result.user_id', null)->where('month', (int)$m->format('m'))
+                            ->where('kpi_datainput_result.user_id', null)->where('month', (int) $m->format('m'))
                             ->where('year', $m->format('Y'))->where('data_input.metric_id', $metric->metric_id)
                             ->get();
                     }
 
                     $metric_result = count($metrics_per_emp) <= 0 ? $metrcis_all : $metrics_per_emp;
-                    
+
                     $total = collect($metric_result)->sum('answer');
                     $metrics_per_month[] = [
                         'month' => $m->format('m'),
@@ -916,15 +956,15 @@ class EvaluationController extends Controller
                     foreach ($period as $m) {
                         $data_input_per_emp = DB::table('kpi_datainput_result')
                             ->where('data_input_id', $input->input_id)->where('user_id', $employee_id)
-                            ->where('month', (int)$m->format('m'))->where('year', $m->format('Y'))->first();
+                            ->where('month', (int) $m->format('m'))->where('year', $m->format('Y'))->first();
 
                         $total_per_emp = $data_input_per_emp ? $data_input_per_emp->answer : 0;
-                        
+
                         $total_all = 0;
-                        if (!$data_input_per_emp) {
+                        if (! $data_input_per_emp) {
                             $data_input_all = DB::table('kpi_datainput_result')
                                 ->where('data_input_id', $input->input_id)->where('user_id', null)
-                                ->where('month', (int)$m->format('m'))->where('year', $m->format('Y'))->first();
+                                ->where('month', (int) $m->format('m'))->where('year', $m->format('Y'))->first();
 
                             $total_all = $data_input_all ? $data_input_all->answer : 0;
                         }
@@ -947,36 +987,37 @@ class EvaluationController extends Controller
                 $metric_list[] = [
                     'metric_description' => $metric->metric_description,
                     'metrics_per_month' => $metrics_per_month,
-                    'data_inputs' => $input_list
+                    'data_inputs' => $input_list,
                 ];
             }
 
             $kpi_result_per_month = [];
             foreach ($period as $m) {
                 $kpi_totals = DB::table('kpi_result')->where('kpi_id', $kpi->kpi_id)
-                        ->where('month', (int)$m->format('m'))
-                        ->where('year', $m->format('Y'))->first();
+                    ->where('month', (int) $m->format('m'))
+                    ->where('year', $m->format('Y'))->first();
 
-                $total = $kpi_totals ? $kpi_totals->kpi_answer : null;;
+                $total = $kpi_totals ? $kpi_totals->kpi_answer : null;
 
                 $kpi_result_per_month[] = [
                     'month' => $m->format('m'),
                     'year' => $m->format('Y'),
-                    'total' => $total
+                    'total' => $total,
                 ];
             }
-            
+
             $quantitative_kpi_result[] = [
                 'kpi_description' => $kpi->kpi_description,
                 'kpi_result_per_month' => $kpi_result_per_month,
-                'metrics' => $metric_list
+                'metrics' => $metric_list,
             ];
         }
 
         return view('client.modules.evaluation.appraisal.tables.department.engineering.engineering_emp_kpi_manual', compact('quantitative_kpi_result', 'month_list', 'kpi_timeliness'));
     }
 
-    public function empDataInputsManualEntry(Request $request, $employee_id){
+    public function empDataInputsManualEntry(Request $request, $employee_id)
+    {
         $employee_details = DB::table('users')->where('user_id', $employee_id)->first();
         $evaluation_period_from = $request->evaluation_period_from;
         $evaluation_period_to = $request->evaluation_period_to;
@@ -986,7 +1027,8 @@ class EvaluationController extends Controller
         return $result;
     }
 
-    public function updateAppraisal(Request $request){
+    public function updateAppraisal(Request $request)
+    {
         $appraisal_result = [
             'overall_ratings' => $request->overall_rating,
             'recommendations' => $request->recommendation,
@@ -997,21 +1039,21 @@ class EvaluationController extends Controller
             'evaluation_date' => $request->evaluation_date,
             'evaluated_by' => $request->evaluated_by,
         ];
-        
+
         DB::table('appraisal_result')->where('appraisal_result_id', $request->appraisal_result_id)->update($appraisal_result);
 
         $kpi_result = collect($request->kpi_result_id);
 
         $for_delete = DB::table('qualitative_kpi_result')
-                ->where('appraisal_result_id', $request->appraisal_result_id)
-                ->whereNotIn('kpi_result_id', $kpi_result)->delete();
+            ->where('appraisal_result_id', $request->appraisal_result_id)
+            ->whereNotIn('kpi_result_id', $kpi_result)->delete();
 
         if ($request->kpi_result_id) {
-            foreach($request->kpi_result_id as $i => $row){
+            foreach ($request->kpi_result_id as $i => $row) {
                 $rating = 'rating'.$request->kpi_result_id[$i];
                 $qualitative_result = [
                     'rating' => $request->$rating,
-                    'comment' => $request->comment[$i]
+                    'comment' => $request->comment[$i],
                 ];
 
                 DB::table('qualitative_kpi_result')->where('kpi_result_id', $request->kpi_result_id[$i])->update($qualitative_result);
@@ -1020,33 +1062,35 @@ class EvaluationController extends Controller
 
         $for_insert = [];
         if ($request->new_kpi) {
-            foreach($request->new_kpi as $i => $row){
+            foreach ($request->new_kpi as $i => $row) {
                 $rating = 'new_rating'.$request->new_kpi[$i];
                 $for_insert[] = [
                     'appraisal_result_id' => $request->appraisal_result_id,
                     'kpi_id' => $request->new_kpi[$i],
                     'rating' => $request->$rating,
-                    'comment' => $request->new_comment[$i]
+                    'comment' => $request->new_comment[$i],
                 ];
             }
         }
 
         DB::table('qualitative_kpi_result')->insert($for_insert);
-    
+
         return redirect('/evaluation/appraisal')->with(['message' => 'Performance Appraisal has been Submitted.']);
     }
 
-    public function qualitativeKpi(){
+    public function qualitativeKpi()
+    {
         return DB::table('kpi')->where('category', 'Qualitative')->get();
     }
 
-    public function showEmployeeInputsDept(){
+    public function showEmployeeInputsDept()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $handledDepts = $this->getHandledDepts(Auth::user()->user_id);
         $department_list = DB::table('departments');
-        if (!in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
+        if (! in_array($designation, ['Human Resources Head', 'Director of Operations', 'President', 'HR Payroll Assistant', 'HR Assistant'])) {
             $department_list = $department_list->whereIn('department_id', $handledDepts);
         }
 
@@ -1055,7 +1099,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.employee_inputs.index', compact('designation', 'department', 'department_list'));
     }
 
-    public function showEmployeeInputsForm($department_id){
+    public function showEmployeeInputsForm($department_id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -1075,7 +1120,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.employee_inputs.form', compact('designation', 'department', 'designation_list', 'kpi_data', 'department_name'));
     }
 
-    public function viewEmployeeInputs($department_id){
+    public function viewEmployeeInputs($department_id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -1088,7 +1134,7 @@ class EvaluationController extends Controller
             $employee_data_inputs[] = [
                 'id' => $row->kpi_id,
                 'kpi_description' => $row->kpi_description,
-                'designation_metrics' => $this->getKpiDesignation($row->kpi_id, $department_id)
+                'designation_metrics' => $this->getKpiDesignation($row->kpi_id, $department_id),
             ];
         }
 
@@ -1096,13 +1142,14 @@ class EvaluationController extends Controller
     }
 
     // get designation from kpi's created with metrics
-    public function getKpiDesignation($kpi_id, $department_id){
+    public function getKpiDesignation($kpi_id, $department_id)
+    {
         $designation = DB::table('designation')
                     // ->whereIn('des_id',function($query) use ($kpi_id){
                     //     $query->select('designation_id')->from('metrics')->where('kpi_id', $kpi_id);
                     // })
-                    ->where('department_id', $department_id)
-                    ->get();
+            ->where('department_id', $department_id)
+            ->get();
 
         $list = [];
         foreach ($designation as $row) {
@@ -1117,32 +1164,34 @@ class EvaluationController extends Controller
     }
 
     // get metrics from kpi
-    public function getMetrics($kpi_id, $designation_id){
+    public function getMetrics($kpi_id, $designation_id)
+    {
         return DB::table('metrics')
-                ->when($kpi_id, function($query) use ($kpi_id){
-                    return $query->where('kpi_id', $kpi_id);
-                })
-                ->when($designation_id, function($query) use ($designation_id){
-                    return $query->where('designation_id', $designation_id);
-                })
-                ->whereNotNull('entry_schedule')
-                ->get();
+            ->when($kpi_id, function ($query) use ($kpi_id) {
+                return $query->where('kpi_id', $kpi_id);
+            })
+            ->when($designation_id, function ($query) use ($designation_id) {
+                return $query->where('designation_id', $designation_id);
+            })
+            ->whereNotNull('entry_schedule')
+            ->get();
     }
 
-    public function updateEmpInputs(Request $request){
+    public function updateEmpInputs(Request $request)
+    {
         $metric_result = collect($request->metric_id);
         $old_metric_id = collect($request->old_metric_id);
 
         $for_delete = DB::table('metrics')
-                ->whereIn('metric_id', $old_metric_id)
-                ->whereNotIn('metric_id', $metric_result)->delete();
+            ->whereIn('metric_id', $old_metric_id)
+            ->whereNotIn('metric_id', $metric_result)->delete();
 
         // for update
         if ($request->metric_id) {
-            foreach($request->metric_id as $i => $row){
+            foreach ($request->metric_id as $i => $row) {
                 $metrics = [
                     'metric_description' => $request->input_details[$i],
-                    'entry_schedule' => $request->schedule[$i]
+                    'entry_schedule' => $request->schedule[$i],
                 ];
 
                 DB::table('metrics')->where('metric_id', $request->metric_id[$i])->update($metrics);
@@ -1170,7 +1219,8 @@ class EvaluationController extends Controller
 
     // START OBJECTIVE TREE
     // for overall quality objective tree
-    public function viewObjectiveTree($objective){
+    public function viewObjectiveTree($objective)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -1188,12 +1238,13 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.objective.view', compact('designation', 'department', 'tree_data'));
     }
 
-    public function getDeptObjTree($objective){
+    public function getDeptObjTree($objective)
+    {
         $department_list = DB::table('departments')
-                ->whereIn('department_id', function($query) use ($objective){
-                    $query->select('department_id')->from('kpi')->where('objective_id', $objective);
-                })
-                ->get();
+            ->whereIn('department_id', function ($query) use ($objective) {
+                $query->select('department_id')->from('kpi')->where('objective_id', $objective);
+            })
+            ->get();
 
         $result = [];
         foreach ($department_list as $row) {
@@ -1207,34 +1258,36 @@ class EvaluationController extends Controller
         return $result;
     }
 
-    public function getKpiObjTree($objective, $department){
+    public function getKpiObjTree($objective, $department)
+    {
         $kpi_list = DB::table('kpi')
-                ->when($objective, function($query) use ($objective){
-                    return $query->where('objective_id', $objective);
-                })
-                ->when($department, function($query) use ($department){
-                    return $query->where('department_id', $department);
-                })
-                ->get();
+            ->when($objective, function ($query) use ($objective) {
+                return $query->where('objective_id', $objective);
+            })
+            ->when($department, function ($query) use ($department) {
+                return $query->where('department_id', $department);
+            })
+            ->get();
 
         $result = [];
         foreach ($kpi_list as $row) {
             $result[] = [
                 'kpi_id' => $row->kpi_id,
                 'kpi_description' => $row->kpi_description,
-                'metrics' => $this->getMetricsObjTree($row->kpi_id)
+                'metrics' => $this->getMetricsObjTree($row->kpi_id),
             ];
         }
 
         return $result;
     }
 
-    public function getMetricsObjTree($kpi){
+    public function getMetricsObjTree($kpi)
+    {
         $metric_list = DB::table('metrics')
-                ->when($kpi, function($query) use ($kpi){
-                    return $query->where('kpi_id', $kpi);
-                })
-                ->get();
+            ->when($kpi, function ($query) use ($kpi) {
+                return $query->where('kpi_id', $kpi);
+            })
+            ->get();
 
         $result = [];
         foreach ($metric_list as $row) {
@@ -1248,17 +1301,19 @@ class EvaluationController extends Controller
     }
     // END OBJECTIVE TREE
 
-    //////Patrick
-    public function metric_data(){
+    // ////Patrick
+    public function metric_data()
+    {
         $data = DB::table('metrics')
-            ->join('kpi', 'kpi.kpi_id','=','metrics.kpi_id')
-            ->where('designation_id', Auth::user()->designation_id )
+            ->join('kpi', 'kpi.kpi_id', '=', 'metrics.kpi_id')
+            ->where('designation_id', Auth::user()->designation_id)
             ->get();
-           
+
         return $data;
     }
-    
-    public function getEmpAppraisal($user){
+
+    public function getEmpAppraisal($user)
+    {
         $appraisal_list = DB::table('appraisal_result')
             ->where('appraisal_result.employee_id', $user)
             ->where('appraisal_result.status', 'Submitted')
@@ -1268,18 +1323,20 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.appraisal.tables.employee_appraisal_list', compact('appraisal_list'));
     }
 
-    public function getEmpKpiResult(Request $request, $user){
+    public function getEmpKpiResult(Request $request, $user)
+    {
         $kpi_result = DB::table('kpi_result')
-                ->join('kpi', 'kpi.kpi_id', 'kpi_result.kpi_id')
-                ->where('user_id', $user)
-                ->where('kpi_result.month', $request->filmonth)
-                ->where('kpi_result.year', $request->filyear)
-                ->get();
+            ->join('kpi', 'kpi.kpi_id', 'kpi_result.kpi_id')
+            ->where('user_id', $user)
+            ->where('kpi_result.month', $request->filmonth)
+            ->where('kpi_result.year', $request->filyear)
+            ->get();
 
         return view('client.modules.evaluation.kpi.tables.employee_kpi_result', compact('kpi_result'));
     }
 
-    public function viewEmpAppraisalResult($id){
+    public function viewEmpAppraisalResult($id)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -1288,8 +1345,8 @@ class EvaluationController extends Controller
         $employee_id = $appraisal_result->employee_id;
 
         $ratee = DB::table('users')->join('designation', 'users.designation_id', 'designation.des_id')
-                    ->where('user_id', $appraisal_result->evaluated_by)
-                    ->select('users.employee_name', 'designation.designation')->first();
+            ->where('user_id', $appraisal_result->evaluated_by)
+            ->select('users.employee_name', 'designation.designation')->first();
 
         $appraisal_details = [
             'evaluation_period_from' => $appraisal_result->evaluation_period_from,
@@ -1298,28 +1355,28 @@ class EvaluationController extends Controller
         ];
 
         $kpi_data_inputs = DB::table('kpi_datainput_result')
-                ->join('kpi','kpi_datainput_result.kpi_id','=','kpi.kpi_id')
-                ->where('kpi_datainput_result.user_id', $user_id)
-                ->select('kpi_datainput_result.kpi_id', 'kpi_description')
-                ->groupBy('kpi_datainput_result.kpi_id', 'kpi_description')->get();
+            ->join('kpi', 'kpi_datainput_result.kpi_id', '=', 'kpi.kpi_id')
+            ->where('kpi_datainput_result.user_id', $user_id)
+            ->select('kpi_datainput_result.kpi_id', 'kpi_description')
+            ->groupBy('kpi_datainput_result.kpi_id', 'kpi_description')->get();
 
         $kpi_result_summary = [];
         foreach ($kpi_data_inputs as $row) {
             $kpi_metrics = DB::table('kpi_datainput_result')
-                ->join('metrics','metrics.metric_id','=','kpi_datainput_result.metric_id')
-                ->join('kpi','kpi_datainput_result.kpi_id','=','kpi.kpi_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'kpi_datainput_result.metric_id')
+                ->join('kpi', 'kpi_datainput_result.kpi_id', '=', 'kpi.kpi_id')
                 ->where('kpi_datainput_result.user_id', $user_id)
                 ->where('kpi_datainput_result.kpi_id', $row->kpi_id)
-                ->whereBetween('kpi_datainput_result.month', [(int)$from_month, (int)$to_month])
+                ->whereBetween('kpi_datainput_result.month', [(int) $from_month, (int) $to_month])
                 ->whereBetween('kpi_datainput_result.year', [$from_year, $to_year])
                 ->select(DB::raw('SUM(kpi_datainput_result.answer) as total'), 'metrics.metric_description')
                 ->groupBy('kpi_datainput_result.metric_id', 'metrics.metric_description')
-                ->get();   
+                ->get();
 
             $kpi_result_summary[] = [
                 'kpi_id' => $row->kpi_id,
                 'kpi_description' => $row->kpi_description,
-                'metrics_summary' => $kpi_metrics
+                'metrics_summary' => $kpi_metrics,
             ];
         }
 
@@ -1342,60 +1399,63 @@ class EvaluationController extends Controller
         $qualitative_kpi = DB::table('kpi')->where('category', 'Qualitative')->get();
 
         $qualitative_kpi_set = DB::table('qualitative_kpi_result')
-                ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
-                ->where('qualitative_kpi_result.appraisal_result_id', $id)
-                ->where('category', 'Qualitative')->get();
+            ->join('kpi', 'qualitative_kpi_result.kpi_id', 'kpi.kpi_id')
+            ->where('qualitative_kpi_result.appraisal_result_id', $id)
+            ->where('category', 'Qualitative')->get();
 
         $employee_details = DB::table('users')
-                ->join('departments', 'departments.department_id', 'users.department_id')
-                ->join('designation', 'designation.des_id', 'users.designation_id')
-                ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
-                ->select('users.*', 'designation.designation', 'departments.department','shift_groups.shift_group_name')
-                ->where('users.user_id', $employee_id)->first();
+            ->join('departments', 'departments.department_id', 'users.department_id')
+            ->join('designation', 'designation.des_id', 'users.designation_id')
+            ->join('shift_groups', 'shift_groups.id', 'users.shift_group_id')
+            ->select('users.*', 'designation.designation', 'departments.department', 'shift_groups.shift_group_name')
+            ->where('users.user_id', $employee_id)->first();
 
         return view('client.modules.evaluation.appraisal.result', compact('designation', 'department', 'employee_details', 'appraisal_details', 'qualitative_kpi', 'qualitative_kpi_set', 'appraisal_result', 'stats', 'kpi_result_summary', 'ratee'));
     }
 
-    public function showKpiResult(Request $request){
+    public function showKpiResult(Request $request)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $department_list = DB::table('departments')->get();
 
         $year_list = DB::table('fiscal_year')->get();
+
         return view('client.modules.evaluation.reports.kpi_result', compact('designation', 'department', 'department_list', 'year_list'));
     }
 
-    public function getKpiResult(Request $request){
+    public function getKpiResult(Request $request)
+    {
         $kpi_list = DB::table('kpi')->where('department_id', $request->department)->where('set_kpi', 1)->get();
 
         $result = [];
-        foreach($kpi_list as $lvl1){
+        foreach ($kpi_list as $lvl1) {
             $metrics = $this->kpiMetrics($lvl1->kpi_id);
             $metric_data = [];
-                foreach ($metrics as $lvl2) {
-                    $data_input_list = $this->metricDataInputs($lvl2->metric_id);
-                    $data_input = [];
-                    foreach ($data_input_list as $lvl3) {
-                        $data_input_result = $this->dataInputResult($lvl3->input_id, $request->month, $request->year);
-                        $data_input_total = $data_input_result ? $data_input_result->answer : 'No data submitted';
-                        $input_result_id = $data_input_result ? $data_input_result->id : null;
-                        $data_input[] = [
-                            'data_input_id' => $lvl3->input_id,
-                            'data_input' => $lvl3->data_input,
-                            'result' => $data_input_total,
-                            'input_result_id' => $input_result_id
-                        ];
-                    }
-                    $metric_result = $this->metricResult($lvl2->metric_id, $request->month, $request->year);
-                    $metric_data[] = [
-                        'metric_id' => $lvl2->metric_id,
-                        'metric_description' => $lvl2->metric_description,
-                        'metric_result' => $metric_result,
-                        'data_input_list' => $data_input
+            foreach ($metrics as $lvl2) {
+                $data_input_list = $this->metricDataInputs($lvl2->metric_id);
+                $data_input = [];
+                foreach ($data_input_list as $lvl3) {
+                    $data_input_result = $this->dataInputResult($lvl3->input_id, $request->month, $request->year);
+                    $data_input_total = $data_input_result ? $data_input_result->answer : 'No data submitted';
+                    $input_result_id = $data_input_result ? $data_input_result->id : null;
+                    $data_input[] = [
+                        'data_input_id' => $lvl3->input_id,
+                        'data_input' => $lvl3->data_input,
+                        'result' => $data_input_total,
+                        'input_result_id' => $input_result_id,
                     ];
                 }
-            
+                $metric_result = $this->metricResult($lvl2->metric_id, $request->month, $request->year);
+                $metric_data[] = [
+                    'metric_id' => $lvl2->metric_id,
+                    'metric_description' => $lvl2->metric_description,
+                    'metric_result' => $metric_result,
+                    'data_input_list' => $data_input,
+                ];
+            }
+
             $result[] = [
                 'kpi_id' => $lvl1->kpi_id,
                 'kpi_description' => $lvl1->kpi_description,
@@ -1408,77 +1468,80 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.reports.kpi_result_table', compact('result'));
     }
 
-    public function updateDataInputResult(Request $request){
+    public function updateDataInputResult(Request $request)
+    {
         $values = [
             'answer' => $request->result,
-            'last_modified_by' => Auth::user()->employee_name
+            'last_modified_by' => Auth::user()->employee_name,
         ];
 
         DB::table('kpi_datainput_result')->where('id', $request->result_id)->update($values);
 
-        return response()->json(['message' => 'Data Input Result for <b>'. $request->data_input . '</b> has been updated.']);
+        return response()->json(['message' => 'Data Input Result for <b>'.$request->data_input.'</b> has been updated.']);
     }
 
     // OVERVIEW PER DEPARTMENT
-    public function informationTechnology_index(){
+    public function informationTechnology_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        
-        $kpi=DB::table('kpi')
+
+        $kpi = DB::table('kpi')
             ->where('kpi.department_id', 9)
             ->get();
 
-        return view('client.modules.evaluation.overview.department.IT_index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.IT_index', compact('designation', 'department', 'kpi'));
     }
 
-    public function kpi1_stats(Request $request){
+    public function kpi1_stats(Request $request)
+    {
 
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $current= date('n');
-        $current_year= date('Y');
+        $current = date('n');
+        $current_year = date('Y');
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(52);
-            $percentage= collect($target)->sum('target');
+            $target = $this->target_kpi(52);
+            $percentage = collect($target)->sum('target');
             $i = $i + 1;
             $data_inputs = DB::table('kpi_datainput_result')
-                ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-                ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
                 ->where('kpi_datainput_result.month', $i)
                 ->where('kpi_datainput_result.year', $request->year)
                 ->get();
-                
+
             $sumoflate = collect($data_inputs)->where('kpi_id', 52)->where('metric_id', 89)->sum('answer');
             $sumofontime = collect($data_inputs)->where('kpi_id', 52)->where('metric_id', 115)->sum('answer');
             $sumoflateandontime = $sumoflate + $sumofontime;
 
-            if($sumofontime == 0){
-                $var=0;
-            }else{
-                $var=$sumofontime;
+            if ($sumofontime == 0) {
+                $var = 0;
+            } else {
+                $var = $sumofontime;
             }
             if ($sumoflateandontime == 0) {
-                $var1=1;
-            }else{
-                $var1=$sumoflateandontime;
+                $var1 = 1;
+            } else {
+                $var1 = $sumoflateandontime;
             }
 
-            $computation= ($var/ $var1) * 100;
+            $computation = ($var / $var1) * 100;
 
             if ($current_year == $request->year) {
                 if ($i <= $current) {
                     $data[] = [
                         'month' => $month,
-                        'total' => round($computation,2),
-                        'target'=>$percentage,
+                        'total' => round($computation, 2),
+                        'target' => $percentage,
                     ];
                 }
-            }else{
+            } else {
                 $data[] = [
                     'month' => $month,
-                    'total' => round($computation,2),
-                    'target'=>$percentage,
+                    'total' => round($computation, 2),
+                    'target' => $percentage,
                 ];
             }
         }
@@ -1486,65 +1549,67 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function target_kpi($kpi){
-        $target=DB::table('kpi')->select('target')->where('kpi_id',$kpi)->get();
+    public function target_kpi($kpi)
+    {
+        $target = DB::table('kpi')->select('target')->where('kpi_id', $kpi)->get();
         $data = [];
         foreach ($target as $i) {
             $data[] = [
-                'target'=>$i->target,
+                'target' => $i->target,
             ];
         }
 
         return $data;
     }
 
-    public function kpi2_stats(Request $request){
+    public function kpi2_stats(Request $request)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $current= date('n');
-        $current_year= date('Y');
+        $current = date('n');
+        $current_year = date('Y');
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(52);
+            $target = $this->target_kpi(52);
 
             $i = $i + 1;
             $data_inputs = DB::table('kpi_datainput_result')
-                ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-                ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
                 ->where('kpi_datainput_result.month', $i)
                 ->where('kpi_datainput_result.year', $request->year)
                 ->where('kpi_datainput_result.user_id', null)
                 ->get();
-                
+
             $sumofdowntime = collect($data_inputs)->where('kpi_id', 53)->where('metric_id', 114)->sum('answer');
             $totalhrsinperiod = collect($data_inputs)->where('kpi_id', 53)->where('metric_id', 113)->sum('answer');
 
-            if($sumofdowntime == 0){
-                $var=1;
-            }else{
-                $var=$sumofdowntime;
+            if ($sumofdowntime == 0) {
+                $var = 1;
+            } else {
+                $var = $sumofdowntime;
             }
             if ($totalhrsinperiod == 0) {
-                $var1=1;
-            }else{
-                $var1=$totalhrsinperiod;
+                $var1 = 1;
+            } else {
+                $var1 = $totalhrsinperiod;
             }
-            $computation= (($var1 - $var) / $var1) * 100;
-            $percentage= collect($target)->sum('target');
+            $computation = (($var1 - $var) / $var1) * 100;
+            $percentage = collect($target)->sum('target');
             if ($current_year == $request->year) {
                 if ($i <= $current) {
                     $data[] = [
                         'month' => $month,
-                        'total' => round($computation,2),
-                        'target'=>$percentage,
-                        
+                        'total' => round($computation, 2),
+                        'target' => $percentage,
+
                     ];
                 }
-            }else{
+            } else {
                 $data[] = [
                     'month' => $month,
-                    'total' => round($computation,2),
-                    'target'=>$percentage,
+                    'total' => round($computation, 2),
+                    'target' => $percentage,
                 ];
             }
         }
@@ -1552,34 +1617,35 @@ class EvaluationController extends Controller
         return response()->json($data);
     }
 
-    public function kpi3_stats(Request $request){
+    public function kpi3_stats(Request $request)
+    {
         $months = ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(64);
+            $target = $this->target_kpi(64);
             $i = $i + 1;
 
             $data_inputs = DB::table('kpi_datainput_result')
-                ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-                ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
                 ->where('kpi_datainput_result.month', $i)
                 ->where('kpi_datainput_result.year', $request->year)
 
                 ->get();
             $total = collect($data_inputs)->where('kpi_id', 64)->where('metric_id', 116)->sum('answer');
-            $percentage= collect($target)->sum('target');
-            $current= date('n');
-            $current_year= date('Y');
+            $percentage = collect($target)->sum('target');
+            $current = date('n');
+            $current_year = date('Y');
             if ($current_year == $request->year) {
                 if ($i <= $current) {
                     $data[] = [
                         'month' => $month,
                         'total' => $total,
-                        'target'=>$percentage,
+                        'target' => $percentage,
                     ];
                 }
-            }else{
+            } else {
                 $data[] = [
                     'month' => $month,
                     'total' => $total,
@@ -1591,42 +1657,45 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function technicalLevel_stats(Request $request){
+    public function technicalLevel_stats(Request $request)
+    {
         $kpi = DB::table('kpi_datainput_result')
-        ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-        ->where('kpi_datainput_result.month', $request->tech_month)    
-        ->where('kpi_datainput_result.year', $request->tech_year)
-        ->get();
-        $data=[];
+            ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+            ->where('kpi_datainput_result.month', $request->tech_month)
+            ->where('kpi_datainput_result.year', $request->tech_year)
+            ->get();
+        $data = [];
         // $sum_allLevel= collect($kpi)->sum('answer');
-        $level_1=collect($kpi)->where('data_input_id', 74)->sum('answer');
-        $level_2=collect($kpi)->where('data_input_id', 75)->sum('answer');
-        $level_3=collect($kpi)->where('data_input_id', 76)->sum('answer');
+        $level_1 = collect($kpi)->where('data_input_id', 74)->sum('answer');
+        $level_2 = collect($kpi)->where('data_input_id', 75)->sum('answer');
+        $level_3 = collect($kpi)->where('data_input_id', 76)->sum('answer');
         $sum_allLevel = $level_1 + $level_2 + $level_3;
 
-        if($sum_allLevel == 0){
-            $var=1;
-        }else{
-            $var=$sum_allLevel;
+        if ($sum_allLevel == 0) {
+            $var = 1;
+        } else {
+            $var = $sum_allLevel;
         }
-        
+
         $data = [
             'level1' => round(($level_1 / $var) * 100, 2),
             'level2' => round(($level_2 / $var) * 100, 2),
-            'level3' => round(($level_3 / $var) * 100, 2)
+            'level3' => round(($level_3 / $var) * 100, 2),
         ];
 
         return response()->json($data);
     }
 
-    public function viewKPIresult_IT(){
+    public function viewKPIresult_IT()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         return view('client.modules.evaluation.overview.department.it.IT_kpi_result', compact('designation', 'department'));
     }
 
-    public function IT_departmentKpiResult(Request $request, $department){
+    public function IT_departmentKpiResult(Request $request, $department)
+    {
         $month = $request->month;
         $year = $request->year;
         $evaluation_period = $request->period;
@@ -1654,19 +1723,19 @@ class EvaluationController extends Controller
                 $kpi_metric_list = DB::table('metrics')->where('kpi_id', $kpi->kpi_id)->get();
                 foreach ($kpi_metric_list as $kpi_metric_row) {
                     $data_inputs = DB::table('data_input')
-                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                            ->where('metric_id', $kpi_metric_row->metric_id)
-                            ->where('user_id', null)
-                            ->where('month', $month)->where('year', $year)
-                            ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                            ->groupBy('data_input.data_input')
-                            ->get();
+                        ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                        ->where('metric_id', $kpi_metric_row->metric_id)
+                        ->where('user_id', null)
+                        ->where('month', $month)->where('year', $year)
+                        ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                        ->groupBy('data_input.data_input')
+                        ->get();
 
                     $kpi_metric[] = [
                         'metric_id' => $kpi_metric_row->metric_id,
                         'metric_description' => $kpi_metric_row->metric_description,
                         'metric_total' => collect($data_inputs)->sum('total'),
-                        'data_inputs' => $data_inputs
+                        'data_inputs' => $data_inputs,
                     ];
                 }
                 $kpi_result[] = [
@@ -1678,7 +1747,7 @@ class EvaluationController extends Controller
                     'status' => $submission_details ? $submission_details->status : null,
                 ];
             }
-        }else{
+        } else {
             $is_per_department = 0;
             $kpi_list = DB::table('kpi')
                 ->where('department_id', $department)->where('set_kpi', 0)
@@ -1689,29 +1758,29 @@ class EvaluationController extends Controller
             foreach ($kpi_list as $kpi) {
                 $employee_result = [];
                 $employee_list = DB::table('users')
-                        ->select('employee_name', 'user_id')
-                        ->whereIn('designation_id',function($query) use ($kpi){
-                            $query->select('designation_id')->from('kpi_per_designation')->where('kpi_id', $kpi->kpi_id);
-                        })
-                        ->whereIn('user_id',function($query) use ($month, $year){
-                            $query->select('user_id')->from('kpi_datainput_result')->where('month', $month)->where('year', $year);
-                        })->get();
+                    ->select('employee_name', 'user_id')
+                    ->whereIn('designation_id', function ($query) use ($kpi) {
+                        $query->select('designation_id')->from('kpi_per_designation')->where('kpi_id', $kpi->kpi_id);
+                    })
+                    ->whereIn('user_id', function ($query) use ($month, $year) {
+                        $query->select('user_id')->from('kpi_datainput_result')->where('month', $month)->where('year', $year);
+                    })->get();
 
                 $kpi_metric = [];
                 $kpi_metric_list = DB::table('metrics')->where('kpi_id', $kpi->kpi_id)->get();
                 foreach ($kpi_metric_list as $kpi_metric_row) {
                     $data_inputs = DB::table('data_input')
-                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                            ->where('metric_id', $kpi_metric_row->metric_id)->where('user_id', '!=', null)
-                            ->where('month', $month)->where('year', $year)
-                            ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                            ->groupBy('data_input.data_input')->get();
+                        ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                        ->where('metric_id', $kpi_metric_row->metric_id)->where('user_id', '!=', null)
+                        ->where('month', $month)->where('year', $year)
+                        ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                        ->groupBy('data_input.data_input')->get();
 
                     $kpi_metric[] = [
                         'metric_id' => $kpi_metric_row->metric_id,
                         'metric_description' => $kpi_metric_row->metric_description,
                         'metric_total' => collect($data_inputs)->sum('total'),
-                        'data_inputs' => $data_inputs
+                        'data_inputs' => $data_inputs,
                     ];
                 }
 
@@ -1730,11 +1799,11 @@ class EvaluationController extends Controller
                     foreach ($metric_list as $metric) {
                         $data_input_result = [];
                         $data_input_list = DB::table('data_input')
-                                ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                                ->select('kpi_datainput_result.data_input_id', 'data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                                ->where('metric_id', $metric->metric_id)->where('month', $month)
-                                ->where('year', $year)->where('user_id', $emp->user_id)
-                                ->groupBy('kpi_datainput_result.data_input_id', 'data_input.data_input')->get();
+                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                            ->select('kpi_datainput_result.data_input_id', 'data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                            ->where('metric_id', $metric->metric_id)->where('month', $month)
+                            ->where('year', $year)->where('user_id', $emp->user_id)
+                            ->groupBy('kpi_datainput_result.data_input_id', 'data_input.data_input')->get();
 
                         foreach ($data_input_list as $input) {
                             $data_input_result[] = [
@@ -1765,7 +1834,7 @@ class EvaluationController extends Controller
                     'kpi_id' => $kpi->kpi_id,
                     'kpi_description' => $kpi->kpi_description,
                     'kpi_metrics' => $kpi_metric,
-                    'employee_result' => $employee_result
+                    'employee_result' => $employee_result,
                 ];
             }
         }
@@ -1773,7 +1842,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.reports.data_input_result_table', compact('kpi_result', 'department_name', 'is_per_department'))->render();
     }
 
-    public function viewKpiResult(){
+    public function viewKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -1784,7 +1854,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.reports.data_input_result', compact('year_list', 'department_list', 'designation', 'department'));
     }
 
-    public function departmentKpiResult(Request $request, $department){
+    public function departmentKpiResult(Request $request, $department)
+    {
         $month = $request->month;
         $year = $request->year;
         $evaluation_period = $request->period;
@@ -1812,19 +1883,19 @@ class EvaluationController extends Controller
                 $kpi_metric_list = DB::table('metrics')->where('kpi_id', $kpi->kpi_id)->get();
                 foreach ($kpi_metric_list as $kpi_metric_row) {
                     $data_inputs = DB::table('data_input')
-                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                            ->where('metric_id', $kpi_metric_row->metric_id)
-                            ->where('user_id', null)
-                            ->where('month', $month)->where('year', $year)
-                            ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                            ->groupBy('data_input.data_input')
-                            ->get();
+                        ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                        ->where('metric_id', $kpi_metric_row->metric_id)
+                        ->where('user_id', null)
+                        ->where('month', $month)->where('year', $year)
+                        ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                        ->groupBy('data_input.data_input')
+                        ->get();
 
                     $kpi_metric[] = [
                         'metric_id' => $kpi_metric_row->metric_id,
                         'metric_description' => $kpi_metric_row->metric_description,
                         'metric_total' => collect($data_inputs)->sum('total'),
-                        'data_inputs' => $data_inputs
+                        'data_inputs' => $data_inputs,
                     ];
                 }
                 $kpi_result[] = [
@@ -1836,7 +1907,7 @@ class EvaluationController extends Controller
                     'status' => $submission_details ? $submission_details->status : null,
                 ];
             }
-        }else{
+        } else {
             $is_per_department = 0;
             $kpi_list = DB::table('kpi')
                 ->where('department_id', $department)->where('set_kpi', 0)
@@ -1846,29 +1917,29 @@ class EvaluationController extends Controller
             foreach ($kpi_list as $kpi) {
                 $employee_result = [];
                 $employee_list = DB::table('users')
-                        ->select('employee_name', 'user_id')
-                        ->whereIn('designation_id',function($query) use ($kpi){
-                            $query->select('designation_id')->from('kpi_per_designation')->where('kpi_id', $kpi->kpi_id);
-                        })
-                        ->whereIn('user_id',function($query) use ($month, $year){
-                            $query->select('user_id')->from('kpi_datainput_result')->where('month', $month)->where('year', $year);
-                        })->get();
+                    ->select('employee_name', 'user_id')
+                    ->whereIn('designation_id', function ($query) use ($kpi) {
+                        $query->select('designation_id')->from('kpi_per_designation')->where('kpi_id', $kpi->kpi_id);
+                    })
+                    ->whereIn('user_id', function ($query) use ($month, $year) {
+                        $query->select('user_id')->from('kpi_datainput_result')->where('month', $month)->where('year', $year);
+                    })->get();
 
                 $kpi_metric = [];
                 $kpi_metric_list = DB::table('metrics')->where('kpi_id', $kpi->kpi_id)->get();
                 foreach ($kpi_metric_list as $kpi_metric_row) {
                     $data_inputs = DB::table('data_input')
-                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                            ->where('metric_id', $kpi_metric_row->metric_id)->where('user_id', '!=', null)
-                            ->where('month', $month)->where('year', $year)
-                            ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                            ->groupBy('data_input.data_input')->get();
+                        ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                        ->where('metric_id', $kpi_metric_row->metric_id)->where('user_id', '!=', null)
+                        ->where('month', $month)->where('year', $year)
+                        ->select('data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                        ->groupBy('data_input.data_input')->get();
 
                     $kpi_metric[] = [
                         'metric_id' => $kpi_metric_row->metric_id,
                         'metric_description' => $kpi_metric_row->metric_description,
                         'metric_total' => collect($data_inputs)->sum('total'),
-                        'data_inputs' => $data_inputs
+                        'data_inputs' => $data_inputs,
                     ];
                 }
 
@@ -1887,11 +1958,11 @@ class EvaluationController extends Controller
                     foreach ($metric_list as $metric) {
                         $data_input_result = [];
                         $data_input_list = DB::table('data_input')
-                                ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
-                                ->select('kpi_datainput_result.data_input_id', 'data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
-                                ->where('metric_id', $metric->metric_id)->where('month', $month)
-                                ->where('year', $year)->where('user_id', $emp->user_id)
-                                ->groupBy('kpi_datainput_result.data_input_id', 'data_input.data_input')->get();
+                            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', 'data_input.input_id')
+                            ->select('kpi_datainput_result.data_input_id', 'data_input.data_input', DB::raw('SUM(kpi_datainput_result.answer) as total'))
+                            ->where('metric_id', $metric->metric_id)->where('month', $month)
+                            ->where('year', $year)->where('user_id', $emp->user_id)
+                            ->groupBy('kpi_datainput_result.data_input_id', 'data_input.data_input')->get();
 
                         foreach ($data_input_list as $input) {
                             $data_input_result[] = [
@@ -1922,7 +1993,7 @@ class EvaluationController extends Controller
                     'kpi_id' => $kpi->kpi_id,
                     'kpi_description' => $kpi->kpi_description,
                     'kpi_metrics' => $kpi_metric,
-                    'employee_result' => $employee_result
+                    'employee_result' => $employee_result,
                 ];
             }
         }
@@ -1930,7 +2001,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.reports.data_input_result_table', compact('kpi_result', 'department_name', 'is_per_department'))->render();
     }
 
-    public function engineeringDataInputsERP(Request $request){
+    public function engineeringDataInputsERP(Request $request)
+    {
         $month = $request->month;
         $year = $request->year;
 
@@ -1938,9 +2010,9 @@ class EvaluationController extends Controller
         $emp_dwg_timeliness_result = [];
         $emp_dwg_completion_result = [];
         foreach ($employees as $row) {
-            $rfd = DB::connection('mysql_erp')->select('SELECT (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) as d, name, docstatus, category, DATEDIFF(date_issued, creation) as date_difference FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$month.' AND YEAR(creation) = '. $year.' AND date_issued IS NOT NULL AND (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) = "'.$row->user_id.'"');
+            $rfd = DB::connection('mysql_erp')->select('SELECT (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) as d, name, docstatus, category, DATEDIFF(date_issued, creation) as date_difference FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$month.' AND YEAR(creation) = '.$year.' AND date_issued IS NOT NULL AND (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) = "'.$row->user_id.'"');
 
-            $dwgs = DB::connection('mysql_erp')->select('SELECT name FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$month.' AND YEAR(creation) = '. $year.' AND (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) = "'.$row->user_id.'"');
+            $dwgs = DB::connection('mysql_erp')->select('SELECT name FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$month.' AND YEAR(creation) = '.$year.' AND (SELECT access_id FROM `tabEmployee` WHERE name = drawn_by) = "'.$row->user_id.'"');
 
             $total_dwgs = collect($dwgs)->count();
             $accomplished_dwgs = collect($rfd)->where('docstatus', '<', 2)->count();
@@ -1982,33 +2054,35 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.engineering.inputs_erp_table', compact('result'));
     }
 
-    public function rfdPerMonthChart($year){
+    public function rfdPerMonthChart($year)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         $data = [];
         foreach ($months as $i => $month) {
             $i = $i + 1;
-            $rfd = DB::connection('mysql_erp')->select('SELECT name, category, creation FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$i.' AND YEAR(creation) = '. $year);
+            $rfd = DB::connection('mysql_erp')->select('SELECT name, category, creation FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$i.' AND YEAR(creation) = '.$year);
 
             $total_rfd_per_month = collect($rfd)->count();
             $total_rfd_for_others = collect($rfd)->where('category', 'Others')->count();
             $total_rfd_for_lamp_post = collect($rfd)->where('category', 'Lamp Post')->count();
             $total_rfd_for_luminaires = collect($rfd)->where('category', 'Luminaire')->count();
-    
+
             $data[] = [
                 'month' => $month,
                 'total_rfd_per_month' => $total_rfd_per_month,
                 'total_rfd_for_others' => $total_rfd_for_others,
                 'total_rfd_for_lamp_post' => $total_rfd_for_lamp_post,
-                'total_rfd_for_luminaires' => $total_rfd_for_luminaires
+                'total_rfd_for_luminaires' => $total_rfd_for_luminaires,
             ];
         }
 
         return response()->json($data);
     }
 
-    public function rfdDistributionChart($year){
-        $rfd = DB::connection('mysql_erp')->select('SELECT name, category, creation FROM `tabRequest for Drawing` WHERE YEAR(creation) = '. $year);
+    public function rfdDistributionChart($year)
+    {
+        $rfd = DB::connection('mysql_erp')->select('SELECT name, category, creation FROM `tabRequest for Drawing` WHERE YEAR(creation) = '.$year);
 
         $total_rfd = collect($rfd)->count();
         $total_rfd_for_others = collect($rfd)->where('category', 'Others')->count();
@@ -2019,9 +2093,9 @@ class EvaluationController extends Controller
         $rfd_lamp_post = ($total_rfd_for_lamp_post / $total_rfd) * 100;
         $rfd_luminaires = ($total_rfd_for_luminaires / $total_rfd) * 100;
 
-        $so_dwgs = DB::connection('mysql_erp')->select('SELECT rfd.name, rfd.creation, rfd.date_issued FROM `tabRequest for Drawing` rfd JOIN `tabSales Order Item` ON rfd.name = `tabSales Order Item`.request_for_drawing WHERE `tabSales Order Item`.docstatus = 1 AND YEAR(rfd.creation) = '. $year.' AND YEAR(`tabSales Order Item`.creation) = '. $year.' AND rfd.date_issued IS NOT NULL GROUP BY rfd.name, rfd.creation, rfd.date_issued');
+        $so_dwgs = DB::connection('mysql_erp')->select('SELECT rfd.name, rfd.creation, rfd.date_issued FROM `tabRequest for Drawing` rfd JOIN `tabSales Order Item` ON rfd.name = `tabSales Order Item`.request_for_drawing WHERE `tabSales Order Item`.docstatus = 1 AND YEAR(rfd.creation) = '.$year.' AND YEAR(`tabSales Order Item`.creation) = '.$year.' AND rfd.date_issued IS NOT NULL GROUP BY rfd.name, rfd.creation, rfd.date_issued');
 
-        $approved_dwgs = DB::connection('mysql_erp')->select('SELECT name, creation, date_issued FROM `tabRequest for Drawing` WHERE YEAR(creation) = '. $year.' AND date_issued IS NOT NULL AND docstatus < 2');
+        $approved_dwgs = DB::connection('mysql_erp')->select('SELECT name, creation, date_issued FROM `tabRequest for Drawing` WHERE YEAR(creation) = '.$year.' AND date_issued IS NOT NULL AND docstatus < 2');
 
         $total_so_dwgs = collect($so_dwgs)->count();
         $total_approved_dwgs = collect($approved_dwgs)->count();
@@ -2036,13 +2110,14 @@ class EvaluationController extends Controller
             'rfd_for_lamp_post' => round($rfd_lamp_post, 2),
             'rfd_for_luminaires' => round($rfd_luminaires, 2),
             'rfd_for_others' => round($rfd_others, 2),
-            'success_rate' => round($success_rate, 2) .'%'
+            'success_rate' => round($success_rate, 2).'%',
         ];
 
         return response()->json($data);
     }
 
-    public function rfdTotals(){
+    public function rfdTotals()
+    {
         $rfd = DB::connection('mysql_erp')->select('SELECT name, workflow_state, creation FROM `tabRequest for Drawing`');
 
         $total_rfd_requests = collect($rfd)->count();
@@ -2066,7 +2141,8 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function engineeringKpiResult(){
+    public function engineeringKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -2075,13 +2151,14 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.engineering.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function rfdTimeliness(Request $request, $year){
+    public function rfdTimeliness(Request $request, $year)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         $data = [];
         foreach ($months as $i => $month) {
             $i = $i + 1;
-            $rfd = DB::connection('mysql_erp')->select('SELECT name, category, date_issued, DATEDIFF(date_issued, creation) as date_difference FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$i.' AND YEAR(creation) = '. $year.' AND date_issued IS NOT NULL');
+            $rfd = DB::connection('mysql_erp')->select('SELECT name, category, date_issued, DATEDIFF(date_issued, creation) as date_difference FROM `tabRequest for Drawing` WHERE MONTH(creation) = '.$i.' AND YEAR(creation) = '.$year.' AND date_issued IS NOT NULL');
 
             $accomplished_dwgs = collect($rfd)->count();
             $delayed_dwgs = collect($rfd)->where('date_difference', '>', 2)->count();
@@ -2101,13 +2178,14 @@ class EvaluationController extends Controller
                     'delayed_dwgs' => $delayed_dwgs,
                     'percentage' => round($percentage, 2),
                 ];
-            }  
+            }
         }
 
         return response()->json($data);
     }
 
-    public function rfdCompletion($year){
+    public function rfdCompletion($year)
+    {
         $months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
 
@@ -2117,26 +2195,26 @@ class EvaluationController extends Controller
         }
 
         $rfds = DB::connection('mysql_erp')->table('tabRequest for Drawing')
-                ->select('name', DB::raw('MONTH(creation) AS mcreation'), 'date_issued', 'status', 'docstatus')
-                ->where(DB::raw('YEAR(creation)'), $year)
-                ->get();
+            ->select('name', DB::raw('MONTH(creation) AS mcreation'), 'date_issued', 'status', 'docstatus')
+            ->where(DB::raw('YEAR(creation)'), $year)
+            ->get();
 
         $accomplished_dwgs = DB::connection('mysql_erp')->table('tabRequest for Drawing')
-                ->select('name', DB::raw('MONTH(date_issued) AS mcreation'), 'date_issued', 'workflow_state', 'docstatus')
-                ->where(DB::raw('YEAR(date_issued)'), $year)
-                ->whereIn('workflow_state', ['For Checking', 'For Approval', 'Approved', 'Cancelled'])
-                ->get();
+            ->select('name', DB::raw('MONTH(date_issued) AS mcreation'), 'date_issued', 'workflow_state', 'docstatus')
+            ->where(DB::raw('YEAR(date_issued)'), $year)
+            ->whereIn('workflow_state', ['For Checking', 'For Approval', 'Approved', 'Cancelled'])
+            ->get();
 
         $cancelled_dwgs = DB::connection('mysql_erp')->table('tabRequest for Drawing')
-                ->select('name', DB::raw('MONTH(creation) AS mcreation'), 'date_issued', 'status', 'docstatus')
-                ->where(DB::raw('YEAR(creation)'), $year)
-                ->whereIn('workflow_state', ['Approved'])
-                ->where('status', 'Cancelled - NEW RFD CREATED')
-                ->get();
+            ->select('name', DB::raw('MONTH(creation) AS mcreation'), 'date_issued', 'status', 'docstatus')
+            ->where(DB::raw('YEAR(creation)'), $year)
+            ->whereIn('workflow_state', ['Approved'])
+            ->where('status', 'Cancelled - NEW RFD CREATED')
+            ->get();
 
         $cancelled_dwgs_arr = $accomplished_dwgs_arr = $total_dwgs_arr = [''];
         $accomplished_dwgs_total = $overall_dwgs_total = 0;
-        
+
         for ($i = 1; $i <= 12; $i++) {
             $accomplished_dwgs_total = collect($accomplished_dwgs)->where('mcreation', $i)->count();
             $overall_dwgs_total = collect($rfds)->where('mcreation', $i)->count();
@@ -2195,13 +2273,14 @@ class EvaluationController extends Controller
         return response()->json(['months' => $m, 'percentage' => $data]);
     }
 
-    public function rfdQuality($year){
+    public function rfdQuality($year)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
-        for ($i = 0; $i < $month_no; $i++) { 
+        for ($i = 0; $i < $month_no; $i++) {
             $month_name = $months[$i];
             $data_inputs = DB::table('kpi_datainput_result')->select('data_input_id', 'user_id', 'answer', 'month')
-                    ->where('month', $i + 1)->where('year', $year)->get();
+                ->where('month', $i + 1)->where('year', $year)->get();
 
             $accomplished_dwgs = collect($data_inputs)->where('data_input_id', 75)->sum('answer');
             $revision_dept = collect($data_inputs)->where('data_input_id', 7)->sum('answer');
@@ -2210,7 +2289,7 @@ class EvaluationController extends Controller
             if ($accomplished_dwgs > 0) {
                 $percentage = (($accomplished_dwgs - ($revision_dept + $revision_customer)) / $accomplished_dwgs) * 100;
             }
-                
+
             $percentage = $accomplished_dwgs > 0 ? $percentage : 0;
 
             $data[] = [
@@ -2218,17 +2297,18 @@ class EvaluationController extends Controller
                 'accomplished_dwgs' => $accomplished_dwgs,
                 'revision_dept' => $revision_dept,
                 'revision_customer' => $revision_customer,
-                'percentage' => round($percentage, 2)
+                'percentage' => round($percentage, 2),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function rfdSuccessRate($year){        
-        $so_dwgs = DB::connection('mysql_erp')->select('SELECT rfd.name, rfd.category, rfd.date_issued FROM `tabRequest for Drawing` rfd JOIN `tabSales Order Item` ON rfd.name = `tabSales Order Item`.request_for_drawing WHERE `tabSales Order Item`.docstatus = 1 AND YEAR(rfd.creation) = '. $year.' AND YEAR(`tabSales Order Item`.creation) = '. $year.' AND rfd.date_issued IS NOT NULL GROUP BY rfd.name, rfd.category, rfd.date_issued');
+    public function rfdSuccessRate($year)
+    {
+        $so_dwgs = DB::connection('mysql_erp')->select('SELECT rfd.name, rfd.category, rfd.date_issued FROM `tabRequest for Drawing` rfd JOIN `tabSales Order Item` ON rfd.name = `tabSales Order Item`.request_for_drawing WHERE `tabSales Order Item`.docstatus = 1 AND YEAR(rfd.creation) = '.$year.' AND YEAR(`tabSales Order Item`.creation) = '.$year.' AND rfd.date_issued IS NOT NULL GROUP BY rfd.name, rfd.category, rfd.date_issued');
 
-        $approved_dwgs = DB::connection('mysql_erp')->select('SELECT name, category, date_issued FROM `tabRequest for Drawing` WHERE YEAR(creation) = '. $year.' AND date_issued IS NOT NULL AND docstatus < 2');
+        $approved_dwgs = DB::connection('mysql_erp')->select('SELECT name, category, date_issued FROM `tabRequest for Drawing` WHERE YEAR(creation) = '.$year.' AND date_issued IS NOT NULL AND docstatus < 2');
 
         $rfd_lamp_post_dwgs = collect($approved_dwgs)->where('category', 'Lamp Post')->count();
         $rfd_luminaire_dwgs = collect($approved_dwgs)->where('category', 'Luminaire')->count();
@@ -2260,7 +2340,7 @@ class EvaluationController extends Controller
 
         $chart_data = [];
         $month_no = $year == date('Y') ? date('m') : 12;
-        for ($i = 0; $i < $month_no; $i++) { 
+        for ($i = 0; $i < $month_no; $i++) {
             $month_name = $months[$i];
             $n = $i + 1;
             $rfd_so = DB::connection('mysql_erp')->select('SELECT rfd.name, rfd.category FROM `tabRequest for Drawing` rfd JOIN `tabSales Order Item` soi ON rfd.name = soi.request_for_drawing WHERE soi.docstatus = 1 AND YEAR(rfd.creation) = '.$year.' AND YEAR(soi.creation) = '.$year.' AND rfd.date_issued IS NOT NULL AND MONTH(rfd.creation) = '.$n.' AND MONTH(soi.creation) = '.$n.' GROUP BY rfd.name, rfd.category');
@@ -2280,28 +2360,29 @@ class EvaluationController extends Controller
         }
 
         $data = [
-            'rfd_lamp_post_rate' => round($so_rfd_lamp_post_dwgs > 0 ? $rfd_lamp_post_rate : 0, 2) .'%',
-            'rfd_luminaire_rate' => round($so_rfd_luminaire_dwgs > 0 ? $rfd_luminaire_rate : 0, 2) .'%',
-            'rfd_ins_guide_rate' => round($so_rfd_ins_guide_dwgs > 0 ? $rfd_ins_guide_rate : 0, 2) .'%',
-            'rfd_others_rate' => round($so_rfd_others_dwgs > 0 ? $rfd_others_rate : 0, 2) .'%',
-            'chart_data' => $chart_data
+            'rfd_lamp_post_rate' => round($so_rfd_lamp_post_dwgs > 0 ? $rfd_lamp_post_rate : 0, 2).'%',
+            'rfd_luminaire_rate' => round($so_rfd_luminaire_dwgs > 0 ? $rfd_luminaire_rate : 0, 2).'%',
+            'rfd_ins_guide_rate' => round($so_rfd_ins_guide_dwgs > 0 ? $rfd_ins_guide_rate : 0, 2).'%',
+            'rfd_others_rate' => round($so_rfd_others_dwgs > 0 ? $rfd_others_rate : 0, 2).'%',
+            'chart_data' => $chart_data,
         ];
 
         return response()->json($data);
     }
 
     // DATA INPUT ENTRY
-    public function subquery_dataInput($kpi){
+    public function subquery_dataInput($kpi)
+    {
         $metrics = DB::table('metrics')
-                ->select('metrics.metric_name','metrics.metric_id','metrics.kpi_id')
-                ->join('data_input','data_input.metric_id','=','metrics.metric_id')
-                ->where('kpi_id', $kpi)->distinct()->get();
-        
+            ->select('metrics.metric_name', 'metrics.metric_id', 'metrics.kpi_id')
+            ->join('data_input', 'data_input.metric_id', '=', 'metrics.metric_id')
+            ->where('kpi_id', $kpi)->distinct()->get();
+
         $datainput = [];
         foreach ($metrics as $row) {
             $table = DB::table('metrics')
-                ->join('data_input','data_input.metric_id','=','metrics.metric_id')
-                ->where('kpi_id', $kpi )->where( 'metrics.metric_id', $row->metric_id)
+                ->join('data_input', 'data_input.metric_id', '=', 'metrics.metric_id')
+                ->where('kpi_id', $kpi)->where('metrics.metric_id', $row->metric_id)
                 ->get();
 
             $datainput[] = [
@@ -2315,141 +2396,140 @@ class EvaluationController extends Controller
         return $datainput;
     }
 
-    public function dataInput(Request $request){
-        $department_heads= DB::table('department_head_list')
-                            ->join('departments','department_head_list.department_id','=','departments.department_id')
-                            ->where('employee_id',Auth::user()->user_id)
-                            ->get();
-        if(!$department_heads->isEmpty()){
-          $depart='head';
+    public function dataInput(Request $request)
+    {
+        $department_heads = DB::table('department_head_list')
+            ->join('departments', 'department_head_list.department_id', '=', 'departments.department_id')
+            ->where('employee_id', Auth::user()->user_id)
+            ->get();
+        if (! $department_heads->isEmpty()) {
+            $depart = 'head';
+        } else {
+            $department_heads = DB::table('users')
+                ->join('departments', 'users.department_id', '=', 'departments.department_id')
+                ->where('user_id', Auth::user()->user_id)
+                ->get();
+            $depart = 'employee';
         }
-        else{
-          $department_heads= DB::table('users')
-                            ->join('departments','users.department_id','=','departments.department_id')
-                            ->where('user_id',Auth::user()->user_id)
-                            ->get();
-          $depart='employee';
-        }
-        ///////////////////////////////////////////////////////////////////
+        // /////////////////////////////////////////////////////////////////
 
-        $users=DB::table('users')
-                    ->select('designation_id','department_id','user_id')
-                    ->where('user_id', $request->employeelist)
-                    ->first();
-        $user_designation= $users->designation_id;
-        $user_user_id= $users->user_id;
+        $users = DB::table('users')
+            ->select('designation_id', 'department_id', 'user_id')
+            ->where('user_id', $request->employeelist)
+            ->first();
+        $user_designation = $users->designation_id;
+        $user_user_id = $users->user_id;
 
-        /////////////////////////////////////////////////////////////////////
+        // ///////////////////////////////////////////////////////////////////
         if ($depart == 'employee') {
             $kpi = DB::table('kpi_per_designation')
-                ->select('kpi.kpi_description','kpi.kpi_id','kpi.evaluation_period','kpi.target','kpi.weight_average','kpi.set_manual')
-                ->join('kpi','kpi_per_designation.kpi_id','=','kpi.kpi_id')
+                ->select('kpi.kpi_description', 'kpi.kpi_id', 'kpi.evaluation_period', 'kpi.target', 'kpi.weight_average', 'kpi.set_manual')
+                ->join('kpi', 'kpi_per_designation.kpi_id', '=', 'kpi.kpi_id')
                 ->where('designation_id', Auth::user()->designation_id)
                 ->where('kpi.evaluation_period', $request->eval_period)
                 ->distinct()
                 ->get();
-                    $datainput = [];
-                        foreach ($kpi as $row) {
-                             
-                                    $datainput[] = [
-                                        'kpi_id' => $row->kpi_id,
-                                        'kpi_description' => $row->kpi_description,
-                                        'kpi_target' => $row->target,
-                                        'kpi_weight' => $row->weight_average,
-                                        'set_manual' => $row->set_manual,
-                                        // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
-                                        'nodes' => $this->subquery_dataInput($row->kpi_id),
-                                        // 'user_id'=> $user_user_id,
-                                    ];
-                        }
-        }elseif($request->entry == 'per_employee') {
+            $datainput = [];
+            foreach ($kpi as $row) {
+
+                $datainput[] = [
+                    'kpi_id' => $row->kpi_id,
+                    'kpi_description' => $row->kpi_description,
+                    'kpi_target' => $row->target,
+                    'kpi_weight' => $row->weight_average,
+                    'set_manual' => $row->set_manual,
+                    // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
+                    'nodes' => $this->subquery_dataInput($row->kpi_id),
+                    // 'user_id'=> $user_user_id,
+                ];
+            }
+        } elseif ($request->entry == 'per_employee') {
             $kpi = DB::table('kpi_per_designation')
-                ->select('kpi.kpi_description','kpi.kpi_id','kpi.evaluation_period','kpi.target','kpi.weight_average','kpi.set_manual')
-                ->join('kpi','kpi_per_designation.kpi_id','=','kpi.kpi_id')
+                ->select('kpi.kpi_description', 'kpi.kpi_id', 'kpi.evaluation_period', 'kpi.target', 'kpi.weight_average', 'kpi.set_manual')
+                ->join('kpi', 'kpi_per_designation.kpi_id', '=', 'kpi.kpi_id')
                 ->where('designation_id', $user_designation)
                 ->where('kpi.evaluation_period', $request->eval_period)
                 ->distinct()
                 ->get();
-                        $datainput = [];
-                            foreach ($kpi as $row) {
-                                        $datainput[] = [
-                                            'kpi_id' => $row->kpi_id,
-                                            'kpi_description' => $row->kpi_description,
-                                            'kpi_target' => $row->target,
-                                            'kpi_weight' => $row->weight_average,
-                                            'set_manual' => $row->set_manual,
-                                            // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
-                                            'nodes' => $this->subquery_dataInput($row->kpi_id),
-                                            // 'user_id'=> $user_user_id,
-                                        ];
-                            }
-        }elseif($request->entry == 'per_department') {
+            $datainput = [];
+            foreach ($kpi as $row) {
+                $datainput[] = [
+                    'kpi_id' => $row->kpi_id,
+                    'kpi_description' => $row->kpi_description,
+                    'kpi_target' => $row->target,
+                    'kpi_weight' => $row->weight_average,
+                    'set_manual' => $row->set_manual,
+                    // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
+                    'nodes' => $this->subquery_dataInput($row->kpi_id),
+                    // 'user_id'=> $user_user_id,
+                ];
+            }
+        } elseif ($request->entry == 'per_department') {
             $kpi = DB::table('kpi')
-                ->select('kpi.kpi_description','kpi.kpi_id','kpi.evaluation_period','kpi.target','kpi.weight_average','kpi.set_manual')
+                ->select('kpi.kpi_description', 'kpi.kpi_id', 'kpi.evaluation_period', 'kpi.target', 'kpi.weight_average', 'kpi.set_manual')
                 ->where('department_id', $request->dept)
                 ->where('kpi.evaluation_period', $request->eval_period)
                 ->where('kpi.set_kpi', 1)
                 ->distinct()
                 ->get();
-                    $datainput = [];
-                        foreach ($kpi as $row) {
-                             
-                                    $datainput[] = [
-                                        'kpi_id' => $row->kpi_id,
-                                        'kpi_description' => $row->kpi_description,
-                                        'kpi_target' => $row->target,
-                                        'kpi_weight' => $row->weight_average,
-                                        'set_manual' => $row->set_manual,
-                                        // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
-                                        'nodes' => $this->subquery_dataInput($row->kpi_id),
-                                        // 'user_id'=> $user_user_id,
-                                    ];
-                        }
+            $datainput = [];
+            foreach ($kpi as $row) {
 
-            
+                $datainput[] = [
+                    'kpi_id' => $row->kpi_id,
+                    'kpi_description' => $row->kpi_description,
+                    'kpi_target' => $row->target,
+                    'kpi_weight' => $row->weight_average,
+                    'set_manual' => $row->set_manual,
+                    // 'nodes' => $this->evaluationDesignation($department_id, $row->kpi_id),
+                    'nodes' => $this->subquery_dataInput($row->kpi_id),
+                    // 'user_id'=> $user_user_id,
+                ];
+            }
+
         }
 
-                
         $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('departments', 'users.department_id', '=', 'departments.department_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
 
         $designation = $detail->designation;
         $department = $detail->department;
-        if ($request->eval_period == "Monthly") {
-            $eval_sched_id=1;
-            $eval_type='Monthly';
-        }elseif ($request->eval_period == "Quarterly") {
-            $eval_sched_id=2;
-            $eval_type='Quarterly';
-        }elseif ($request->eval_period == "Semi-Annual") {
-            $eval_sched_id=3;
-            $eval_type='Semi-Annual';
-        }elseif ($request->eval_period == "Annual") {
-            $eval_sched_id=4;
-            $eval_type='Annual';
+        if ($request->eval_period == 'Monthly') {
+            $eval_sched_id = 1;
+            $eval_type = 'Monthly';
+        } elseif ($request->eval_period == 'Quarterly') {
+            $eval_sched_id = 2;
+            $eval_type = 'Quarterly';
+        } elseif ($request->eval_period == 'Semi-Annual') {
+            $eval_sched_id = 3;
+            $eval_type = 'Semi-Annual';
+        } elseif ($request->eval_period == 'Annual') {
+            $eval_sched_id = 4;
+            $eval_type = 'Annual';
         }
 
         $schedule_details = DB::table('evaluation_schedule')->where('eval_sched_id', $eval_sched_id)->first();
         $scheduless = $this->getSubmissionSchedules($schedule_details->period, $schedule_details->start_date, $schedule_details->year);
 
-        return view('client.modules.evaluation.metrics.datainput', compact('designation', 'department', 'datainput','department_heads','depart','schedule_details','scheduless','eval_type'));
+        return view('client.modules.evaluation.metrics.datainput', compact('designation', 'department', 'datainput', 'department_heads', 'depart', 'schedule_details', 'scheduless', 'eval_type'));
     }
 
-    public function getemployeeperdept(Request $request){
-        $output="";
+    public function getemployeeperdept(Request $request)
+    {
+        $output = '';
         if ($request->deptvalidate == 'head') {
             $users = DB::table('users')->where('department_id', $request->dept)->get();
-            foreach($users as $row){
+            foreach ($users as $row) {
                 $output .= '<option value="'.$row->user_id.'">'.$row->employee_name.'</option>';
             }
         }
 
         if ($request->deptvalidate == 'employee') {
             $users = DB::table('users')->where('user_id', Auth::user()->user_id)->get();
-            foreach($users as $row){
+            foreach ($users as $row) {
                 $output .= '<option value="'.$row->user_id.'">'.$row->employee_name.'</option>';
             }
         }
@@ -2457,313 +2537,316 @@ class EvaluationController extends Controller
         return json_encode($output);
     }
 
-     public function savedataInput(Request $request){
-            $date=date('Y-m-d');
-            $users=DB::table('users')
-                    ->select('designation_id','department_id','user_id')
-                    ->where('user_id', $request->user_id)
-                    ->first();
-            $department_heads= DB::table('department_head_list')
-                     ->join('departments','department_head_list.department_id','=','departments.department_id')
-                    ->where('employee_id',Auth::user()->user_id)
-                    ->get();
-            if(!$department_heads->isEmpty()){
-                $depart='head';
-            }
-            else{
-                $department_heads= DB::table('users')
-                ->join('departments','users.department_id','=','departments.department_id')
-                ->where('user_id',Auth::user()->user_id)
+    public function savedataInput(Request $request)
+    {
+        $date = date('Y-m-d');
+        $users = DB::table('users')
+            ->select('designation_id', 'department_id', 'user_id')
+            ->where('user_id', $request->user_id)
+            ->first();
+        $department_heads = DB::table('department_head_list')
+            ->join('departments', 'department_head_list.department_id', '=', 'departments.department_id')
+            ->where('employee_id', Auth::user()->user_id)
+            ->get();
+        if (! $department_heads->isEmpty()) {
+            $depart = 'head';
+        } else {
+            $department_heads = DB::table('users')
+                ->join('departments', 'users.department_id', '=', 'departments.department_id')
+                ->where('user_id', Auth::user()->user_id)
                 ->get();
-                $depart='employee';
+            $depart = 'employee';
+        }
+
+        $data = $request->all();
+        $ans = $data['answer'];
+        $data_input_id = $data['input_id'];
+        $answerkpi = $data['answerkpi'];
+        $set_manual = $data['set_manual'];
+        $kpiID = $data['kpiID'];
+        $kpi_target = $data['kpi_target'];
+        $kpi_weight = $data['kpi_weight'];
+        $period = $request->eval_period;
+        $filtermonth = date('m', strtotime('-1 months', strtotime($request->schedule_date)));
+        $filteryear = date('Y', strtotime('-1 months', strtotime($request->schedule_date)));
+        $submission_date = Carbon::parse($request->schedule_date)->format('Y-m-d');
+        $date_submitted = date('Y-m-d');
+        $status = $date_submitted > $submission_date ? 'late' : 'on time';
+
+        if ($depart == 'employee') {
+            if (DB::table('kpi_datainput_result')
+                ->where('due_date', '=', $submission_date)
+                ->where('year', '=', $filteryear)
+                ->where('month', '=', $filtermonth)
+                ->where('user_id', '=', $request->user_id)
+                ->exists()) {
+                return response()->json(['message' => '1']);
+            } else {
+                foreach ($answerkpi as $keys => $inputs) {
+                    $set = 0;
+                    if ($inputs > 0) {
+                        $savekpi = new KPIResult;
+                        $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
+                        $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
+                        $savekpi->user_id = Auth::user()->user_id;
+                        $savekpi->month = $period == 'Annual' ? 'null' : $filtermonth;
+                        $savekpi->year = $period == $filteryear;
+                        $savekpi->set_to_all = $set;
+                        $savekpi->target = isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
+                        $savekpi->weight = isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
+                        $savekpi->submitted_by = Auth::user()->employee_name;
+                        $savekpi->last_modified_by = Auth::user()->employee_name;
+                        $savekpi->save();
+                    }
+                }
+                foreach ($data_input_id as $key => $input) {
+                    $scores = new DataInputModel;
+                    $scores->user_id = Auth::user()->user_id;
+                    $scores->answer = isset($ans[$key]) ? $ans[$key] : '';
+                    $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : '';
+                    $scores->month = $period == 'Annual' ? 'null' : $filtermonth;
+                    $scores->year = $filteryear;
+                    $scores->date_submitted = $date;
+                    $scores->due_date = $submission_date; //
+                    $scores->status = $status; //
+                    $scores->evaluation_period = $period; //
+                    $scores->submitted_by = Auth::user()->employee_name;
+                    $scores->last_modified_by = Auth::user()->employee_name;
+                    $scores->save();
+                }
+
+                return response()->json(['message' => 'Form is successfully submitted']);
             }
 
-            $data = $request->all();
-            $ans = $data['answer'];
-            $data_input_id = $data['input_id'];
-            $answerkpi = $data['answerkpi'];
-            $set_manual = $data['set_manual'];
-            $kpiID = $data['kpiID'];
-            $kpi_target = $data['kpi_target'];
-            $kpi_weight = $data['kpi_weight'];
-            $period = $request->eval_period;
-            $filtermonth = date('m', strtotime('-1 months', strtotime($request->schedule_date)));
-            $filteryear = date('Y', strtotime('-1 months', strtotime($request->schedule_date)));
-            $submission_date = Carbon::parse($request->schedule_date)->format('Y-m-d');
-            $date_submitted = date('Y-m-d');
-            $status = $date_submitted > $submission_date ? 'late' : 'on time';
-
-
-            if ($depart == 'employee') {
-                if(DB::table('kpi_datainput_result')
-                    ->where('due_date', '=', $submission_date)
-                    ->where('year', '=', $filteryear)
-                    ->where('month', '=', $filtermonth)
-                    ->where('user_id', '=', $request->user_id)
-                    ->exists()){
-                    return response()->json(['message' => '1']);   
-                }
-                else
-                {
-                    foreach($answerkpi as $keys => $inputs) {
-                        $set=0;
-                        if ($inputs > 0) {
-                            $savekpi = new KPIResult;
-                            $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
-                            $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
-                            $savekpi->user_id=Auth::user()->user_id;
-                            $savekpi->month = $period == 'Annual'? 'null': $filtermonth;
-                            $savekpi->year = $period == $filteryear;
-                            $savekpi->set_to_all =$set;
-                            $savekpi->target =isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
-                            $savekpi->weight =isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
-                            $savekpi->submitted_by =  Auth::user()->employee_name;
-                            $savekpi->last_modified_by =  Auth::user()->employee_name;
-                            $savekpi->save();
-                        }            
-                    }
-                    foreach($data_input_id as $key => $input) {
+        } else {
+            if ($request->entry_val == 'per_department') {
+                if (DB::table('kpi_datainput_result')
+                    ->select('kpi.department_id', 'kpi_datainput_result.month', 'kpi_datainput_result.year')
+                    ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                    ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
+                    ->join('kpi', 'metrics.kpi_id', '=', 'kpi.kpi_id')
+                    ->where('kpi.department_id', '=', $request->depart_id)
+                    ->where('kpi_datainput_result.due_date', '=', $submission_date)
+                    ->where('kpi_datainput_result.year', '=', $filteryear)
+                    ->where('kpi_datainput_result.month', '=', $filtermonth)
+                    ->where('kpi_datainput_result.user_id', '=', null)
+                    ->exists()) {
+                    return response()->json(['message' => '1']);
+                } else {
+                    $set = '1';
+                    foreach ($data_input_id as $key => $input) {
                         $scores = new DataInputModel;
-                        $scores->user_id=  Auth::user()->user_id;
-                        $scores->answer = isset($ans[$key]) ? $ans[$key] : ''; 
-                        $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : ''; 
-                        $scores->month = $period == 'Annual'? 'null': $filtermonth;
+                        $scores->user_id = null;
+                        $scores->answer = isset($ans[$key]) ? $ans[$key] : '';
+                        $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : '';
+                        $scores->month = $period == 'Annual' ? 'null' : $filtermonth;
                         $scores->year = $filteryear;
                         $scores->date_submitted = $date;
                         $scores->due_date = $submission_date; //
                         $scores->status = $status; //
                         $scores->evaluation_period = $period; //
-                        $scores->submitted_by =  Auth::user()->employee_name;
-                        $scores->last_modified_by =  Auth::user()->employee_name;
+                        $scores->submitted_by = Auth::user()->employee_name;
+                        $scores->last_modified_by = Auth::user()->employee_name;
                         $scores->save();
                     }
-                    return response()->json(['message' => "Form is successfully submitted"]);
-                }
-            
-            }else{
-                    if($request->entry_val == 'per_department'){
-                        if (DB::table('kpi_datainput_result')
-                            ->select('kpi.department_id','kpi_datainput_result.month','kpi_datainput_result.year')
-                            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-                            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
-                            ->join('kpi', 'metrics.kpi_id','=','kpi.kpi_id')
-                            ->where('kpi.department_id', '=', $request->depart_id)
-                            ->where('kpi_datainput_result.due_date', '=', $submission_date)
-                            ->where('kpi_datainput_result.year', '=', $filteryear)
-                            ->where('kpi_datainput_result.month', '=', $filtermonth)
-                            ->where('kpi_datainput_result.user_id', '=', null)
-                            ->exists()){
-                                return response()->json(['message' => '1']);
-                            }
-                        else{
-                            $set='1';
-                            foreach($data_input_id as $key => $input) {
-                                $scores = new DataInputModel;
-                                $scores->user_id=  null;
-                                $scores->answer = isset($ans[$key]) ? $ans[$key] : ''; 
-                                $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : ''; 
-                                $scores->month = $period == 'Annual'? 'null': $filtermonth;
-                                $scores->year = $filteryear;
-                                $scores->date_submitted = $date;
-                                $scores->due_date = $submission_date; //
-                                $scores->status = $status; //
-                                $scores->evaluation_period = $period; //
-                                $scores->submitted_by =   Auth::user()->employee_name;
-                                $scores->last_modified_by =  Auth::user()->employee_name;
-                                $scores->save();
-                            }
-                            foreach($answerkpi as $keys => $inputs){
-                                if ($inputs > 0) {
-                                    $savekpi = new KPIResult;
-                                    $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
-                                    $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
-                                    $savekpi->user_id=null;
-                                    $savekpi->month=$period == 'Annual'? 'null': $filtermonth;
-                                    $savekpi->year = $filteryear;
-                                    $savekpi->set_to_all =$set;
-                                    $savekpi->target =isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
-                                    $savekpi->weight =isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
-                                    $savekpi->submitted_by =  Auth::user()->employee_name;
-                                    $savekpi->last_modified_by =  Auth::user()->employee_name;
-                                    $savekpi->save();
-                                    }
-                                }
-                                return response()->json(['message' => "Form is successfully submitted"]);
-                            }
-                    }else
-                    {  
-                        if (DB::table('kpi_datainput_result')   
-                            ->where('due_date', '=', $submission_date)
-                            ->where('year', '=', $filteryear)
-                            ->where('month', '=', $filtermonth)
-                            ->where('user_id', '=', $request->user_id)
-                            ->exists()){
-                        return response()->json(['message' => '1']);
-                        }
-                        else{ 
-                            $user_n=Auth::user()->user_id;
-                            $set='0';
-                            foreach($answerkpi as $keys => $inputs) {
-                                if ($inputs > 0) {
-                                    $savekpi = new KPIResult;
-                                    $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
-                                    $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
-                                    $savekpi->user_id=$request->user_id;
-                                    $savekpi->month = $period == 'Annual'? 'null': $filtermonth;
-                                    $savekpi->year = $filteryear;
-                                    $savekpi->set_to_all =$set;
-                                    $savekpi->target =isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
-                                    $savekpi->weight =isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
-                                    $savekpi->submitted_by =  Auth::user()->employee_name;
-                                    $savekpi->last_modified_by =  Auth::user()->employee_name;
-                                    $savekpi->save();
-                                }                           
-                            }  
-                            foreach($data_input_id as $key => $input) {
-                                $scores = new DataInputModel;
-                                $scores->user_id= $request->user_id;
-                                $scores->answer = isset($ans[$key]) ? $ans[$key] : ''; 
-                                $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : ''; 
-                                $scores->month = $period == 'Annual'? 'null': $filtermonth;
-                                         $scores->year = $filteryear;
-                                $scores->date_submitted = $date;
-                                $scores->due_date = $submission_date; //
-                                $scores->status = $status; //
-                                $scores->evaluation_period = $period; //
-                                $scores->submitted_by = Auth::user()->employee_name;
-                                $scores->last_modified_by =  Auth::user()->employee_name;
-                                $scores->save();
-                            }
-                            return response()->json(['message' => "Form is successfully submitted!"]);
+                    foreach ($answerkpi as $keys => $inputs) {
+                        if ($inputs > 0) {
+                            $savekpi = new KPIResult;
+                            $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
+                            $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
+                            $savekpi->user_id = null;
+                            $savekpi->month = $period == 'Annual' ? 'null' : $filtermonth;
+                            $savekpi->year = $filteryear;
+                            $savekpi->set_to_all = $set;
+                            $savekpi->target = isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
+                            $savekpi->weight = isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
+                            $savekpi->submitted_by = Auth::user()->employee_name;
+                            $savekpi->last_modified_by = Auth::user()->employee_name;
+                            $savekpi->save();
                         }
                     }
-                }  
-    }
-    //    
 
-    public function gettblDatainput($user_id,$year,$sched){
-       
-        
-       
-        $data=DB::table('metrics')
-        ->select('data_input.input_id','data_input.data_input','kpi_datainput_result.answer','kpi_datainput_result.month','kpi_datainput_result.user_id','kpi_datainput_result.answer','kpi_datainput_result.data_input_id','kpi_datainput_result.year','kpi.kpi_description','kpi.kpi_id','kpi.evaluation_period','kpi.department_id')
-        ->join('data_input','metrics.metric_id','=','data_input.metric_id')
-        ->join('kpi_datainput_result','kpi_datainput_result.data_input_id','=','data_input.input_id')
-        ->join('kpi','metrics.kpi_id','=','kpi.kpi_id')
-        ->whereIn('kpi_datainput_result.user_id', [null,Auth::user()->user_id])
-        ->where('kpi.department_id', Auth::user()->department_id)
+                    return response()->json(['message' => 'Form is successfully submitted']);
+                }
+            } else {
+                if (DB::table('kpi_datainput_result')
+                    ->where('due_date', '=', $submission_date)
+                    ->where('year', '=', $filteryear)
+                    ->where('month', '=', $filtermonth)
+                    ->where('user_id', '=', $request->user_id)
+                    ->exists()) {
+                    return response()->json(['message' => '1']);
+                } else {
+                    $user_n = Auth::user()->user_id;
+                    $set = '0';
+                    foreach ($answerkpi as $keys => $inputs) {
+                        if ($inputs > 0) {
+                            $savekpi = new KPIResult;
+                            $savekpi->kpi_id = isset($kpiID[$keys]) ? $kpiID[$keys] : '';
+                            $savekpi->kpi_answer = isset($answerkpi[$keys]) ? $answerkpi[$keys] : '';
+                            $savekpi->user_id = $request->user_id;
+                            $savekpi->month = $period == 'Annual' ? 'null' : $filtermonth;
+                            $savekpi->year = $filteryear;
+                            $savekpi->set_to_all = $set;
+                            $savekpi->target = isset($kpi_target[$keys]) ? $kpi_target[$keys] : '';
+                            $savekpi->weight = isset($kpi_weight[$keys]) ? $kpi_weight[$keys] : '';
+                            $savekpi->submitted_by = Auth::user()->employee_name;
+                            $savekpi->last_modified_by = Auth::user()->employee_name;
+                            $savekpi->save();
+                        }
+                    }
+                    foreach ($data_input_id as $key => $input) {
+                        $scores = new DataInputModel;
+                        $scores->user_id = $request->user_id;
+                        $scores->answer = isset($ans[$key]) ? $ans[$key] : '';
+                        $scores->data_input_id = isset($data_input_id[$key]) ? $data_input_id[$key] : '';
+                        $scores->month = $period == 'Annual' ? 'null' : $filtermonth;
+                        $scores->year = $filteryear;
+                        $scores->date_submitted = $date;
+                        $scores->due_date = $submission_date; //
+                        $scores->status = $status; //
+                        $scores->evaluation_period = $period; //
+                        $scores->submitted_by = Auth::user()->employee_name;
+                        $scores->last_modified_by = Auth::user()->employee_name;
+                        $scores->save();
+                    }
+
+                    return response()->json(['message' => 'Form is successfully submitted!']);
+                }
+            }
+        }
+    }
+    //
+
+    public function gettblDatainput($user_id, $year, $sched)
+    {
+
+        $data = DB::table('metrics')
+            ->select('data_input.input_id', 'data_input.data_input', 'kpi_datainput_result.answer', 'kpi_datainput_result.month', 'kpi_datainput_result.user_id', 'kpi_datainput_result.answer', 'kpi_datainput_result.data_input_id', 'kpi_datainput_result.year', 'kpi.kpi_description', 'kpi.kpi_id', 'kpi.evaluation_period', 'kpi.department_id')
+            ->join('data_input', 'metrics.metric_id', '=', 'data_input.metric_id')
+            ->join('kpi_datainput_result', 'kpi_datainput_result.data_input_id', '=', 'data_input.input_id')
+            ->join('kpi', 'metrics.kpi_id', '=', 'kpi.kpi_id')
+            ->whereIn('kpi_datainput_result.user_id', [null, Auth::user()->user_id])
+            ->where('kpi.department_id', Auth::user()->department_id)
         // ->where('kpi_datainput_result.user_id', null)
-        ->where('kpi_datainput_result.month', $user_id)
-        ->where('kpi_datainput_result.year', $year)
-        ->where('kpi.evaluation_period', $sched)
-        ->get();
+            ->where('kpi_datainput_result.month', $user_id)
+            ->where('kpi_datainput_result.year', $year)
+            ->where('kpi.evaluation_period', $sched)
+            ->get();
 
         return $data;
     }
 
-    public function tbldatainput(Request $request){
-        $tbldatainput= array();
-        $getdata=$this->gettblDatainput($request->filmonths,$request->filyears,$request->schedentry);
-        $tbldatainput= collect($getdata)->groupBy('kpi_description');
+    public function tbldatainput(Request $request)
+    {
+        $tbldatainput = [];
+        $getdata = $this->gettblDatainput($request->filmonths, $request->filyears, $request->schedentry);
+        $tbldatainput = collect($getdata)->groupBy('kpi_description');
 
         // Get current page form url e.x. &page=1
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
-     
+
         // Create a new Laravel collection from the array data
         $itemCollection = collect($tbldatainput);
-     
+
         // Define how many items we want to be visible in each page
         $perPage = 1;
-     
+
         // Slice the collection to get the items to display in current page
         $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->all();
-     
+
         // Create our paginator and pass it to the view
-        $paginatedItems= new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
-     
+        $paginatedItems = new LengthAwarePaginator($currentPageItems, count($itemCollection), $perPage);
+
         // set url path for generted links
         $paginatedItems->setPath($request->url());
 
         $data = $paginatedItems;
+
         return view('client.modules.evaluation.metrics.datainput_table', compact('data'));
     }
 
-    public function metricdata($kpi,$user_id){
-        $datametric= DB::table('data_input')
-            ->select('metrics.metric_description','metrics.kpi_id','metrics.metric_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
-            ->where('metrics.kpi_id',$kpi)->distinct()->get();
+    public function metricdata($kpi, $user_id)
+    {
+        $datametric = DB::table('data_input')
+            ->select('metrics.metric_description', 'metrics.kpi_id', 'metrics.metric_id')
+            ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
+            ->where('metrics.kpi_id', $kpi)->distinct()->get();
 
-        $data=[];
+        $data = [];
         foreach ($datametric as $key) {
-            $datain= DB::table('kpi_datainput_result')
-                ->select('data_input.data_input','kpi_datainput_result.answer','kpi_datainput_result.user_id','kpi_datainput_result.month','kpi_datainput_result.year')
-                ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-                ->where('data_input.metric_id',$key->metric_id)->where('user_id', $user_id)
+            $datain = DB::table('kpi_datainput_result')
+                ->select('data_input.data_input', 'kpi_datainput_result.answer', 'kpi_datainput_result.user_id', 'kpi_datainput_result.month', 'kpi_datainput_result.year')
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->where('data_input.metric_id', $key->metric_id)->where('user_id', $user_id)
                 ->where('kpi_datainput_result.month', 7)
                 ->where('kpi_datainput_result.year', 2019)
                 ->get();
 
             $data[] = [
-                'metric_id'=>$key->metric_id,
-                'metric_description'=>$key->metric_description,
-                'kpi_id'=>$key->kpi_id,
-                'nodessss' => $datain
+                'metric_id' => $key->metric_id,
+                'metric_description' => $key->metric_description,
+                'kpi_id' => $key->kpi_id,
+                'nodessss' => $datain,
             ];
         }
 
         return $data;
     }
 
-    public function datainputt($desig, $kpi){
-        $datametric = DB::table('users')->select('user_id','employee_name')->where('designation_id', $desig )->get();
+    public function datainputt($desig, $kpi)
+    {
+        $datametric = DB::table('users')->select('user_id', 'employee_name')->where('designation_id', $desig)->get();
         foreach ($datametric as $key) {
             $data[] = [
-                'user_id'=>$key->user_id,
-                'employee_name'=>$key->employee_name,
-                'nodesss' => $this->metricdata($kpi,$key->user_id)
+                'user_id' => $key->user_id,
+                'employee_name' => $key->employee_name,
+                'nodesss' => $this->metricdata($kpi, $key->user_id),
             ];
         }
 
         return $data;
     }
 
-    public function mtric($kpi){
+    public function mtric($kpi)
+    {
         $metrics_table = DB::table('kpi_per_designation')
-                ->select('kpi_per_designation.kpi_id','kpi_per_designation.designation_id','designation.designation')
-                ->join('designation','designation.des_id','=','kpi_per_designation.designation_id')
-                ->where('kpi_id', $kpi )->distinct()->get();
-        
+            ->select('kpi_per_designation.kpi_id', 'kpi_per_designation.designation_id', 'designation.designation')
+            ->join('designation', 'designation.des_id', '=', 'kpi_per_designation.designation_id')
+            ->where('kpi_id', $kpi)->distinct()->get();
+
         $data = [];
         foreach ($metrics_table as $key) {
             $data[] = [
-                'designation_id'=>$key->designation_id,
-                'designation'=>$key->designation,
-                'nodess' => $this->datainputt($key->designation_id, $kpi)
+                'designation_id' => $key->designation_id,
+                'designation' => $key->designation,
+                'nodess' => $this->datainputt($key->designation_id, $kpi),
             ];
         }
 
         return $data;
     }
 
-    public function overview_index(){
+    public function overview_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $department_heads= DB::table('department_head_list')
-                            ->join('departments','department_head_list.department_id','=','departments.department_id')
-                            ->where('employee_id',Auth::user()->user_id)->get();
+        $department_heads = DB::table('department_head_list')
+            ->join('departments', 'department_head_list.department_id', '=', 'departments.department_id')
+            ->where('employee_id', Auth::user()->user_id)->get();
 
-        return view('client.modules.evaluation.overview.index', compact('designation', 'department', 'department_heads','datainput_table'));
+        return view('client.modules.evaluation.overview.index', compact('designation', 'department', 'department_heads', 'datainput_table'));
     }
 
-    public function getdatainput_overview(Request $request){
+    public function getdatainput_overview(Request $request)
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $department_heads= DB::table('department_head_list')
-                            ->join('departments','department_head_list.department_id','=','departments.department_id')
-                            ->where('employee_id',Auth::user()->user_id)->get();
+        $department_heads = DB::table('department_head_list')
+            ->join('departments', 'department_head_list.department_id', '=', 'departments.department_id')
+            ->where('employee_id', Auth::user()->user_id)->get();
 
         $kpi_table = DB::table('kpi')->where('kpi.department_id', $request->dept)->get();
         $datainput_table = [];
@@ -2773,7 +2856,7 @@ class EvaluationController extends Controller
                 'kpi_id' => $row->kpi_id,
                 'kpi_description' => $row->kpi_description,
                 'department_id' => $row->department_id,
-                'nodes' => $this->mtric($row->kpi_id)
+                'nodes' => $this->mtric($row->kpi_id),
             ];
         }
 
@@ -2781,33 +2864,37 @@ class EvaluationController extends Controller
     }
 
     // kpi per department start
-    public function accounting_index(){
+    public function accounting_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 1)
-        ->get();
-        return view('client.modules.evaluation.overview.department.accounting.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 1)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.accounting.index', compact('designation', 'department', 'kpi'));
     }
 
-    public function accounting_index2(){
+    public function accounting_index2()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $kpi = DB::table('kpi')->where('kpi.department_id', 1)->get();
 
-        return view('client.modules.evaluation.overview.department.accounting.index2', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.accounting.index2', compact('designation', 'department', 'kpi'));
     }
 
-    public function pinvPerMonthChart($year){
+    public function pinvPerMonthChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         $pinvs = DB::connection('mysql_erp')->table('tabPurchase Invoice')
-                ->where('docstatus', 1)->whereYear('posting_date', $year)
-                ->where('company', 'FUMACO Inc.')
-                ->selectRaw('tc_name, MONTH(posting_date) as m')->get();
+            ->where('docstatus', 1)->whereYear('posting_date', $year)
+            ->where('company', 'FUMACO Inc.')
+            ->selectRaw('tc_name, MONTH(posting_date) as m')->get();
 
         $chart_data = [];
         $month_no = $year == date('Y') ? date('m') : 12;
@@ -2827,7 +2914,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function salesInvAnalysis(Request $request, $year){
+    public function salesInvAnalysis(Request $request, $year)
+    {
         $branch = $request->branch;
         $type = $request->type;
         $month = $request->month;
@@ -2910,15 +2998,15 @@ class EvaluationController extends Controller
             ->where('tc_name', '!=', 'Cash')
             ->select('issued_date as si_posting_date', 'tc_name', 'name', 'sales_invoice_reference_no', 'customer', 'grand_total', 'status')
             ->get();
-        
+
         $beyond_terms = 0;
         $beyond_terms_arr = [];
         foreach ($beyond_terms_paid as $value) {
             $days = 0;
-            $splittedstring = explode(" ", $value->tc_name);
+            $splittedstring = explode(' ', $value->tc_name);
             foreach ($splittedstring as $val) {
-                if ((int)$val) {
-                    $days = (int)$val;
+                if ((int) $val) {
+                    $days = (int) $val;
                 }
             }
 
@@ -2941,10 +3029,10 @@ class EvaluationController extends Controller
 
         foreach ($beyond_terms_unpaid as $value) {
             $days = 0;
-            $splittedstring = explode(" ", $value->tc_name);
+            $splittedstring = explode(' ', $value->tc_name);
             foreach ($splittedstring as $val) {
-                if ((int)$val) {
-                    $days = (int)$val;
+                if ((int) $val) {
+                    $days = (int) $val;
                 }
             }
 
@@ -2975,13 +3063,14 @@ class EvaluationController extends Controller
             'beyond_terms' => $beyond_terms,
             'beyond_terms_list' => $beyond_terms_arr,
             'delinquent' => $delinquent,
-            'percentage' => round($percentage, 2)
+            'percentage' => round($percentage, 2),
         ];
 
         return $data;
     }
 
-    public function salesInvAnalysisCtx(Request $request, $year){
+    public function salesInvAnalysisCtx(Request $request, $year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -3000,7 +3089,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function purchaseInvAnalysis(Request $request, $year){
+    public function purchaseInvAnalysis(Request $request, $year)
+    {
         $branch = $request->branch;
         $month = $request->month;
         $pinv = DB::connection('mysql_erp')->table('tabPurchase Invoice')
@@ -3063,15 +3153,15 @@ class EvaluationController extends Controller
             })
             ->where('docstatus', 1)->whereIn('status', ['Unpaid', 'Overdue'])
             ->where('tc_name', '!=', 'Cash')->get();
-        
+
         $beyond_terms = 0;
         $beyond_terms_arr = [];
         foreach ($beyond_terms_paid as $value) {
             $days = 0;
-            $splittedstring = explode(" ", $value->tc_name);
+            $splittedstring = explode(' ', $value->tc_name);
             foreach ($splittedstring as $val) {
-                if ((int)$val) {
-                    $days = (int)$val;
+                if ((int) $val) {
+                    $days = (int) $val;
                 }
             }
 
@@ -3089,10 +3179,10 @@ class EvaluationController extends Controller
 
         foreach ($beyond_terms_unpaid as $value) {
             $days = 0;
-            $splittedstring = explode(" ", $value->tc_name);
+            $splittedstring = explode(' ', $value->tc_name);
             foreach ($splittedstring as $val) {
-                if ((int)$val) {
-                    $days = (int)$val;
+                if ((int) $val) {
+                    $days = (int) $val;
                 }
             }
 
@@ -3117,13 +3207,14 @@ class EvaluationController extends Controller
             'delinquent_pinv' => $delinquent_pinv,
             'beyond_terms' => $beyond_terms,
             'delinquent' => $delinquent,
-            'percentage' => round($percentage, 2)
+            'percentage' => round($percentage, 2),
         ];
 
         return $data;
     }
 
-    public function purchaseInvAnalysisCtx(Request $request, $year){
+    public function purchaseInvAnalysisCtx(Request $request, $year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -3142,7 +3233,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function cashReceiptChart(Request $request, $year){
+    public function cashReceiptChart(Request $request, $year)
+    {
         $branch = $request->branch;
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -3150,7 +3242,7 @@ class EvaluationController extends Controller
         $chart_data = [];
         $month_no = $year == date('Y') ? date('m') : 12;
         for ($i = 1; $i <= $month_no; $i++) {
-           $je = DB::connection('mysql_erp')->table('tabJournal Entry AS je')
+            $je = DB::connection('mysql_erp')->table('tabJournal Entry AS je')
                 ->join('tabJournal Entry Account AS jea', 'je.name', 'jea.parent')
                 ->selectRaw('sum(jea.debit_in_account_currency) as debit')
                 ->where('je.docstatus', 1)
@@ -3164,18 +3256,18 @@ class EvaluationController extends Controller
                 ->whereMonth('je.posting_date', $i);
 
             $ge = DB::connection('mysql_erp')->table('tabGL Entry AS ge')->join('tabPayment Entry AS pe', 'ge.voucher_no', 'pe.name')
-                    ->selectRaw('sum(ge.debit) as debit')
-                    ->where('ge.docstatus', 1)
-                    ->where('ge.company', 'FUMACO Inc.')
-                    ->where('ge.voucher_type', 'Payment Entry')
-                    ->where('pe.party_type', 'Customer')
-                    ->whereYear('ge.posting_date', $year)
-                    ->whereMonth('ge.posting_date', $i)
-                    ->when($branch, function ($query, $branch) {
-                        return $query->whereRaw('(SELECT branch FROM `tabUser` where name = ge.owner) = ?', $branch);
-                    })
-                    ->union($je)
-                    ->sum('debit');
+                ->selectRaw('sum(ge.debit) as debit')
+                ->where('ge.docstatus', 1)
+                ->where('ge.company', 'FUMACO Inc.')
+                ->where('ge.voucher_type', 'Payment Entry')
+                ->where('pe.party_type', 'Customer')
+                ->whereYear('ge.posting_date', $year)
+                ->whereMonth('ge.posting_date', $i)
+                ->when($branch, function ($query, $branch) {
+                    return $query->whereRaw('(SELECT branch FROM `tabUser` where name = ge.owner) = ?', $branch);
+                })
+                ->union($je)
+                ->sum('debit');
 
             $chart_data[] = [
                 'month' => $months[$i],
@@ -3186,7 +3278,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function cashDisbursementChart(Request $request, $year){
+    public function cashDisbursementChart(Request $request, $year)
+    {
         $branch = $request->branch;
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -3194,7 +3287,7 @@ class EvaluationController extends Controller
         $chart_data = [];
         $month_no = $year == date('Y') ? date('m') : 12;
         for ($i = 1; $i <= $month_no; $i++) {
-           $je = DB::connection('mysql_erp')->table('tabJournal Entry AS je')
+            $je = DB::connection('mysql_erp')->table('tabJournal Entry AS je')
                 ->join('tabJournal Entry Account AS jea', 'je.name', 'jea.parent')
                 ->selectRaw('sum(jea.debit_in_account_currency) as debit')
                 ->where('je.docstatus', 1)
@@ -3208,18 +3301,18 @@ class EvaluationController extends Controller
                 ->whereMonth('je.posting_date', $i);
 
             $ge = DB::connection('mysql_erp')->table('tabGL Entry AS ge')->join('tabPayment Entry AS pe', 'ge.voucher_no', 'pe.name')
-                    ->selectRaw('sum(ge.debit) as debit')
-                    ->where('ge.docstatus', 1)
-                    ->where('ge.company', 'FUMACO Inc.')
-                    ->where('ge.voucher_type', 'Payment Entry')
-                    ->where('pe.payment_type', 'Pay')
-                    ->whereYear('ge.posting_date', $year)
-                    ->whereMonth('ge.posting_date', $i)
-                    ->when($branch, function ($query, $branch) {
+                ->selectRaw('sum(ge.debit) as debit')
+                ->where('ge.docstatus', 1)
+                ->where('ge.company', 'FUMACO Inc.')
+                ->where('ge.voucher_type', 'Payment Entry')
+                ->where('pe.payment_type', 'Pay')
+                ->whereYear('ge.posting_date', $year)
+                ->whereMonth('ge.posting_date', $i)
+                ->when($branch, function ($query, $branch) {
                     return $query->whereRaw('(SELECT branch FROM `tabUser` where name = ge.owner) = ?', $branch);
                 })
-                    ->unionAll($je)
-                    ->sum('debit');
+                ->unionAll($je)
+                ->sum('debit');
 
             $chart_data[] = [
                 'month' => $months[$i],
@@ -3230,7 +3323,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function topExpenses($year){
+    public function topExpenses($year)
+    {
         $expenses = DB::connection('mysql_erp')->table('tabExpense Claim Detail AS ecd')
             ->join('tabExpense Claim AS ec', 'ecd.parent', 'ec.name')
             ->where('ec.company', 'FUMACO Inc.')->whereYear('expense_date', $year)
@@ -3240,7 +3334,8 @@ class EvaluationController extends Controller
         return response()->json($expenses);
     }
 
-    public function sales_index(){
+    public function sales_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -3250,18 +3345,17 @@ class EvaluationController extends Controller
         $prev = $current - 1;
 
         $sales_current = DB::connection('mysql_erp')->table('tabSales Order')
-                ->whereYear('transaction_date', $current)->where('docstatus', 1)
-                ->where('status', '!=', 'Closed')->where('company', 'FUMACO Inc.')
-                ->sum('grand_total');
+            ->whereYear('transaction_date', $current)->where('docstatus', 1)
+            ->where('status', '!=', 'Closed')->where('company', 'FUMACO Inc.')
+            ->sum('grand_total');
 
         $sales_prev = DB::connection('mysql_erp')->table('tabSales Order')
-                ->whereYear('transaction_date', $prev)->where('docstatus', 1)
-                ->where('status', '!=', 'Closed')->where('company', 'FUMACO Inc.')
-                ->sum('grand_total');
+            ->whereYear('transaction_date', $prev)->where('docstatus', 1)
+            ->where('status', '!=', 'Closed')->where('company', 'FUMACO Inc.')
+            ->sum('grand_total');
 
         $sales_current_shorten = $this->shortenNumeral($sales_current);
         $sales_prev_shorten = $this->shortenNumeral($sales_prev);
-
 
         $annual_sales = [
             'current_sales_shorten' => $sales_current_shorten,
@@ -3272,10 +3366,11 @@ class EvaluationController extends Controller
             'previous_year' => $prev,
         ];
 
-        return view('client.modules.evaluation.overview.department.sales.index', compact('designation', 'department','kpi', 'annual_sales'));  
+        return view('client.modules.evaluation.overview.department.sales.index', compact('designation', 'department', 'kpi', 'annual_sales'));
     }
 
-    public function sales_totals(){
+    public function sales_totals()
+    {
         $sales_order = DB::connection('mysql_erp')->table('tabSales Order')
             ->where('docstatus', 1)->count();
         $overdue_sales_order = DB::connection('mysql_erp')->table('tabSales Order')
@@ -3294,13 +3389,14 @@ class EvaluationController extends Controller
             'sales_order' => $sales_order,
             'overdue_sales_order' => $overdue_sales_order,
             'delivery_note' => $delivery_note,
-            'for_delivery' => $for_delivery
+            'for_delivery' => $for_delivery,
         ];
 
         return response()->json($data);
     }
 
-    public function salesChart($year){
+    public function salesChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
@@ -3324,16 +3420,17 @@ class EvaluationController extends Controller
                 'total' => round($overall, 2),
                 'regular_sales' => round($reg, 2),
                 'sales_consignment' => round($consignment, 2),
-                'sales_dr' => round($dr, 2)
+                'sales_dr' => round($dr, 2),
             ];
         }
 
         return response()->json($chart_data);
     }
 
-    public function opportunityStats($year){
+    public function opportunityStats($year)
+    {
         $opty = DB::connection('mysql_erp')->table('tabOpportunity')
-        ->whereYear('creation', $year)->select('status')->get();
+            ->whereYear('creation', $year)->select('status')->get();
 
         $won = collect($opty)->where('status', 'Won')->count();
         $open = collect($opty)->where('status', 'Open')->count();
@@ -3350,81 +3447,88 @@ class EvaluationController extends Controller
         return response()->json($data);
     }
 
-    public function shortenNumeral($n){
-        if ($n < 1000) return $n;
-        $suffix = ['','k','M','G','T','P','E','Z','Y'];
+    public function shortenNumeral($n)
+    {
+        if ($n < 1000) {
+            return $n;
+        }
+        $suffix = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
         $power = floor(log($n, 1000));
 
-        return round($n/(1000**$power),1,PHP_ROUND_HALF_EVEN).$suffix[$power];
+        return round($n / (1000 ** $power), 1, PHP_ROUND_HALF_EVEN).$suffix[$power];
     }
-    
-    public function engineering_index(){
+
+    public function engineering_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 3)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 3)
+            ->get();
 
         $last_update = DB::table('kpi_datainput_result')->whereIn('data_input_id', [75, 7, 8])->max('date_submitted');
 
-        return view('client.modules.evaluation.overview.department.engineering.index', compact('designation', 'department','kpi', 'last_update'));
+        return view('client.modules.evaluation.overview.department.engineering.index', compact('designation', 'department', 'kpi', 'last_update'));
     }
 
-    public function customer_service_index(){
+    public function customer_service_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 4)
-        ->get();
-        return view('client.modules.evaluation.overview.department.customer_service.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 4)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.customer_service.index', compact('designation', 'department', 'kpi'));
     }
 
-    public function cskpi1_stat(Request $request){
+    public function cskpi1_stat(Request $request)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $current= date('n');
-        $current_year= date('Y');
+        $current = date('n');
+        $current_year = date('Y');
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(43);
-            $percentage= collect($target)->sum('target');
+            $target = $this->target_kpi(43);
+            $percentage = collect($target)->sum('target');
             $i = $i + 1;
             $data_inputs = DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
-            ->where('kpi_datainput_result.month', $i)
-            ->where('kpi_datainput_result.year',$request->year)
-            ->get();
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
+                ->where('kpi_datainput_result.month', $i)
+                ->where('kpi_datainput_result.year', $request->year)
+                ->get();
 
             $product_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 272)->sum('answer');
-            $product_perf_avg = ($product_perf/4)  ;
+            $product_perf_avg = ($product_perf / 4);
             $delandserv_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 273)->sum('answer');
-            $delandserv_perf_avg = ($delandserv_perf/4);
+            $delandserv_perf_avg = ($delandserv_perf / 4);
             $tech_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 274)->sum('answer');
-            $tech_perf_avg = ($tech_perf/4);
+            $tech_perf_avg = ($tech_perf / 4);
 
             $sales_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 275)->sum('answer');
-            $sales_perf_avg = ($sales_perf/5);
+            $sales_perf_avg = ($sales_perf / 5);
             $price_cost_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 276)->sum('answer');
-            $price_cost_perf_avg = ($price_cost_perf/3);
+            $price_cost_perf_avg = ($price_cost_perf / 3);
 
-            $computation= ($product_perf_avg + $delandserv_perf_avg + $tech_perf_avg + $sales_perf_avg + $price_cost_perf_avg)/5 ;
+            $computation = ($product_perf_avg + $delandserv_perf_avg + $tech_perf_avg + $sales_perf_avg + $price_cost_perf_avg) / 5;
 
             if ($current_year == $request->year) {
-                    if ($i <= $current) {
-                        $data[] = [
+                if ($i <= $current) {
+                    $data[] = [
                         'month' => $month,
-                        'total' => round($computation,2),
-                        'target'=>$percentage,
+                        'total' => round($computation, 2),
+                        'target' => $percentage,
                     ];
                 }
-            }else{
-              $data[] = [
+            } else {
+                $data[] = [
                     'month' => $month,
-                    'total' => round($computation,2),
-                    'target'=>$percentage,
+                    'total' => round($computation, 2),
+                    'target' => $percentage,
                 ];
             }
         }
@@ -3432,14 +3536,15 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function within_departmentfaultPie(Request $request, $year){
+    public function within_departmentfaultPie(Request $request, $year)
+    {
         $month = $request->month;
         $total_delivery_order = DB::table('kpi_datainput_result')
-                ->where('user_id', null)->where('data_input_id', 175)
-                ->when($month, function ($query, $month) {
-                    return $query->where('month', $month);
-                })
-                ->where('year', $year)->sum('answer');
+            ->where('user_id', null)->where('data_input_id', 175)
+            ->when($month, function ($query, $month) {
+                return $query->where('month', $month);
+            })
+            ->where('year', $year)->sum('answer');
 
         $ids = [176, 177, 178];
         $data_inputs = DB::table('kpi_datainput_result')
@@ -3454,21 +3559,22 @@ class EvaluationController extends Controller
             $percentage = ($total_delivery_order > 0) ? ($input_result / $total_delivery_order) * 100 : 0;
             $inputs[] = [
                 'cause' => $cause->data_input,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
         return response()->json($inputs);
     }
 
-    public function not_within_departmentfaultPie(Request $request, $year){
+    public function not_within_departmentfaultPie(Request $request, $year)
+    {
         $month = $request->month;
         $total_delivery_order = DB::table('kpi_datainput_result')
-                ->where('user_id', null)->where('data_input_id', 175)
-                ->when($month, function ($query, $month) {
-                    return $query->where('month', $month);
-                })
-                ->where('year', $year)->sum('answer');
+            ->where('user_id', null)->where('data_input_id', 175)
+            ->when($month, function ($query, $month) {
+                return $query->where('month', $month);
+            })
+            ->where('year', $year)->sum('answer');
 
         $ids = [179, 180, 181, 182, 183, 184, 185];
         $data_inputs = DB::table('kpi_datainput_result')
@@ -3483,59 +3589,60 @@ class EvaluationController extends Controller
             $percentage = ($total_delivery_order > 0) ? $input_result : 0;
             $inputs[] = [
                 'cause' => $cause->data_input,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
         return response()->json($inputs);
     }
 
-    public function cskpi2_stat(Request $request){
+    public function cskpi2_stat(Request $request)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $current= date('n');
-        $current_year= date('Y');
+        $current = date('n');
+        $current_year = date('Y');
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(44);
-            $percentage= collect($target)->sum('target');
+            $target = $this->target_kpi(44);
+            $percentage = collect($target)->sum('target');
             $i = $i + 1;
             $data_inputs = DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
-            ->where('kpi_datainput_result.month', $i)
-            ->where('kpi_datainput_result.year',$request->year)
-            ->get();
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
+                ->where('kpi_datainput_result.month', $i)
+                ->where('kpi_datainput_result.year', $request->year)
+                ->get();
 
             $total_deliveries = collect($data_inputs)->where('kpi_id', 44)->where('metric_id', 278)->sum('answer');
             $within_dept_fault = collect($data_inputs)->where('kpi_id', 44)->where('metric_id', 279)->sum('answer');
-            $diff= $total_deliveries - $within_dept_fault;
+            $diff = $total_deliveries - $within_dept_fault;
 
-            if($total_deliveries == 0){
-                $var1=1;
-            }else{
-                $var1=$total_deliveries;
+            if ($total_deliveries == 0) {
+                $var1 = 1;
+            } else {
+                $var1 = $total_deliveries;
             }
             if ($diff == 0) {
-                $var=0;
-            }else{
-                $var=$diff;
+                $var = 0;
+            } else {
+                $var = $diff;
             }
-            $computation= ($var/ $var1) * 100;
+            $computation = ($var / $var1) * 100;
 
             if ($current_year == $request->year) {
-                    if ($i <= $current) {
-                        $data[] = [
+                if ($i <= $current) {
+                    $data[] = [
                         'month' => $month,
-                        'total' => round($computation,2),
-                        'target'=>$percentage,
+                        'total' => round($computation, 2),
+                        'target' => $percentage,
                     ];
                 }
-            }else{
-              $data[] = [
+            } else {
+                $data[] = [
                     'month' => $month,
-                    'total' => round($computation,2),
-                    'target'=>$percentage,
+                    'total' => round($computation, 2),
+                    'target' => $percentage,
                 ];
             }
         }
@@ -3543,81 +3650,83 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function csperformance_chart(Request $request, $year){
+    public function csperformance_chart(Request $request, $year)
+    {
         if ($request->month == 01) {
             $year = $request->year - 1;
             $month = 12;
-        }else{
-            $year= $request->year;
-            $month=$request->month - 1;
+        } else {
+            $year = $request->year;
+            $month = $request->month - 1;
         }
 
         $prev_month_ts = $request->month - 1;
 
         $data = [];
-            $previous_month_data_input =DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+        $previous_month_data_input = DB::table('kpi_datainput_result')
+            ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+            ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
             ->where('kpi_datainput_result.month', $month)
-            ->where('kpi_datainput_result.year',$year)
+            ->where('kpi_datainput_result.year', $year)
             ->get();
 
-            $data_inputs = DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+        $data_inputs = DB::table('kpi_datainput_result')
+            ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+            ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
             ->where('kpi_datainput_result.month', $request->month)
-            ->where('kpi_datainput_result.year',$request->year)
+            ->where('kpi_datainput_result.year', $request->year)
             ->get();
 
-            $product_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 272)->sum('answer');
-            $product_perf_avg = ($product_perf/4)  ;
-            $delandserv_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 273)->sum('answer');
-            $delandserv_perf_avg = ($delandserv_perf/4);
-            $tech_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 274)->sum('answer');
-            $tech_perf_avg = ($tech_perf/4);
+        $product_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 272)->sum('answer');
+        $product_perf_avg = ($product_perf / 4);
+        $delandserv_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 273)->sum('answer');
+        $delandserv_perf_avg = ($delandserv_perf / 4);
+        $tech_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 274)->sum('answer');
+        $tech_perf_avg = ($tech_perf / 4);
 
-            $sales_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 275)->sum('answer');
-            $sales_perf_avg = ($sales_perf/5);
-            $price_cost_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 276)->sum('answer');
-            $price_cost_perf_avg = ($price_cost_perf/3);
+        $sales_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 275)->sum('answer');
+        $sales_perf_avg = ($sales_perf / 5);
+        $price_cost_perf = collect($data_inputs)->where('kpi_id', 43)->where('metric_id', 276)->sum('answer');
+        $price_cost_perf_avg = ($price_cost_perf / 3);
 
-            ////////////////////////////////////////////////
-            $product_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 272)->sum('answer');
-            $product_perf_avg_previous = ($product_perf_previous/4)  ;
-            $delandserv_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 273)->sum('answer');
-            $delandserv_perf_avg_previous = ($delandserv_perf_previous/4);
-            $tech_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 274)->sum('answer');
-            $tech_perf_avg_previous = ($tech_perf_previous/4);
+        // //////////////////////////////////////////////
+        $product_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 272)->sum('answer');
+        $product_perf_avg_previous = ($product_perf_previous / 4);
+        $delandserv_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 273)->sum('answer');
+        $delandserv_perf_avg_previous = ($delandserv_perf_previous / 4);
+        $tech_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 274)->sum('answer');
+        $tech_perf_avg_previous = ($tech_perf_previous / 4);
 
-            $sales_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 275)->sum('answer');
-            $sales_perf_avg_previous = ($sales_perf_previous/5);
-            $price_cost_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 276)->sum('answer');
-            $price_cost_perf_avg_previous = ($price_cost_perf_previous/3);
+        $sales_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 275)->sum('answer');
+        $sales_perf_avg_previous = ($sales_perf_previous / 5);
+        $price_cost_perf_previous = collect($previous_month_data_input)->where('kpi_id', 43)->where('metric_id', 276)->sum('answer');
+        $price_cost_perf_avg_previous = ($price_cost_perf_previous / 3);
 
-            $product_perf_avg_status = $product_perf_avg > $product_perf_avg_previous ? 'up' : 'down';
-            $delandserv_perf_avg_status = $delandserv_perf_avg > $delandserv_perf_avg_previous ? 'up' : 'down';
-            $tech_perf_avg_status = $tech_perf_avg > $tech_perf_avg_previous ? 'up' : 'down';
-            $sales_perf_avg_status = $sales_perf_avg > $sales_perf_avg_previous ? 'up' : 'down';
-            $price_cost_perf_avg_status = $price_cost_perf_avg > $price_cost_perf_avg_previous ? 'up' : 'down';
+        $product_perf_avg_status = $product_perf_avg > $product_perf_avg_previous ? 'up' : 'down';
+        $delandserv_perf_avg_status = $delandserv_perf_avg > $delandserv_perf_avg_previous ? 'up' : 'down';
+        $tech_perf_avg_status = $tech_perf_avg > $tech_perf_avg_previous ? 'up' : 'down';
+        $sales_perf_avg_status = $sales_perf_avg > $sales_perf_avg_previous ? 'up' : 'down';
+        $price_cost_perf_avg_status = $price_cost_perf_avg > $price_cost_perf_avg_previous ? 'up' : 'down';
 
-            $data[] = [
-                'month' => $month,
-                'product_perf' => round($product_perf_avg, 1),
-                'product_perf_status'=> $product_perf_avg_status,
-                'delivery_service_perf' => round($delandserv_perf_avg, 1),
-                'delivery_service_perf_status'=> $delandserv_perf_avg_status,
-                'technical_perf' => round($tech_perf_avg, 1),
-                'technical_perf_status'=> $tech_perf_avg_status,
-                'sales_perf' => round($sales_perf_avg, 1),
-                'sales_perf_status'=> $sales_perf_avg_status,
-                'price_cost_perf' => round($price_cost_perf_avg, 1),
-                'price_cost_perf_status'=> $price_cost_perf_avg_status
-            ];
-        
+        $data[] = [
+            'month' => $month,
+            'product_perf' => round($product_perf_avg, 1),
+            'product_perf_status' => $product_perf_avg_status,
+            'delivery_service_perf' => round($delandserv_perf_avg, 1),
+            'delivery_service_perf_status' => $delandserv_perf_avg_status,
+            'technical_perf' => round($tech_perf_avg, 1),
+            'technical_perf_status' => $tech_perf_avg_status,
+            'sales_perf' => round($sales_perf_avg, 1),
+            'sales_perf_status' => $sales_perf_avg_status,
+            'price_cost_perf' => round($price_cost_perf_avg, 1),
+            'price_cost_perf_status' => $price_cost_perf_avg_status,
+        ];
+
         return $data;
     }
 
-    public function salesTotal(){
+    public function salesTotal()
+    {
         $sales_order = DB::connection('mysql_erp')->select('SELECT name, workflow_state, creation FROM `tabSales Order`');
         $quoation = DB::connection('mysql_erp')->select('SELECT name, workflow_state, creation FROM `tabQuotation`');
         $delivery_note = DB::connection('mysql_erp')->select('SELECT name, workflow_state, sales_type, creation FROM `tabDelivery Note`');
@@ -3626,9 +3735,9 @@ class EvaluationController extends Controller
         $total_sales_order = collect($sales_order)->where('workflow_state', 'Approved')->count();
         $total_quotation = collect($quoation)->where('workflow_state', 'Approved')->count();
         $total_delivery_note = collect($delivery_note)
-        ->where('workflow_state', 'Approved')
-        ->whereIn('sales_type', ['Regular Sales', 'Sales DR', 'Sales on Consignment'])
-        ->count();
+            ->where('workflow_state', 'Approved')
+            ->whereIn('sales_type', ['Regular Sales', 'Sales DR', 'Sales on Consignment'])
+            ->count();
         $total_sales_invoices = collect($sales_invoices)->where('status', 'Paid')->count();
         $total_sales_invoices = collect($sales_invoices)->whereIn('status', ['Return', 'Credit Note Issued', 'Submitted', 'Paid', 'Unpaid', 'Overdue'])->count();
 
@@ -3636,94 +3745,96 @@ class EvaluationController extends Controller
             'total_sales_order' => $total_sales_order,
             'total_quotation' => $total_quotation,
             'total_delivery_note' => $total_delivery_note,
-            'total_sales_invoices' => $total_sales_invoices
+            'total_sales_invoices' => $total_sales_invoices,
 
         ];
 
         return $data;
     }
 
-    public function salesOrder_data($year, $month){
+    public function salesOrder_data($year, $month)
+    {
 
-        $sales_order = DB::connection('mysql_erp')->select('SELECT reference_doctype,subject,reference_name,subject, communication_date, creation FROM `tabCommunication` WHERE MONTH(communication_date) = '.$month.' AND YEAR(communication_date) = '. $year.'');
+        $sales_order = DB::connection('mysql_erp')->select('SELECT reference_doctype,subject,reference_name,subject, communication_date, creation FROM `tabCommunication` WHERE MONTH(communication_date) = '.$month.' AND YEAR(communication_date) = '.$year.'');
 
         $total_for_approval = collect($sales_order)
-        ->where('reference_doctype', 'Sales Order')
-        ->where('subject','For Approval');
+            ->where('reference_doctype', 'Sales Order')
+            ->where('subject', 'For Approval');
         $data = [];
         foreach ($total_for_approval as $row) {
-          $total_approved = collect($sales_order)
-            ->where('reference_doctype', 'Sales Order')
-            ->where('subject', 'Approved');
-         
+            $total_approved = collect($sales_order)
+                ->where('reference_doctype', 'Sales Order')
+                ->where('subject', 'Approved');
+
             foreach ($total_approved as $row1) {
-              if ($row->reference_name == $row1->reference_name) {
-                  $approve=Carbon::parse($row1->communication_date);
-                  $for_approval=Carbon::parse($row->communication_date);
-                  $totalDuration = $approve->diffInSeconds($for_approval);
-                  $reference_name1=  $row->reference_name;
-                  $total_status = $totalDuration < 10800 ? 'ontime':'late';
+                if ($row->reference_name == $row1->reference_name) {
+                    $approve = Carbon::parse($row1->communication_date);
+                    $for_approval = Carbon::parse($row->communication_date);
+                    $totalDuration = $approve->diffInSeconds($for_approval);
+                    $reference_name1 = $row->reference_name;
+                    $total_status = $totalDuration < 10800 ? 'ontime' : 'late';
 
-                  $data[] = [
-                      'duration' => $totalDuration,
-                      'for_approval' => $row->reference_name,
-                      'approved ' => $row1->reference_name,
-                      'date_approved' => $row1->communication_date,
-                      'date_approval' => $row->communication_date,
-                      'total_status' => $total_status
-                  ];
-              }
+                    $data[] = [
+                        'duration' => $totalDuration,
+                        'for_approval' => $row->reference_name,
+                        'approved ' => $row1->reference_name,
+                        'date_approved' => $row1->communication_date,
+                        'date_approval' => $row->communication_date,
+                        'total_status' => $total_status,
+                    ];
+                }
             }
-        }   
+        }
 
-        return $data;  
+        return $data;
     }
 
-    public function hrkpi1_stat(Request $request){
+    public function hrkpi1_stat(Request $request)
+    {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $current= date('n');
-        $current_year= date('Y');
+        $current = date('n');
+        $current_year = date('Y');
 
         $data = [];
         foreach ($months as $i => $month) {
-            $target=$this->target_kpi(49);
-            $percentage= collect($target)->sum('target');
+            $target = $this->target_kpi(49);
+            $percentage = collect($target)->sum('target');
             $i = $i + 1;
             $data_inputs = DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
-            ->where('kpi_datainput_result.month', $i)
-            ->where('kpi_datainput_result.year', $request->year)
-            ->get();
-                
+                ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+                ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
+                ->where('kpi_datainput_result.month', $i)
+                ->where('kpi_datainput_result.year', $request->year)
+                ->get();
+
             $implemented = collect($data_inputs)->where('kpi_id', 49)->where('data_input_id', 34)->sum('answer');
             $proposed = collect($data_inputs)->where('kpi_id', 49)->where('data_input_id', 93)->sum('answer');
 
-            if($implemented == 0){
-                $var=0;
-            }else{
-                $var=$implemented;
+            if ($implemented == 0) {
+                $var = 0;
+            } else {
+                $var = $implemented;
             }
             if ($proposed == 0) {
-                $var1=1;
-            }else{
-                $var1=$proposed;
+                $var1 = 1;
+            } else {
+                $var1 = $proposed;
             }
-            $computation= ($var/ $var1) * 100;
+            $computation = ($var / $var1) * 100;
 
             if ($current_year == $request->year) {
-                    if ($i <= $current) {
-                        $data[] = [
+                if ($i <= $current) {
+                    $data[] = [
                         'month' => $month,
-                        'total' => round($computation,2),
-                        'target'=>$percentage, 
+                        'total' => round($computation, 2),
+                        'target' => $percentage,
                     ];
                 }
-            }else{
-              $data[] = [
+            } else {
+                $data[] = [
                     'month' => $month,
-                    'total' => round($computation,2),
-                    'target'=>$percentage,
+                    'total' => round($computation, 2),
+                    'target' => $percentage,
                 ];
             }
         }
@@ -3731,106 +3842,120 @@ class EvaluationController extends Controller
         return $data;
     }
 
-    public function salesOrder_timeliness(Request $request, $year){
+    public function salesOrder_timeliness(Request $request, $year)
+    {
         $data = [];
-        $current= date('n');
-        $current_year= date('Y');
-        $target=$this->target_kpi(43);
-        $percentage= collect($target)->sum('target');
+        $current = date('n');
+        $current_year = date('Y');
+        $target = $this->target_kpi(43);
+        $percentage = collect($target)->sum('target');
 
-        $SO_data= $this->salesOrder_data($year,$request->month);
+        $SO_data = $this->salesOrder_data($year, $request->month);
         $SO_ontime = collect($SO_data)->where('total_status', 'ontime')->count();
         $SO_late = collect($SO_data)->where('total_status', 'late')->count();
         $SO_total = collect($SO_data)->count();
         $avg_submission = collect($SO_data)->sum('duration');
 
-        if($SO_late == 0){
-            $var2=0;
-        }else{
-            $var2=$SO_late;
+        if ($SO_late == 0) {
+            $var2 = 0;
+        } else {
+            $var2 = $SO_late;
         }
-        if($SO_ontime == 0){
-            $var=0;
-        }else{
-            $var=$SO_ontime;
+        if ($SO_ontime == 0) {
+            $var = 0;
+        } else {
+            $var = $SO_ontime;
         }
         if ($SO_total == 0) {
-            $var1=1;
-        }else{
-            $var1=$SO_total;
+            $var1 = 1;
+        } else {
+            $var1 = $SO_total;
         }
-        $late_rate= ($var2/ $var1) * 100;
-        $ontime_rate=($var/ $var1) * 100;
-        $avr_hrs_submission=($avg_submission/ $var1) * 100;
+        $late_rate = ($var2 / $var1) * 100;
+        $ontime_rate = ($var / $var1) * 100;
+        $avr_hrs_submission = ($avg_submission / $var1) * 100;
         $converted = gmdate('H:i:s', $avr_hrs_submission);
 
         $data[] = [
             'late_rate' => round($late_rate, 2),
             'ontime_rate' => round($ontime_rate, 2),
-            'avr_hrs_submission'=> round($converted, 2),
-            'total_so_ontime'=> $SO_ontime,
-            'total_so_late'=> $SO_late,
-            
+            'avr_hrs_submission' => round($converted, 2),
+            'total_so_ontime' => $SO_ontime,
+            'total_so_late' => $SO_late,
+
         ];
 
         return $data;
     }
 
-    public function quality_assurance_index(){
+    public function quality_assurance_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 5)
-        ->get();
-        return view('client.modules.evaluation.overview.department.qa.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 5)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.qa.index', compact('designation', 'department', 'kpi'));
     }
-    public function production_index(){
+
+    public function production_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 8)
-        ->get();
-        return view('client.modules.evaluation.overview.department.production.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 8)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.production.index', compact('designation', 'department', 'kpi'));
     }
-    public function human_resource_index(){
+
+    public function human_resource_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 6)
-        ->get();
-        return view('client.modules.evaluation.overview.department.hr.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 6)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.hr.index', compact('designation', 'department', 'kpi'));
     }
-    public function plant_services_index(){
+
+    public function plant_services_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 7)
-        ->get();
-        return view('client.modules.evaluation.overview.department.plant_services.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 7)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.plant_services.index', compact('designation', 'department', 'kpi'));
     }
-    
-    public function information_technology_index(){
+
+    public function information_technology_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
-        
+
         $kpi = DB::table('kpi')->where('kpi.department_id', 9)->get();
 
         $data_inputs = DB::table('kpi_datainput_result')
-            ->join('data_input','data_input.input_id','=','kpi_datainput_result.data_input_id')
-            ->join('metrics','metrics.metric_id','=','data_input.metric_id')
+            ->join('data_input', 'data_input.input_id', '=', 'kpi_datainput_result.data_input_id')
+            ->join('metrics', 'metrics.metric_id', '=', 'data_input.metric_id')
             ->where('metrics.kpi_id', 61)->where('metrics.metric_id', 128)
             ->orderBy('kpi_datainput_result.year', 'desc')
             ->limit(4)
             ->get();
 
-        return view('client.modules.evaluation.overview.department.it.index', compact('designation', 'department','kpi','data_inputs'));
+        return view('client.modules.evaluation.overview.department.it.index', compact('designation', 'department', 'kpi', 'data_inputs'));
     }
 
-    public function materials_management_index(){
+    public function materials_management_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -3838,10 +3963,11 @@ class EvaluationController extends Controller
 
         $item_classification = DB::connection('mysql_erp')->table('tabItem Classification')->get();
 
-        return view('client.modules.evaluation.overview.department.materials_management.index', compact('designation', 'department','kpi', 'item_classification'));
+        return view('client.modules.evaluation.overview.department.materials_management.index', compact('designation', 'department', 'kpi', 'item_classification'));
     }
 
-    public function materials_management_totals(){
+    public function materials_management_totals()
+    {
         $total_ste = DB::connection('mysql_erp')->table('tabStock Entry')
             ->where('docstatus', 1)->count();
         $open_ste = DB::connection('mysql_erp')->table('tabStock Entry')
@@ -3864,7 +3990,8 @@ class EvaluationController extends Controller
         return response()->json($totals);
     }
 
-    public function purchasing_index(){
+    public function purchasing_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -3872,10 +3999,11 @@ class EvaluationController extends Controller
 
         $item_classification = DB::connection('mysql_erp')->table('tabItem Classification')->get();
 
-        return view('client.modules.evaluation.overview.department.materials_management.index2', compact('designation', 'department','kpi', 'item_classification'));
+        return view('client.modules.evaluation.overview.department.materials_management.index2', compact('designation', 'department', 'kpi', 'item_classification'));
     }
 
-    public function invAccuracyChart($year){
+    public function invAccuracyChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
@@ -3899,39 +4027,41 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function itemMovements(Request $request, $year){
+    public function itemMovements(Request $request, $year)
+    {
         $month = $request->month;
 
-        $qry = ($month) ?  'AND MONTH(posting_date) = '.$month : '';
+        $qry = ($month) ? 'AND MONTH(posting_date) = '.$month : '';
 
         $stock_movements = DB::connection('mysql_erp')
-                ->table('tabStock Ledger Entry')
-                ->selectRaw('item_code AS code, (SELECT description FROM `tabItem` WHERE name = code) AS description, (SELECT item_classification FROM `tabItem` WHERE name = code) AS item_classification, (SELECT COUNT(DISTINCT voucher_no) FROM `tabStock Ledger Entry` WHERE item_code = code '.$qry.' AND YEAR(posting_date) = '.$year.') AS total_transactions')
-                ->whereYear('posting_date', $year)
-                ->when($month, function ($query, $month) {
-                    return $query->whereMonth('posting_date', $month);
-                })
-                ->groupBy('item_code')
-                ->orderBy('total_transactions', 'desc')
-                ->limit(10)->get();
+            ->table('tabStock Ledger Entry')
+            ->selectRaw('item_code AS code, (SELECT description FROM `tabItem` WHERE name = code) AS description, (SELECT item_classification FROM `tabItem` WHERE name = code) AS item_classification, (SELECT COUNT(DISTINCT voucher_no) FROM `tabStock Ledger Entry` WHERE item_code = code '.$qry.' AND YEAR(posting_date) = '.$year.') AS total_transactions')
+            ->whereYear('posting_date', $year)
+            ->when($month, function ($query, $month) {
+                return $query->whereMonth('posting_date', $month);
+            })
+            ->groupBy('item_code')
+            ->orderBy('total_transactions', 'desc')
+            ->limit(10)->get();
 
         return response()->json($stock_movements);
     }
 
-    public function itemClassMovements(Request $request, $year){
+    public function itemClassMovements(Request $request, $year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
         for ($i = 1; $i <= $month_no; $i++) {
             $month = $i;
             $stock_movements = DB::connection('mysql_erp')
-                    ->table('tabStock Ledger Entry')
-                    ->selectRaw('item_code AS code, (SELECT item_classification FROM `tabItem` WHERE name = code) AS item_classification, (SELECT COUNT(DISTINCT voucher_no) FROM `tabStock Ledger Entry` WHERE item_code = code AND MONTH(posting_date) = '.$month.' AND YEAR(posting_date) = '.$year.') AS total_transactions')
-                    ->whereYear('posting_date', $year)
-                    ->whereMonth('posting_date', $month)
-                    ->groupBy('item_code')
-                    ->orderBy('item_classification', 'asc')
-                    ->get();
+                ->table('tabStock Ledger Entry')
+                ->selectRaw('item_code AS code, (SELECT item_classification FROM `tabItem` WHERE name = code) AS item_classification, (SELECT COUNT(DISTINCT voucher_no) FROM `tabStock Ledger Entry` WHERE item_code = code AND MONTH(posting_date) = '.$month.' AND YEAR(posting_date) = '.$year.') AS total_transactions')
+                ->whereYear('posting_date', $year)
+                ->whereMonth('posting_date', $month)
+                ->groupBy('item_code')
+                ->orderBy('item_classification', 'asc')
+                ->get();
 
             $total_transactions = $stock_movements->groupBy('item_classification')->map(function ($row) {
                 return $row->sum('total_transactions');
@@ -3948,7 +4078,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function purchasesTimeliness($year, $supplier_group){
+    public function purchasesTimeliness($year, $supplier_group)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $month_no = $year == date('Y') ? date('m') : 12;
@@ -3982,7 +4113,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function purchasing_totals(){
+    public function purchasing_totals()
+    {
         $total_po = DB::connection('mysql_erp')->table('tabPurchase Order')
             ->where('docstatus', 1)->count();
         $upcoming_deliveries = DB::connection('mysql_erp')->table('tabPurchase Order')
@@ -4005,88 +4137,105 @@ class EvaluationController extends Controller
         return response()->json($totals);
     }
 
-    public function management_index(){
+    public function management_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 12)
-        ->get();
-        return view('client.modules.evaluation.overview.department.management.index', compact('designation', 'department','kpi'));
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 12)
+            ->get();
+
+        return view('client.modules.evaluation.overview.department.management.index', compact('designation', 'department', 'kpi'));
     }
-    public function marketing_index(){
+
+    public function marketing_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 13)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 13)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.marketing.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.marketing.index', compact('designation', 'department', 'kpi'));
     }
-    public function assembly_index(){
+
+    public function assembly_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 14)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 14)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.assembly.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.assembly.index', compact('designation', 'department', 'kpi'));
     }
-    public function fabrication_index(){
+
+    public function fabrication_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
+        $kpi = DB::table('kpi')
             ->where('kpi.department_id', 15)
             ->get();
 
-        return view('client.modules.evaluation.overview.department.fabrication.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.fabrication.index', compact('designation', 'department', 'kpi'));
     }
-    public function traffic_and_distribution_index(){
+
+    public function traffic_and_distribution_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 16)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 16)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.traffic_and_distribution.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.traffic_and_distribution.index', compact('designation', 'department', 'kpi'));
     }
-    public function painting_index(){
+
+    public function painting_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 17)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 17)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.painting.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.painting.index', compact('designation', 'department', 'kpi'));
     }
-    public function filunited_index(){
+
+    public function filunited_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 19)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 19)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.filunited.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.filunited.index', compact('designation', 'department', 'kpi'));
     }
-    public function production_planning_index(){
+
+    public function production_planning_index()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
-        $kpi=DB::table('kpi')
-        ->where('kpi.department_id', 20)
-        ->get();
+        $kpi = DB::table('kpi')
+            ->where('kpi.department_id', 20)
+            ->get();
 
-        return view('client.modules.evaluation.overview.department.production_planning.index', compact('designation', 'department','kpi'));
+        return view('client.modules.evaluation.overview.department.production_planning.index', compact('designation', 'department', 'kpi'));
     }
     // kpi per department end
 
-    public function accountingKpiResult(){
+    public function accountingKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4095,14 +4244,15 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.accounting.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function sinvPerMonthChart($year){
+    public function sinvPerMonthChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         $sinvs = DB::connection('mysql_erp')->table('tabSales Invoice')
-                ->where('docstatus', 1)->whereYear('posting_date', $year)
-                ->where('company', 'FUMACO Inc.')
-                ->selectRaw('tc_name, MONTH(posting_date) as m')->get();
+            ->where('docstatus', 1)->whereYear('posting_date', $year)
+            ->where('company', 'FUMACO Inc.')
+            ->selectRaw('tc_name, MONTH(posting_date) as m')->get();
 
         $chart_data = [];
         $month_no = $year == date('Y') ? date('m') : 12;
@@ -4122,7 +4272,8 @@ class EvaluationController extends Controller
         return response()->json($chart_data);
     }
 
-    public function creditCollectionChart($year){
+    public function creditCollectionChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -4145,14 +4296,15 @@ class EvaluationController extends Controller
                 'month' => $months[$i],
                 'total' => $sinv_per_month,
                 'total_coll' => $collectible_per_month,
-                'percentage' => round($percentage, 2)
+                'percentage' => round($percentage, 2),
             ];
         }
 
         return $chart_data;
     }
 
-    public function salesKpiResult(){
+    public function salesKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4161,7 +4313,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.sales.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function csKpiResult(){
+    public function csKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4170,7 +4323,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.customer_service.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function qaKpiResult(){
+    public function qaKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4179,7 +4333,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.qa.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function plantServicesKpiResult(){
+    public function plantServicesKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4188,7 +4343,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.plant_services.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function productionKpiResult(){
+    public function productionKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4197,7 +4353,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.production.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function materialsManagementKpiResult(){
+    public function materialsManagementKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4206,7 +4363,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.materials_management.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function managementKpiResult(){
+    public function managementKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4215,7 +4373,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.management.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function marketingKpiResult(){
+    public function marketingKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4224,7 +4383,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.marketing.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function assemblyKpiResult(){
+    public function assemblyKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4233,7 +4393,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.assembly.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function fabricationKpiResult(){
+    public function fabricationKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4242,7 +4403,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.fabrication.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function trafficDistributionKpiResult(){
+    public function trafficDistributionKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4251,7 +4413,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.traffic_and_distribution.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function deliveryCompletionChart($year){
+    public function deliveryCompletionChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -4267,7 +4430,7 @@ class EvaluationController extends Controller
                 ->where('month', $i)->where('year', $year)->sum('answer');
 
             $cust_rel_causes = DB::table('kpi_datainput_result')
-                ->where('user_id', null)->whereIn('data_input_id', [28, 29, 30 ,31 , 32, 33])
+                ->where('user_id', null)->whereIn('data_input_id', [28, 29, 30, 31, 32, 33])
                 ->where('month', $i)->where('year', $year)->sum('answer');
 
             $total_deliveries_accepted = $total_deliveries_accepted + $cust_rel_causes;
@@ -4278,14 +4441,15 @@ class EvaluationController extends Controller
                 'month' => $months[$i],
                 'total_deliveries_accepted' => $total_deliveries_accepted,
                 'total_delivery_invs' => $total_delivery_invs,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
         return response()->json($chart_data);
     }
 
-    public function deliveryGoodConditionChart($year){
+    public function deliveryGoodConditionChart($year)
+    {
         $chart_data = [];
         $months = ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -4309,21 +4473,22 @@ class EvaluationController extends Controller
             $chart_data[] = [
                 'month' => $months[$i],
                 'total_delivery_good' => $total_deliveries,
-                'percentage' => round($percentage, 2)
+                'percentage' => round($percentage, 2),
             ];
         }
 
         return response()->json($chart_data);
     }
 
-    public function nonDeliveryDeptCausesChart(Request $request, $year){
+    public function nonDeliveryDeptCausesChart(Request $request, $year)
+    {
         $month = $request->month;
         $total_delivery_invs = DB::table('kpi_datainput_result')
-                ->where('user_id', null)->where('data_input_id', 23)
-                ->when($month, function ($query, $month) {
-                    return $query->where('month', $month);
-                })
-                ->where('year', $year)->sum('answer');
+            ->where('user_id', null)->where('data_input_id', 23)
+            ->when($month, function ($query, $month) {
+                return $query->where('month', $month);
+            })
+            ->where('year', $year)->sum('answer');
 
         $ids = [24, 25, 26, 27];
         $data_inputs = DB::table('kpi_datainput_result')
@@ -4337,21 +4502,22 @@ class EvaluationController extends Controller
             $percentage = ($total_delivery_invs > 0) ? ($input_result / $total_delivery_invs) * 100 : 0;
             $inputs[] = [
                 'cause' => $cause->data_input,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
         return response()->json($inputs);
     }
 
-    public function nonDeliveryCustCausesChart(Request $request, $year){
+    public function nonDeliveryCustCausesChart(Request $request, $year)
+    {
         $month = $request->month;
         $total_delivery_invs = DB::table('kpi_datainput_result')
-                ->where('user_id', null)->where('data_input_id', 23)
-                ->when($month, function ($query, $month) {
-                    return $query->where('month', $month);
-                })
-                ->where('year', $year)->sum('answer');
+            ->where('user_id', null)->where('data_input_id', 23)
+            ->when($month, function ($query, $month) {
+                return $query->where('month', $month);
+            })
+            ->where('year', $year)->sum('answer');
 
         $ids = [28, 29, 30, 31, 32, 33];
         $data_inputs = DB::table('kpi_datainput_result')
@@ -4365,14 +4531,15 @@ class EvaluationController extends Controller
             $percentage = ($total_delivery_invs > 0) ? ($input_result / $total_delivery_invs) * 100 : 0;
             $inputs[] = [
                 'cause' => $cause->data_input,
-                'percentage' => round($percentage, 1)
+                'percentage' => round($percentage, 1),
             ];
         }
 
         return response()->json($inputs);
     }
 
-    public function paintingKpiResult(){
+    public function paintingKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4381,7 +4548,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.painting.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function filunitedKpiResult(){
+    public function filunitedKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4390,7 +4558,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.filunited.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function productionPlanningKpiResult(){
+    public function productionPlanningKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -4399,7 +4568,8 @@ class EvaluationController extends Controller
         return view('client.modules.evaluation.overview.department.production_planning.kpi_result', compact('year_list', 'designation', 'department'));
     }
 
-    public function hrKpiResult(){
+    public function hrKpiResult()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 

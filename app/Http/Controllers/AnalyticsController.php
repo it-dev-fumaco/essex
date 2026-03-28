@@ -2,32 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use DB;
 use Auth;
+use DB;
+use Illuminate\Http\Request;
 
 class AnalyticsController extends Controller
 {
-    public function sessionDetails($column){
+    public function sessionDetails($column)
+    {
         $detail = DB::table('users')
-                    ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-                    ->join('departments', 'users.department_id', '=', 'departments.department_id')
-                    ->where('user_id', Auth::user()->user_id)
-                    ->first();
+            ->join('designation', 'users.designation_id', '=', 'designation.des_id')
+            ->join('departments', 'users.department_id', '=', 'departments.department_id')
+            ->where('user_id', Auth::user()->user_id)
+            ->first();
 
         return $detail->$column;
     }
 
-    public function showAttendanceAnalytics(){
+    public function showAttendanceAnalytics()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
         $active_employees = DB::table('users')->where('user_type', 'Employee')->where('status', 'Active')->count();
         $present_today = DB::table('biometrics')->distinct('employee_id')->where('bio_date', date('Y-m-d'))->count('employee_id');
         $out_today = DB::table('notice_slip')->distinct('user_id')
-                        ->whereDate('notice_slip.date_from', '<=', date("Y-m-d"))
-                        ->whereDate('notice_slip.date_to', '>=', date("Y-m-d"))
-                        ->where('notice_slip.status', 'Approved')->count();
+            ->whereDate('notice_slip.date_from', '<=', date('Y-m-d'))
+            ->whereDate('notice_slip.date_to', '>=', date('Y-m-d'))
+            ->where('notice_slip.status', 'Approved')->count();
 
         $totals = [
             'active_employees' => $active_employees,
@@ -39,7 +41,8 @@ class AnalyticsController extends Controller
         return view('client.modules.analytics.attendance_analytics', compact('designation', 'department', 'totals'));
     }
 
-    public function showHrAnalytics(){
+    public function showHrAnalytics()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -70,7 +73,8 @@ class AnalyticsController extends Controller
         return view('client.modules.analytics.hr_analytics', compact('designation', 'department', 'totals'));
     }
 
-    public function showGatepassAnalytics(){
+    public function showGatepassAnalytics()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -83,13 +87,14 @@ class AnalyticsController extends Controller
         $totals = [
             'gatepass' => $total_gatepass,
             'unreturned_items' => $total_unreturned,
-            'pending' => $total_pending
+            'pending' => $total_pending,
         ];
 
         return view('client.modules.analytics.gatepass_analytics', compact('designation', 'department', 'totals'));
     }
 
-    public function showNoticesAnalytics(){
+    public function showNoticesAnalytics()
+    {
         $designation = $this->sessionDetails('designation');
         $department = $this->sessionDetails('department');
 
@@ -111,26 +116,28 @@ class AnalyticsController extends Controller
         return view('client.modules.analytics.notices_analytics', compact('designation', 'department', 'totals', 'department_list'));
     }
 
-    public function employeesPerfectAttendance(Request $request){
-        $from_date = new Carbon('first day of '. $request->month .' '. $request->year); 
-        $to_date = new Carbon('last day of '. $request->month .' '. $request->year); 
+    public function employeesPerfectAttendance(Request $request)
+    {
+        $from_date = new Carbon('first day of '.$request->month.' '.$request->year);
+        $to_date = new Carbon('last day of '.$request->month.' '.$request->year);
 
         return $this->getPerfectAttendance($from_date, $to_date);
     }
 
-    public function employeesUnfiledAbsences(Request $request){
-        $from_date = new Carbon('first day of '. $request->month .' '. $request->year); 
-        $to_date = new Carbon('last day of '. $request->month .' '. $request->year); 
+    public function employeesUnfiledAbsences(Request $request)
+    {
+        $from_date = new Carbon('first day of '.$request->month.' '.$request->year);
+        $to_date = new Carbon('last day of '.$request->month.' '.$request->year);
 
         $employees_with_perfect_attendance = $this->getPerfectAttendance($from_date, $to_date);
 
         $excluded_employees = array_column($employees_with_perfect_attendance, 'employee_id');
 
         $employees_list = DB::table('users')
-                ->where('user_type', 'Employee')
-                ->where('status', 'Active')
-                ->whereNotIn('user_id', $excluded_employees)
-                ->get()->chunk(20);
+            ->where('user_type', 'Employee')
+            ->where('status', 'Active')
+            ->whereNotIn('user_id', $excluded_employees)
+            ->get()->chunk(20);
 
         $employees_unfiled_absences = [];
         foreach ($employees_list as $row) {

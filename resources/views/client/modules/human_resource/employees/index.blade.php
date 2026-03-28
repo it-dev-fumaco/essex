@@ -54,6 +54,7 @@
                               <th>Designation</th>
                               <th>Department</th>
                               <th>Status</th>
+                              <th>IT Status</th>
                               <th>Last Modified</th>
                               <th>Actions</th>
                            </tr>
@@ -68,6 +69,25 @@
                               <td>{{ $employee->designation }}</td>
                               <td>{{ $employee->department }}</td>
                               <td>{{ $employee->status }}</td>
+                              <td>
+                                 @php
+                                    $s = trim((string) ($employee->status ?? ''));
+                                    $itStatus = '—';
+                                    if (strcasecmp($s, 'Active') === 0) {
+                                       $dj = $employee->date_joined ?? null;
+                                       if ($dj && \Carbon\Carbon::parse($dj)->greaterThan(\Carbon\Carbon::now()->subMonths(3))) {
+                                          $itStatus = 'For Onboarding';
+                                       } else {
+                                          $itStatus = 'Onboarded';
+                                       }
+                                    } elseif (strcasecmp($s, 'Inactive') === 0) {
+                                       $itStatus = 'For Offboarding';
+                                    } elseif (strcasecmp($s, 'Resigned') === 0) {
+                                       $itStatus = 'Offboarded';
+                                    }
+                                 @endphp
+                                 {{ $itStatus }}
+                              </td>
                               <td style="font-size: 8pt;"><b><i>{{ $employee->updated_at }}-{{ $employee->last_modified_by }}</i></b></td>
                               <td>
                                  <a href="/client/employee/profile/{{ $employee->user_id }}">
@@ -89,7 +109,7 @@
                            @include('client.modules.human_resource.employees.modals.reset_password')
                            @empty
                            <tr>
-                              <td colspan="4">No Employee(s) Found.</td>
+                              <td colspan="8">No Employee(s) Found.</td>
                            </tr>
                            @endforelse
                         </tbody>
@@ -166,6 +186,25 @@ textarea{
       }
    });
 
+   function updateAddEmployeeAddressPreview() {
+      var $m = $('#add-employee-modal');
+      var street = ($m.find('textarea[name="address"]').val() || '').trim();
+      var brgy = ($m.find('input[name="barangay"]').val() || '').trim();
+      var city = ($m.find('input[name="city"]').val() || '').trim();
+      var line = '';
+      if (street || brgy || city) {
+         var tail = [];
+         if (brgy) { tail.push('Barangay ' + brgy); }
+         if (city) { tail.push(city); }
+         line = street + (street && tail.length ? ', ' : '') + tail.join(', ');
+      }
+      $('#add-employee-address-preview').text(line || '—');
+   }
+   $(document).on('input change', '#add-employee-modal textarea[name="address"], #add-employee-modal input[name="barangay"], #add-employee-modal input[name="city"]', updateAddEmployeeAddressPreview);
+   $('#add-employee-modal').on('shown.bs.modal', function () {
+      updateAddEmployeeAddressPreview();
+   });
+
    $("#edit-employee-modal .upload").change(function () {
       if (this.files && this.files[0]) {
          var reader = new FileReader();
@@ -183,10 +222,10 @@ textarea{
 
    function hideResignationDate(){
       if ($('#edit-employee-modal .status').val() == 'Resigned') {
-         $('#edit-employee-modal .resignation-date-div').show();
+         $('#edit-employee-modal #resignation-date-field').show();
          $("#edit-employee-modal input[name='resignation_date']").prop('required',true);
       }else{
-         $('#edit-employee-modal .resignation-date-div').hide();
+         $('#edit-employee-modal #resignation-date-field').hide();
          $("#edit-employee-modal input[name='resignation_date']").prop('required',false);
       }
    }
@@ -249,6 +288,12 @@ textarea{
                $('#edit-employee-form input[name="telephone"]').val(response.telephone);
                $('#edit-employee-form input[name="email"]').val(response.email);
                $('#edit-employee-form select[name="status"]').val(response.status);
+               $('#edit-employee-form input[name="separation_date"]').val(response.separation_date || '');
+               $('#edit-employee-form select[name="separation_type"]').val(response.separation_type || '');
+               $('#edit-employee-form textarea[name="separation_reason"]').val(response.separation_reason || '');
+               $('#edit-employee-form select[name="clearance_status"]').val(response.clearance_status || '');
+               $('#edit-employee-form input[name="resignation_date"]').val(response.resignation_date || '');
+               hideResignationDate();
                $('#edit-employee-modal').modal('show');
             },
             error: function(data) {
@@ -257,8 +302,8 @@ textarea{
          });
       });
 
-   $(document).on('change', '#add-employee-modal .designation', function(e){
-         var designation = $('#add-employee-modal .designation option:selected').text();
+   $(document).on('change', '#add-employee-modal .designation_id', function(e){
+         var designation = $('#add-employee-modal .designation_id option:selected').text();
          $('#add-employee-modal .designation_name').val(designation);
       });
 
@@ -268,7 +313,13 @@ textarea{
       });
 
    $('.modal').on('hidden.bs.modal', function(){
-         $(this).find('form')[0].reset();
+         var $f = $(this).find('form');
+         if ($f.length && $f[0]) {
+            $f[0].reset();
+         }
+         if ($(this).attr('id') === 'add-employee-modal') {
+            $('#add-employee-address-preview').text('—');
+         }
       });
    });
 

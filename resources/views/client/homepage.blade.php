@@ -88,67 +88,154 @@
                     <div class="card-body box-profile p-2">
                         <div class="text-center">
                             @php
-                                $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png';
+                                use Illuminate\Support\Facades\Storage;
+                                use Illuminate\Support\Str;
+
+                                $avatarUrl = asset('storage/img/user.png');
+                                try {
+                                    $disk = Storage::disk('upcloud');
+                                    /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                                    $key = 'employees/profile/'.(string) Auth::user()->user_id.'.jpg';
+                                    if ($disk->exists($key)) {
+                                        $v = optional(Auth::user()->updated_at)->timestamp ?? time();
+                                        $avatarUrl = $disk->url($key).'?v='.$v;
+                                    }
+                                } catch (\Throwable $e) {
+                                    // keep fallback
+                                }
                             @endphp
-                            <img class="profile-user-img img-thumbnail img-fluid" src="{{ asset($img) }}"
-                                alt="User profile picture" width="170" height="170" style="border-radius: 50%;">
+
+                            <div class="profile-photo-wrapper-home">
+                                <img
+                                    id="homeProfilePhotoImg"
+                                    data-user-id="{{ Auth::user()->user_id }}"
+                                    src="{{ $avatarUrl }}"
+                                    alt="User profile picture"
+                                    width="170"
+                                    height="170"
+                                    class="profile-user-img img-thumbnail img-fluid"
+                                    style="border-radius: 50%;"
+                                >
+
+                                <div class="profile-photo-overlay-home" aria-hidden="true"></div>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary profile-photo-change-btn-home"
+                                    id="homeProfilePhotoChangeBtn"
+                                >
+                                    <i class="fa fa-upload"></i> Change Photo
+                                </button>
+                                <input
+                                    type="file"
+                                    id="homeProfilePhotoInput"
+                                    name="empImage"
+                                    accept="image/png,image/jpeg,image/jpg"
+                                    style="display: none;"
+                                >
+                            </div>
+
+                            <div id="home-profile-photo-message" style="display:none; margin-top: 10px;"></div>
                         </div>
                         <h3 class="profile-username text-center">{{ Auth::user()->employee_name }}</h3>
+                        @php
+                            $joiningDateRaw = Auth::user()->date_joined ?? Auth::user()->joining_date ?? null;
+                            $tenureText = 'Tenure: N/A';
+
+                            if (! empty($joiningDateRaw)) {
+                                try {
+                                    $joinDate = \Carbon\Carbon::parse($joiningDateRaw);
+                                    $now = \Carbon\Carbon::now();
+
+                                    if ($joinDate->lte($now)) {
+                                        $diff = $joinDate->diff($now);
+
+                                        $years = (int) $diff->y;
+                                        $months = (int) $diff->m;
+                                        $days = (int) $diff->d;
+
+                                        $yearsLabel = $years.' year'.($years === 1 ? '' : 's');
+                                        $monthsLabel = $months.' month'.($months === 1 ? '' : 's');
+                                        $daysLabel = $days.' day'.($days === 1 ? '' : 's');
+
+                                        if ($years < 1) {
+                                            if ($months > 0 && $days > 0) {
+                                                $tenureText = $monthsLabel.' and '.$daysLabel;
+                                            } elseif ($months > 0) {
+                                                $tenureText = $monthsLabel;
+                                            } else {
+                                                $tenureText = $daysLabel;
+                                            }
+                                        } else {
+                                            $parts = [$yearsLabel];
+                                            if ($months > 0) {
+                                                $parts[] = $monthsLabel;
+                                            }
+                                            if ($days > 0) {
+                                                $parts[] = $daysLabel;
+                                            }
+
+                                            $tenureText = implode(' and ', $parts);
+                                        }
+                                    }
+                                } catch (\Throwable $e) {
+                                    // fall back to Tenure: N/A
+                                }
+                            }
+                        @endphp
+
                         <h6 class="text-muted text-center d-none d-xl-block"><em>{{ $designation }}</em></h6>
                         <small class="text-muted text-center d-block d-xl-none"><em>{{ $designation }}</em></small>
                         <small class="d-block text-muted text-center text-uppercase">{{ $department }}</small>
-                        <ul class="list-group list-group-unbordered mt-3 mb-3 responsive-font">
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Access ID</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->user_id }}</a></div>
+                        <small class="text-muted text-center d-block" style="margin-top: -2px;"><em>{{ $tenureText }}</em></small>
+                        <div class="card mb-3 mt-3">
+                            <div class="card-body p-2">
+                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">My Leave Approver(s)</h3>
+                                <table class="table m-0 remove-last-row-border">
+                                    <tbody class="table-body">
+                                        @forelse($approvers as $approver)
+                                        <tr>
+                                            @if ($approver->employee_id != Auth::user()->user_id)
+                                            <td>
+                                                @php
+                                                    $img = $approver->image ? $approver->image : '/storage/img/user.png';
+                                                @endphp
+                                                <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                                <span class="approver-name d-block">{{ $approver->employee_name }}</span>
+                                                <small class="d-block fst-italic text-muted">{{ $approver->designation }}</small>
+                                            </td>
+                                            @endif
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td class="text-center text-uppercase text-muted">Leave Approver not found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card mb-3">
+                            <div class="card-body p-2">
+                                <h3 class="widget-title mb-2" style="font-size: 12px !important;">Reporting to</h3>
+                                <div class="d-flex align-items-center px-2">
+                                    @php
+                                        $img = $reports_to ? $reports_to->image : '/storage/img/user.png';
+                                    @endphp
+                                    @if ($reports_to)
+                                    <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                    <div class="p-2">
+                                        <span class="approver-name d-block">{{ $reports_to->employee_name }}</span>
+                                        <small class="d-block fst-italic text-muted">{{ $reports_to->designation }}</small>
+                                    </div>
+                                    @else
+                                    <div class="col-12 p-2 text-center text-uppercase text-muted">
+                                        Immediate Supervisor not set
+                                    </div>
+                                    @endif
                                 </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Employment Status</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->employment_status }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Birthdate</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ \Carbon\Carbon::parse(Auth::user()->birth_date)->format('M. d, Y') }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Civil Status</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->civil_status }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Contact No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->contact_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">TIN No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->tin_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">SSS No.</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->sss_no }}</a></div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="d-flex flex-row">
-                                    <div class="fw-bold">Company</div>
-                                    <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->company }}</a></div>
-                                </div>
-                            </li>
-                        </ul>
-                        <a href="#" class="btn btn-secondary d-block btn-sm" data-bs-toggle="modal" data-bs-target="#changePassword"><b>
-                            <i class="fas fa-cog"></i> Change Password</b></a>
+                            </div>
+                        </div>
+
                         @include('client.modals.change_password')
                     </div>
                 </div>
@@ -201,16 +288,77 @@
                             <div class="tabs-section">
                                 <ul class="nav nav-pills" id="profile-tabs">
                                     <li class="nav-item"><a href="#tab-overview" class="nav-link active border rounded border-success"> Overview</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-personal-info" class="nav-link">Personal Info</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-leaves" class="nav-link">My Leave History</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-gatepasses" class="nav-link">My Gatepasses</a></li>
                                     <li class="nav-item border rounded border-success"><a href="#tab-my-itinerary" class="nav-link">My Itinerary</a></li>
-                                    <li class="nav-item border rounded border-success"><a href="#tab-my-exam-history" class="nav-link">My Exam History</a></li>
-                                    <li class="nav-item border rounded border-success"><a href="#tab-my-evaluations" class="nav-link">My Evaluation(s)</a></li>
+                                    <li class="nav-item border rounded border-success"><a href="#tab-my-exam-history" class="nav-link">Assessments</a></li>
                                 </ul>
                                 <div class="tab-content">
                                     <div class="tab-pane in active" id="tab-overview">
                                         <div class="row" id="overview-tab">
                                             @include('client.overview_tab')
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-personal-info">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="d-flex justify-content-end mb-2">
+                                                    <a href="#" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#updateDetails"><b>
+                                                        <i class="fas fa-user-edit"></i> Update Details</b></a>
+                                                </div>
+                                                <ul class="list-group list-group-unbordered mt-2 mb-3 responsive-font">
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Access ID</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->user_id }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Employment Status</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->employment_status }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Birthdate</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ \Carbon\Carbon::parse(Auth::user()->birth_date)->format('M. d, Y') }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Civil Status</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->civil_status }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Contact No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none" id="sidebarContactNo">{{ Auth::user()->contact_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">TIN No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->tin_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">SSS No.</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->sss_no }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="list-group-item">
+                                                        <div class="d-flex flex-row">
+                                                            <div class="fw-bold">Company</div>
+                                                            <div class="flex-grow-1 text-end"><a class="text-decoration-none">{{ Auth::user()->company }}</a></div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                @include('client.modals.update_details')
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="tab-pane" id="tab-my-exam-history">
@@ -267,11 +415,6 @@
                                             <div class="col-sm-12">
                                                 <div id="my-itinerary"></div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane" id="tab-my-evaluations">
-                                        <div class="row">
-                                            <div class="col-sm-12" id="appraisal-table"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -337,22 +480,51 @@
                                 </ul>
                             </div>
                         @endif
+                        {{-- Clock In / Clock Out — disabled temporarily (re-enable with routes + HomeController)
+                        @php
+                            $clock_status = $clock_status ?? 'none';
+                            $clocked_in_at = $clocked_in_at ?? null;
+                        @endphp
+                        <div class="mb-2">
+                            <button type="button" id="clockBtn" class="btn w-100 p-2 fw-bold {{ $clock_status === 'clocked_out' ? 'btn-secondary clock-btn-completed' : 'btn-primary' }}" style="border-radius: 0.7rem; font-size: 11pt;"
+                                data-status="{{ $clock_status }}"
+                                data-time-in="{{ $clocked_in_at }}"
+                                @if($clock_status === 'clocked_out') disabled @endif>
+                                @if($clock_status === 'none')
+                                    <i class="fas fa-clock me-1"></i> Clock In
+                                @elseif($clock_status === 'clocked_in')
+                                    <i class="fas fa-sign-out-alt me-1"></i> Clock Out
+                                @else
+                                    <i class="fas fa-check-circle me-1"></i> Completed
+                                @endif
+                            </button>
+                            <div id="clocked-in-timer" class="text-center small text-muted mt-1" style="display: none;">
+                                <span class="clocked-in-at">Clocked in at <strong class="time-in-display">--:--:--</strong></span>
+                                <span class="elapsed-display ms-1">— Elapsed: <strong class="elapsed-time">00:00:00</strong></span>
+                            </div>
+                            <div id="resume-clock-wrap" class="mt-1" style="{{ $clock_status === 'clocked_out' ? '' : 'display: none;' }}">
+                                <button type="button" id="resumeClockBtn" class="btn btn-outline-primary btn-sm w-100 clock-resume-btn" style="border-radius: 0.5rem; font-size: 10pt;">
+                                    <i class="fas fa-play me-1"></i> Continue working (undo clock out)
+                                </button>
+                            </div>
+                        </div>
+                        --}}
                         <div class="inner-box featured p-2">
                             <div class="widget property-agent p-0">
                                 <div class="d-flex w-100 p-0">
                                     <h3 class="widget-title mb-2 pb-2 w-100">
                                         <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
-                                            <span class="col-8">My Attendance</span>
-                                            <span id="refreshAttendance" class="col-4 text-muted text-end" style="cursor: pointer;">
-                                                <i class="fas fa-sync-alt text-muted m-0 p-0" style="font-size: 12px !important;"></i> Refresh
-                                            </span>
+                                            <span class="col-12">My Attendance</span>
                                         </div>
+                                        <small class="d-block text-muted mt-1" style="font-size: 10px;">
+                                            Note: Attendance data is synced every 15 minutes.
+                                        </small>
                                     </h3>
                                 </div>
                                 <div class="agent-info">
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="container">
+                                            <div class="container-fluid p-0">
                                                 @php
                                                     $current_date = Carbon\Carbon::now()->format('d');
                                                     $start_date = $end_date = null;
@@ -409,6 +581,83 @@
     <iframe id="iframe-print" hidden></iframe>
 
     <style type="text/css">
+    .profile-photo-wrapper-home{
+        position: relative;
+        display: inline-block;
+    }
+    .profile-photo-overlay-home{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.35);
+        opacity: 0;
+        transition: opacity 0.15s ease-in-out;
+        z-index: 1;
+    }
+    .profile-photo-wrapper-home:hover .profile-photo-overlay-home{
+        opacity: 1;
+    }
+    .profile-photo-change-btn-home{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease-in-out;
+        font-size: 10pt;
+    }
+    .profile-photo-wrapper-home:hover .profile-photo-change-btn-home{
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .profile-photo-change-btn-home:disabled{
+        opacity: 0.75;
+        cursor: not-allowed;
+    }
+    #home-profile-photo-message{
+        text-align: center;
+    }
+    /* Clock button styles — disabled with portal clock feature (single block; no nested comments)
+    Clock button "Completed" state: keep text and icon always visible (no hover-only)
+    #clockBtn.btn-secondary,
+    #clockBtn.btn-secondary:disabled,
+    #clockBtn.clock-btn-completed {
+        color: #fff !important;
+        opacity: 1 !important;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+    #clockBtn.btn-secondary:hover,
+    #clockBtn.btn-secondary:focus,
+    #clockBtn.clock-btn-completed:hover,
+    #clockBtn.clock-btn-completed:focus {
+        color: #fff !important;
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+    }
+    #clockBtn.btn-secondary i,
+    #clockBtn.clock-btn-completed i {
+        color: inherit !important;
+        opacity: 1 !important;
+    }
+    /* "Continue working" button: always show text and icon (no hover needed) */
+    #resumeClockBtn.clock-resume-btn,
+    #resumeClockBtn.clock-resume-btn:hover,
+    #resumeClockBtn.clock-resume-btn:focus {
+        color: #0d6efd !important;
+        opacity: 1 !important;
+        background-color: transparent !important;
+    }
+    #resumeClockBtn.clock-resume-btn i {
+        color: inherit !important;
+        opacity: 1 !important;
+    }
+    */
     .settings-btn-opacity {
         opacity: 30% !important;
     }
@@ -435,82 +684,6 @@
         overflow-y: scroll
     }
 
-            
-    .calendar, .calendar_weekdays, .calendar_content {
-        max-width: 300px;
-    }
-    .calendar {
-        margin: auto;
-        font-family:'Muli', sans-serif;
-        font-weight: 400;
-    }
-    .calendar_content, .calendar_weekdays, .calendar_header {
-        position: relative;
-        overflow: hidden;
-    }
-    .calendar_weekdays div {
-        display:inline-block;
-        vertical-align:top;
-    }
-    .calendar_weekdays div, .calendar_content div {
-        width: 14.28571%;
-        overflow: hidden;
-        text-align: center;
-        background-color: transparent;
-        color: #6f6f6f;
-        font-size: 14px;
-    }
-    .calendar_content div {
-        border: 1px solid transparent;
-        float: left;
-    }
-    .calendar_content div:hover {
-        border: 1px solid #dcdcdc;
-        cursor: default;
-    }
-    .calendar_content div.blank:hover {
-        cursor: default;
-        border: 1px solid transparent;
-    }
-    .calendar_content div.past-date {
-        color: #d5d5d5;
-    }
-    .calendar_content div.today {
-        font-weight: bold;
-        font-size: 14px;
-        color: #87b633;
-        border: 1px solid #dcdcdc;
-    }
-    .calendar_content div.selected {
-        background-color: #f0f0f0;
-    }
-    .calendar_header {
-        width: 100%;
-        text-align: center;
-    }
-    .calendar_header h2 {
-        padding: 0 10px;
-        font-family:'Muli', sans-serif;
-        font-weight: 300;
-        font-size: 18px;
-        color: #87b633;
-        float:left;
-        width:70%;
-        margin: 0 0 10px;
-    }
-    button.switch-month {
-        background-color: transparent;
-        padding: 0;
-        outline: none;
-        border: none;
-        color: #dcdcdc;
-        float: left;
-        width:15%;
-        transition: color .2s;
-    }
-    button.switch-month:hover {
-        color: #87b633;
-    }
     .remove-last-row-border tbody > tr:last-child > td {
         border-bottom: 0;
     }
@@ -665,7 +838,6 @@
 @endsection
 
 @section('script')
-<script src="{{ asset('css/js/calendar.js') }}"></script>
     <script type="text/javascript" src="{{ asset('css/js/datepicker/jquery.timepicker.js') }}"></script>
     <link rel="stylesheet" type="text/css" href="{{ asset('css/js/datepicker/jquery.timepicker.css') }}" />
     <script type="text/javascript" src="{{ asset('css/js/datepicker/datepair.js') }}"></script>
@@ -682,6 +854,108 @@
             });
 
             $('.open-reminder').click();
+
+            // Profile Photo Upload (AJAX, no page reload)
+            const homeProfilePhotoImg = document.getElementById('homeProfilePhotoImg');
+            const homeProfilePhotoInput = document.getElementById('homeProfilePhotoInput');
+            const homeProfilePhotoChangeBtn = document.getElementById('homeProfilePhotoChangeBtn');
+            const homeProfilePhotoMessage = document.getElementById('home-profile-photo-message');
+
+            let currentHomeProfileSrc = homeProfilePhotoImg ? homeProfilePhotoImg.src : null;
+
+            function setHomeProfilePhotoMessage(type, message) {
+                if (!homeProfilePhotoMessage) return;
+                homeProfilePhotoMessage.style.display = 'block';
+                homeProfilePhotoMessage.className = 'alert alert-' + type;
+                homeProfilePhotoMessage.textContent = message;
+            }
+
+            if (homeProfilePhotoImg && homeProfilePhotoInput && homeProfilePhotoChangeBtn) {
+                const uploadUrl = "/client/employee/profile/" + (homeProfilePhotoImg.dataset.userId || "") + "/photo";
+
+                homeProfilePhotoChangeBtn.addEventListener('click', function () {
+                    homeProfilePhotoInput.click();
+                });
+
+                homeProfilePhotoInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) return;
+
+                    const allowedTypes = ['image/jpeg', 'image/png'];
+                    const maxBytes = 5 * 1024 * 1024; // 5MB
+
+                    if (!allowedTypes.includes(file.type)) {
+                        setHomeProfilePhotoMessage('danger', 'Please upload a JPG or PNG image.');
+                        this.value = '';
+                        if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        return;
+                    }
+
+                    if (file.size > maxBytes) {
+                        setHomeProfilePhotoMessage('danger', 'Image must be 5MB or less.');
+                        this.value = '';
+                        if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        return;
+                    }
+
+                    // Preview before upload
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        homeProfilePhotoImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    // `portal.app` layout (used by /home) may not include csrf meta tag.
+                    // Use Blade-generated token to avoid CSRF mismatch.
+                    const csrf = '{{ csrf_token() }}' || ($('meta[name="csrf-token"]').attr('content') || '');
+                    const formData = new FormData();
+                    formData.append('empImage', file);
+
+                    homeProfilePhotoChangeBtn.disabled = true;
+                    homeProfilePhotoChangeBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+                    $.ajax({
+                        url: uploadUrl,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf
+                        },
+                        success: function (res) {
+                            if (res && res.success && res.image_url) {
+                                currentHomeProfileSrc = res.image_url;
+                                homeProfilePhotoImg.src = res.image_url + '&t=' + Date.now();
+                                setHomeProfilePhotoMessage('success', 'Photo updated successfully.');
+                                homeProfilePhotoInput.value = '';
+                            } else {
+                                setHomeProfilePhotoMessage(
+                                    'danger',
+                                    (res && res.error_detail) ? res.error_detail : ((res && res.message) ? res.message : 'Upload failed.')
+                                );
+                                if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                            }
+                        },
+                        error: function (xhr) {
+                            let msg = 'Upload failed. Please try again.';
+                            try {
+                                const j = xhr.responseJSON;
+                                if (j && j.error_detail) msg = j.error_detail;
+                                else if (j && j.message) msg = j.message;
+                                else if (j && j.errors && j.errors.empImage && j.errors.empImage[0]) msg = j.errors.empImage[0];
+                            } catch (e) {}
+                            setHomeProfilePhotoMessage('danger', msg);
+                            if (currentHomeProfileSrc) homeProfilePhotoImg.src = currentHomeProfileSrc;
+                        },
+                        complete: function () {
+                            homeProfilePhotoChangeBtn.disabled = false;
+                            homeProfilePhotoChangeBtn.innerHTML = '<i class="fa fa-upload"></i> Change Photo';
+                        }
+                    });
+                });
+            }
 
             const showNotification = (icon, message, status, title = null) => {
                 titleTxt = ''
@@ -711,6 +985,113 @@
                 '</div>');
                 get_cutoff_date($(this).data('action'));
             });
+
+            // Update Details (AJAX)
+            const updateDetailsModalEl = document.getElementById('updateDetails');
+            const updateDetailsForm = document.getElementById('updateDetailsForm');
+            const saveDetailsBtn = document.getElementById('saveDetails');
+            const updateDetailsAlert = document.getElementById('updateDetailsAlert');
+
+            if (updateDetailsModalEl && updateDetailsForm && saveDetailsBtn) {
+                const setAlert = (type, message) => {
+                    updateDetailsAlert.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+                    updateDetailsAlert.classList.add('alert-' + type);
+                    updateDetailsAlert.textContent = message;
+                };
+
+                const clearAlert = () => {
+                    updateDetailsAlert.classList.add('d-none');
+                    updateDetailsAlert.textContent = '';
+                };
+
+                const inputs = Array.from(updateDetailsForm.querySelectorAll('input, textarea, select'));
+                const captureOriginal = () => {
+                    inputs.forEach((el) => {
+                        el.dataset.original = (el.value ?? '').toString();
+                        el.classList.remove('border', 'border-warning');
+                    });
+                    saveDetailsBtn.disabled = true;
+                };
+
+                const computeDirty = () => {
+                    let dirty = false;
+                    inputs.forEach((el) => {
+                        const original = (el.dataset.original ?? '').toString();
+                        const current = (el.value ?? '').toString();
+                        const changed = original !== current;
+                        if (changed) dirty = true;
+                        el.classList.toggle('border', changed);
+                        el.classList.toggle('border-warning', changed);
+                    });
+                    saveDetailsBtn.disabled = !dirty;
+                };
+
+                updateDetailsModalEl.addEventListener('shown.bs.modal', () => {
+                    clearAlert();
+                    captureOriginal();
+                });
+
+                inputs.forEach((el) => el.addEventListener('input', computeDirty));
+
+                saveDetailsBtn.addEventListener('click', async () => {
+                    clearAlert();
+                    saveDetailsBtn.disabled = true;
+
+                    try {
+                        const csrf = $('meta[name="csrf-token"]').attr('content');
+                        const formData = new FormData(updateDetailsForm);
+
+                        const res = await fetch("{{ route('client.profile.update_personal_details') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json',
+                            },
+                            body: formData,
+                        });
+
+                        if (!res.ok) {
+                            if (res.status === 422) {
+                                const data = await res.json();
+                                const msg = Object.values(data.errors || {}).flat().join(' ');
+                                setAlert('danger', msg || 'Please check your inputs.');
+                            } else {
+                                setAlert('danger', 'An error occurred. Please try again.');
+                            }
+                            computeDirty();
+                            return;
+                        }
+
+                        const data = await res.json();
+                        if (!data.success) {
+                            setAlert('danger', data.message || 'An error occurred. Please try again.');
+                            computeDirty();
+                            return;
+                        }
+
+                        if (!data.updated) {
+                            setAlert('warning', data.message || 'No changes were made.');
+                            captureOriginal();
+                            return;
+                        }
+
+                        showNotification('fa fa-check-circle', 'Profile updated successfully.', 'success');
+
+                        // Update sidebar display without page reload
+                        const sidebarContactNo = document.getElementById('sidebarContactNo');
+                        const newContactNo = updateDetailsForm.querySelector('input[name="contact_no"]')?.value;
+                        if (sidebarContactNo && typeof newContactNo === 'string') {
+                            sidebarContactNo.textContent = newContactNo;
+                        }
+
+                        const modal = bootstrap.Modal.getInstance(updateDetailsModalEl) || new bootstrap.Modal(updateDetailsModalEl);
+                        modal.hide();
+                    } catch (e) {
+                        setAlert('danger', 'An error occurred. Please try again.');
+                        computeDirty();
+                    }
+                });
+            }
 
             function get_cutoff_date(op){
                 var date = new Date($('input[name="end"]').val());
@@ -884,6 +1265,27 @@
             loadAbsentNotices();
             loadGatepasses();
             loadItinerary();
+
+            // Auto-fetch attendance: run update then reload once on page load (same as Refresh button)
+            (function autoRefreshAttendanceOnce() {
+                var employee = '{{ Auth::user()->user_id }}';
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/update/' + employee,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    success: function() { loadAttendance(); }
+                });
+            })();
+            // Auto-refresh attendance every 5 minutes while page is open
+            setInterval(function() {
+                var employee = '{{ Auth::user()->user_id }}';
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/update/' + employee,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    success: function() { loadAttendance(); }
+                });
+            }, 5 * 60 * 1000);
 
             $(document).on('click', '#attendance-modal', function(event) {
                 loadAttendanceHistory();
@@ -1060,33 +1462,144 @@
                 });
             }
 
-            $(document).on('click', '#refreshAttendance', function(e) {
+            {{-- Portal clock in/out JS — disabled temporarily (re-enable with HTML block above + routes)
+            $(document).on('click', '#clockBtn', function(e) {
                 e.preventDefault();
-                $('#my-attendance').html('<div class="container-fluid d-flex justify-content-center align-items-center p-2">' +
-                    '<div class="spinner-border" role="status">' +
-                        '<span class="visually-hidden">Loading...</span>' +
-                    '</div>' +
-                '</div>');
-                loadAttendance(1);
-                var employee = '{{ Auth::user()->user_id }}';
+                var btn = $(this);
+                if (btn.prop('disabled')) return;
+                var status = btn.data('status');
+                var isClockIn = (status === 'none');
+                var url = isClockIn ? '/attendance/clock-in' : '/attendance/clock-out';
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...');
                 $.ajax({
                     type: 'POST',
-                    url: '/attendance/update/' + employee,
-                    data: {
-                        '_token': '{{ csrf_token() }}'
-                    },
-                    beforeSend: function() {
-                        $("#refreshAttendance").text("Updating...");
-                    },
-                    success: function(response) {
+                    url: url,
+                    data: { '_token': '{{ csrf_token() }}' },
+                    dataType: 'json',
+                    success: function(res) {
+                        var newStatus = (res && res.status) ? res.status : (isClockIn ? 'clocked_in' : 'clocked_out');
+                        btn.data('status', newStatus);
+                        if (res && res.time_in) { btn.data('time-in', res.time_in); }
+                        if (newStatus === 'clocked_in') {
+                            btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                            startClockedInTimer(res && res.time_in ? res.time_in : btn.data('time-in'));
+                        } else if (newStatus === 'clocked_out') {
+                            btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary clock-btn-completed');
+                            stopClockedInTimer();
+                            $('#resume-clock-wrap').show();
+                        }
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl((res && res.message) || (newStatus === 'clocked_in' ? 'Clocked in.' : 'Clocked out.'), { type: 'success', align: 'center', delay: 3000 });
+                        }
                         loadAttendance();
                     },
+                    error: function(xhr) {
+                        var res = xhr.responseJSON;
+                        var errStatus = (res && res.status) ? res.status : 'none';
+                        btn.data('status', errStatus);
+                        btn.prop('disabled', false);
+                        if (errStatus === 'none') {
+                            btn.html('<i class="fas fa-clock me-1"></i> Clock In');
+                            stopClockedInTimer();
+                        } else if (errStatus === 'clocked_in') {
+                            btn.html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out');
+                            startClockedInTimer(btn.data('time-in'));
+                        }
+                        var msg = (res && res.message) ? res.message : 'Request failed.';
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl(msg, { type: 'danger', align: 'center', delay: 4000 });
+                        } else {
+                            alert(msg);
+                        }
+                    },
                     complete: function() {
-                        $("#refreshAttendance").html("<i class=\"fas fa-sync-alt text-muted m-0 p-0\" style=\"font-size: 12px !important;\"></i> Refresh");
+                        if (btn.html().indexOf('Processing') !== -1) {
+                            var s = btn.data('status');
+                            if (s === 'clocked_in') {
+                                btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out').removeClass('clock-btn-completed');
+                                $('#resume-clock-wrap').hide();
+                            } else if (s === 'clocked_out') {
+                                btn.prop('disabled', true).html('<i class="fas fa-check-circle me-1"></i> Completed').removeClass('btn-primary').addClass('btn-secondary clock-btn-completed');
+                                $('#resume-clock-wrap').show();
+                            } else {
+                                btn.prop('disabled', false).html('<i class="fas fa-clock me-1"></i> Clock In').removeClass('clock-btn-completed');
+                                $('#resume-clock-wrap').hide();
+                            }
+                        }
                     }
                 });
             });
 
+            $(document).on('click', '#resumeClockBtn', function(e) {
+                e.preventDefault();
+                var $resumeBtn = $(this);
+                if ($resumeBtn.prop('disabled')) return;
+                $resumeBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Resuming...');
+                $.ajax({
+                    type: 'POST',
+                    url: '/attendance/resume',
+                    data: { '_token': '{{ csrf_token() }}' },
+                    dataType: 'json',
+                    success: function(res) {
+                        var btn = $('#clockBtn');
+                        if (res && res.status === 'clocked_in') {
+                            btn.data('status', 'clocked_in').data('time-in', res.time_in || btn.data('time-in'));
+                            btn.prop('disabled', false).html('<i class="fas fa-sign-out-alt me-1"></i> Clock Out').removeClass('btn-secondary clock-btn-completed').addClass('btn-primary');
+                            if (res.time_in) startClockedInTimer(res.time_in);
+                            $('#resume-clock-wrap').hide();
+                        }
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl((res && res.message) || 'Resumed. Clock out when you are done.', { type: 'success', align: 'center', delay: 3000 });
+                        }
+                        loadAttendance();
+                    },
+                    error: function(xhr) {
+                        var res = xhr.responseJSON;
+                        var msg = (res && res.message) ? res.message : 'Could not resume.';
+                        if (typeof $.bootstrapGrowl === 'function') {
+                            $.bootstrapGrowl(msg, { type: 'danger', align: 'center', delay: 4000 });
+                        } else {
+                            alert(msg);
+                        }
+                    },
+                    complete: function() {
+                        $resumeBtn.prop('disabled', false).html('<i class="fas fa-play me-1"></i> Continue working (undo clock out)');
+                    }
+                });
+            });
+            @if($clock_status === 'clocked_out')
+            $(function(){ $('#resume-clock-wrap').show(); });
+            @endif
+
+            var clockedInTimerInterval = null;
+            function startClockedInTimer(timeInStr) {
+                if (!timeInStr) return;
+                var $timer = $('#clocked-in-timer');
+                $timer.find('.time-in-display').text(timeInStr);
+                $timer.show();
+                function tick() {
+                    var parts = timeInStr.split(':');
+                    var start = new Date();
+                    start.setHours(parseInt(parts[0],10), parseInt(parts[1],10), parseInt(parts[2],10) || 0, 0);
+                    var now = new Date();
+                    if (start > now) start.setDate(start.getDate() - 1);
+                    var sec = Math.floor((now - start) / 1000);
+                    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+                    var fmt = function(n){ return (n < 10 ? '0' : '') + n; };
+                    $timer.find('.elapsed-time').text(fmt(h) + ':' + fmt(m) + ':' + fmt(s));
+                }
+                tick();
+                if (clockedInTimerInterval) clearInterval(clockedInTimerInterval);
+                clockedInTimerInterval = setInterval(tick, 1000);
+            }
+            function stopClockedInTimer() {
+                if (clockedInTimerInterval) { clearInterval(clockedInTimerInterval); clockedInTimerInterval = null; }
+                $('#clocked-in-timer').hide();
+            }
+            @if($clock_status === 'clocked_in' && $clocked_in_at)
+            $(function(){ startClockedInTimer('{{ $clocked_in_at }}'); });
+            @endif
+            --}}
 
             $(document).on('click', '#view-notice', function(event) {
                 event.preventDefault();
@@ -1321,6 +1834,103 @@
                 });
             });
 
+            function resendManagerNotice(btn, noticeId) {
+                if (btn.prop('disabled')) {
+                    return;
+                }
+
+                var icon = btn.find('i');
+                var originalIconClass = icon.attr('class');
+                var originalTitle = btn.attr('title');
+                var originalBtnText = btn.text();
+                var isModalButton = btn.attr('id') === 'notify-manager-modal-btn';
+
+                btn.prop('disabled', true).attr('title', 'Sending...');
+                icon.removeClass().addClass('fa fa-spinner fa-spin');
+                if (isModalButton) {
+                    btn.contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).remove();
+                    btn.append(' Sending...');
+                }
+
+                $.ajax({
+                    url: "/notice_slip/resend-manager-notification",
+                    type: "POST",
+                    data: {
+                        notice_id: noticeId,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            if (typeof showNotification === 'function') {
+                                showNotification("fa fa-check-circle-o", data.message, 'success', 'Manager notified');
+                            } else {
+                                $.bootstrapGrowl(
+                                    "<center><i class=\"fa fa-check-square-o\" style=\"font-size: 30pt; float: left; padding-right: 10px;\"></i><span style=\"display:block; font-size: 12pt; padding-top: 5px;\">" +
+                                    data.message + "</span></center>", {
+                                        type: 'success',
+                                        align: 'center',
+                                        delay: 4000,
+                                        width: 450,
+                                        offset: {
+                                            from: 'top',
+                                            amount: 300
+                                        },
+                                        stackup_spacing: 20
+                                    });
+                            }
+                        } else {
+                            if (typeof showNotification === 'function') {
+                                showNotification("fa fa-exclamation-triangle", data.message || 'Unable to notify manager.', 'danger');
+                            } else {
+                                $.bootstrapGrowl(data.message || 'Unable to notify manager.', {
+                                    type: 'danger',
+                                    align: 'center',
+                                    delay: 3500
+                                });
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = 'Unable to notify manager. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        if (typeof showNotification === 'function') {
+                            showNotification("fa fa-exclamation-triangle", message, 'danger');
+                        } else {
+                            $.bootstrapGrowl(message, {
+                                type: 'danger',
+                                align: 'center',
+                                delay: 3500
+                            });
+                        }
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).attr('title', originalTitle || 'Notify Manager');
+                        icon.removeClass().addClass(originalIconClass || 'fa fa-bell');
+                        if (isModalButton) {
+                            btn.contents().filter(function() {
+                                return this.nodeType === 3;
+                            }).remove();
+                            btn.append(originalBtnText);
+                        }
+                    }
+                });
+            }
+
+            $(document).on('click', '.notify-manager-btn', function(event) {
+                event.preventDefault();
+                resendManagerNotice($(this), $(this).data('id'));
+            });
+
+            $(document).on('click', '#notify-manager-modal-btn', function(event) {
+                event.preventDefault();
+                resendManagerNotice($(this), $('#edit-notice-form .notice_id').val());
+            });
+
             $(document).on('click', '#printGatepass', function(event) {
                 event.preventDefault();
                 var id = $(this).data('id');
@@ -1384,12 +1994,14 @@
                         console.log(totaldays);
 
                         var status = data.status;
+                        $('#notify-manager-modal-btn').hide().prop('disabled', false).removeData('id');
                         if (status.toLowerCase() != 'for approval') {
                             $("#cancel-notice").hide();
                             $("#update-notice").hide();
                         } else {
                             $("#cancel-notice").show();
                             $("#update-notice").show();
+                            $('#notify-manager-modal-btn').show().data('id', data.notice_id);
                         }
                         if (status.toLowerCase() != 'cancelled') {
 
@@ -1755,6 +2367,10 @@
                 $('#notice-slip-submit-btn').removeAttr('disabled');
             });
 
+            $('#editNoticeModal').on('hidden.bs.modal', function() {
+                $('#notify-manager-modal-btn').hide().prop('disabled', false).removeData('id');
+            });
+
             function getDeductions() {
                 var employee = '{{ Auth::user()->user_id }}';
 
@@ -1893,19 +2509,6 @@
                     }
                 });
             });
-
-            loadAppraisal();
-
-            function loadAppraisal(page) {
-                var user_id = {{ Auth::user()->user_id }};
-
-                $.ajax({
-                    url: "/getEmpAppraisal/" + user_id + "?page=" + page,
-                    success: function(data) {
-                        $('#appraisal-table').html(data);
-                    }
-                });
-            }
 
             $(document).on('submit', '#edit-evaluation-file-form', function(e) {
                 e.preventDefault();

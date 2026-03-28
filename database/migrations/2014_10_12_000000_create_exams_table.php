@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Eloquent\SoftDeletes; // <-- This is required
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema; // <-- This is required
 
-class Exams extends Eloquent {
-
+class Exams extends Eloquent
+{
     use SoftDeletes; // <-- Use This Instead Of SoftDeletingTrait
 
     protected $table = 'exams';

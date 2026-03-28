@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateOperationalPolicyFilesTable extends Migration
 {
@@ -17,7 +17,7 @@ class CreateOperationalPolicyFilesTable extends Migration
             $table->increments('policy_id');
             $table->integer('department_id');
             $table->string('file_attachment');
-            $table->string('description');           
+            $table->string('description');
             $table->timestamps();
         });
     }

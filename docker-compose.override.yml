@@ -1,0 +1,12 @@
+services:
+  app:
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
+      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
+    volumes:
+      # Dev: mount local code (writable for Laravel); nginx uses :ro via main compose
+      - ./:/var/www/html
+      # Dev: revalidate PHP files immediately (no rebuild needed for code edits)
+      - ./docker/php/opcache.dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini:ro

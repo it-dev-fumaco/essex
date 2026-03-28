@@ -32,10 +32,10 @@
               <div class="support-inner">
                 <div class="support-info" style="margin: 5px; padding: 20px 3px 20px 80px;">
                   <div class="info-title">
-                    <a href="{{ asset('storage/uploads/files/'.$policy->file_attachment) }}" class="text-decoration-none one-line ellipsis responsive-font" target="_blank">
+                    <a href="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url('uploads/files/'.$policy->file_attachment) }}" class="text-decoration-none one-line ellipsis responsive-font" target="_blank">
                       <i class="fas fa-file" style="font-size: 32pt;"></i>{{ $policy->subject }}
                     </a>
-                    <span>{!! str_limit($policy->description, 30) ? '' : '<br>' !!}</span>
+                    <span>{!! Illuminate\Support\Str::limit($policy->description, 30) ? '' : '<br>' !!}</span>
                   </div>
                   @if(Auth::user() && in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
                     <div class="container-fluid p-0">
@@ -74,9 +74,9 @@
                 @endif
                 <div class="support-info" style="margin: 5px; padding: 20px 3px 20px 80px;">
                   <div class="info-title">
-                    <a href="{{ asset('storage/uploads/files/'.$policy->file_attachment) }}" target="_blank"><i
-                        class="fa fa-file-text-o" style="font-size: 32pt;"></i>{{ str_limit($policy->subject, 27) }}</a>
-                    <span>{!! str_limit($policy->description, 30) ? '' : '<br>' !!}</span>
+                    <a href="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url('uploads/files/'.$policy->file_attachment) }}" target="_blank"><i
+                        class="fa fa-file-text-o" style="font-size: 32pt;"></i>{{ Illuminate\Support\Str::limit($policy->subject, 27) }}</a>
+                    <span>{!! Illuminate\Support\Str::limit($policy->description, 30) ? '' : '<br>' !!}</span>
                   </div>
                 </div>
               </div>

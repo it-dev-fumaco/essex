@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateExamGroupTable extends Migration
 {
@@ -16,7 +16,7 @@ class CreateExamGroupTable extends Migration
         Schema::create('exam_group', function (Blueprint $table) {
             $table->increments('exam_group_id');
             $table->string('exam_group_description');
-            $table->string('remarks');    
+            $table->string('remarks');
             $table->timestamps();
         });
     }

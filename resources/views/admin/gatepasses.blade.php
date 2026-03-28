@@ -14,6 +14,9 @@
             
             <div id="leave_types_list">
                @include('admin.table.gatepasses_table')
+               @if(method_exists($gatepasses, 'links'))
+               <div class="mt-3">{{ $gatepasses->links() }}</div>
+               @endif
             </div>
          </div>
       </div>

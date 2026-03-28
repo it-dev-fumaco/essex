@@ -37,42 +37,44 @@
                               <i class="fa fa-plus"></i> Holiday
                          </a>
                      </div>
-                      <div class="col-md-12">
-                        <table class="table" id="example">
-                           <thead>
-                              <tr>
-                                 <th>ID</th>
-                                 <th>Holiday Date</th>
-                                 <th>Description</th>
-                                 <th>Category</th>
-                                 <th>Actions</th>
-                              </tr>
-                           </thead>
-                           <tbody class="table-body">
-                              @forelse($holidays as $holiday)
-                              <tr>
-                                 <td>{{ $holiday->id }}</td>
-                                 <td>{{ date('F d, Y', strtotime($holiday->holiday_date)) }}</td>
-                                 <td>{{ $holiday->description }}</td>
-                                 <td>{{ $holiday->category }}</td>
-                                 <td>
-                                    <a href="#" data-toggle="modal" data-target="#edit-holiday-{{ $holiday->id }}">
-                              <i class="fa fa-pencil icon-edit"></i>
-                                    </a>
-                                    <a href="#" data-toggle="modal" data-target="#delete-holiday-{{ $holiday->id }}">
-                              <i class="fa fa-trash icon-delete"></i> 
-                                    </a>
-                                 </td>
-                             </tr>
-                              @include('client.modules.attendance.holiday_entry.modals.edit')
-                              @include('client.modules.attendance.holiday_entry.modals.delete')
-                              @empty
-                              <tr>
-                                 <td colspan="3">No Holiday(s) Found.</td>
-                              </tr>
-                              @endforelse
-                           </tbody>
-                        </table>
+                     <div class="col-md-12">
+                        <div class="table-responsive-wrapper">
+                           <table class="table" id="example">
+                              <thead>
+                                 <tr>
+                                    <th>ID</th>
+                                    <th>Holiday Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Actions</th>
+                                 </tr>
+                              </thead>
+                              <tbody class="table-body">
+                                 @forelse($holidays as $holiday)
+                                 <tr>
+                                    <td>{{ $holiday->id }}</td>
+                                    <td>{{ date('F d, Y', strtotime($holiday->holiday_date)) }}</td>
+                                    <td>{{ $holiday->description }}</td>
+                                    <td>{{ $holiday->category }}</td>
+                                    <td>
+                                       <a href="#" data-toggle="modal" data-target="#edit-holiday-{{ $holiday->id }}">
+                                 <i class="fa fa-pencil icon-edit"></i>
+                                       </a>
+                                       <a href="#" data-toggle="modal" data-target="#delete-holiday-{{ $holiday->id }}">
+                                 <i class="fa fa-trash icon-delete"></i> 
+                                       </a>
+                                    </td>
+                                </tr>
+                                 @include('client.modules.attendance.holiday_entry.modals.edit')
+                                 @include('client.modules.attendance.holiday_entry.modals.delete')
+                                 @empty
+                                 <tr>
+                                    <td colspan="3">No Holiday(s) Found.</td>
+                                 </tr>
+                                 @endforelse
+                              </tbody>
+                           </table>
+                        </div>
                      </div>
                   </div>
                </div>

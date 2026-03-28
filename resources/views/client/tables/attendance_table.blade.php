@@ -24,11 +24,11 @@
                <td class="text-center">
                   @if($row['time_in'])
                   <span class="badge bg-{{ $row['time_in_status'] === 'late' ? 'danger' : 'success'}}" style="font-size: 9pt;">
-                     {{ $row['time_in'] }}
+                     {{ \Carbon\Carbon::parse($row['time_in'])->format('H:i:s') }}
                   </span>
                   @endif
                </td>
-               <td class="text-center">{{ $row['time_out'] }}</td>   
+               <td class="text-center">{{ $row['time_out'] ? \Carbon\Carbon::parse($row['time_out'])->format('H:i:s') : '' }}</td>   
             @endif
             <td class="text-center">{{ $row['hrs_worked'] }}</td>
             <td class="text-center">{{ $row['overtime'] }}</td>
@@ -69,10 +69,18 @@
             Required Working Hour(s): <b>{{ $required_working_hrs }} hour(s)</b>
          </div>
          <div class="d-flex justify-content-between">
-            Total hour(s) worked: <b>{{ $total_hours_worked }} hour(s)</b>
+            Total hour(s) worked: <b>{{ number_format(max(0, (float)$total_hours_worked), 2) }} hour(s)</b>
          </div>
          <div class="d-flex justify-content-between">
-            Overtime Hour(s): <b>{{ $total_overtime }} hour(s)</b>
+            Overtime Hour(s): <b>{{ number_format(max(0, (float)$total_overtime), 2) }} hour(s)</b>
+         </div>
+         <div class="d-flex justify-content-between">
+            @php $balance = (float)($hours_balance ?? 0); @endphp
+            @if($balance >= 0)
+            Surplus / Overtime balance: <b>{{ number_format($balance, 2) }} hour(s)</b>
+            @else
+            Shortfall (remaining): <b>{{ number_format(-$balance, 2) }} hour(s)</b>
+            @endif
          </div>
       </div>
    </div>

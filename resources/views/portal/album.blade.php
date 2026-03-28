@@ -31,7 +31,7 @@
 	@foreach($images as $image)
 	<div class="col-md-3 col-sm-6 col-xs-12 mix living bedroom">
 		<div class="portfolio-item">
-			<img src="{{ asset('storage/'.$image->filepath) }}" alt="" height="350" />
+			<img src="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($image->filepath) }}" alt="" height="350" />
 			<div class="overlay">
 				<div class="icon">
 					@if(Auth::user())
@@ -39,7 +39,7 @@
 					<a href="#" id="setAsBtn" data-id="{{ $image->id }}" data-album="{{ $album->id }}" data-album_name="{{ $album->name }}" data-path="{{ $image->filepath }}"><i class="far fa-star"></i></a>
 					@endif
 					@endif
-					<a href="{{ asset('storage/'.$image->filepath) }}" class="lightbox"><i class="icon-eye right"></i></a>
+					<a href="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($image->filepath) }}" class="lightbox"><i class="icon-eye right"></i></a>
 					@if(Auth::user())
 					@if(in_array(Auth::user()->user_group, ['Editor', 'HR Personnel']))
 					<a href="#" data-bs-toggle="modal" data-bs-target="#deleteImage{{ $image->id }}"><i class="icon-trash left"></i></a>
@@ -59,7 +59,7 @@
 </div>
 
 </section>
-<center>{{ $images->links() }}</center>
+<center>{{ $images->links('vendor.pagination.bootstrap-4') }}</center>
 @endsection
 
 @section('script')

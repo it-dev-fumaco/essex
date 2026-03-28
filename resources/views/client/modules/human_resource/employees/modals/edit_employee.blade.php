@@ -77,10 +77,27 @@
                                  <input type="hidden" name="user_image" value="{{$employee_profile->image }}">
                                  <div style="text-align: center;">
                                     @php
-                                    $img = $employee_profile->image ? $employee_profile->image : '/storage/img/user.png'
+                                    use Illuminate\Support\Facades\Storage;
+                                    use Illuminate\Support\Str;
+
+                                    $imgValue = $employee_profile->image ? (string) $employee_profile->image : '/storage/img/user.png';
+                                    $img = null;
+                                    if (Str::startsWith($imgValue, ['http://', 'https://'])) {
+                                      $img = $imgValue;
+                                    } elseif (Str::startsWith($imgValue, ['/storage/', 'storage/'])) {
+                                      $img = asset(ltrim($imgValue, '/'));
+                                    } else {
+                                      try {
+                                        $disk = Storage::disk('upcloud');
+                                        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                                        $img = $disk->url(ltrim($imgValue, '/'));
+                                      } catch (\Throwable $e) {
+                                        $img = asset('storage/img/user.png');
+                                      }
+                                    }
                                     @endphp
                                     <div>
-                                       <img src="{{ asset($img) }}" width="110" height="110" class="imgPreview">
+                                       <img src="{{ $img }}" width="110" height="110" class="imgPreview">
                                     </div>
                                     <div class="fileUpload btn btn-primary upload-btn">
                                        <span>Choose File..</span>
@@ -258,6 +275,46 @@
                               <div class="form-group">
                                  <label>Password:</label>
                                  <input type="password" name="password" placeholder="Enter Password" required>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-md-12">
+                     <div class="inner-box featured" style="padding: 2px 10px 2px 10px;">
+                        <h2 class="title-2" style="font-size: 12pt;">Separation Details</h2>
+                        <div class="row" style="padding-top: 0; padding-bottom: 0;">
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Separation Date:</label>
+                                 <input type="date" name="separation_date" value="{{ $employee_profile->separation_date ?? '' }}">
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Separation Type:</label>
+                                 <select name="separation_type">
+                                    <option value="">Select Separation Type</option>
+                                    <option value="Resigned" {{ ($employee_profile->separation_type ?? '') === 'Resigned' ? 'selected' : '' }}>Resigned</option>
+                                    <option value="Terminated" {{ ($employee_profile->separation_type ?? '') === 'Terminated' ? 'selected' : '' }}>Terminated</option>
+                                    <option value="End of Contract" {{ ($employee_profile->separation_type ?? '') === 'End of Contract' ? 'selected' : '' }}>End of Contract</option>
+                                 </select>
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Clearance Status:</label>
+                                 <select name="clearance_status">
+                                    <option value="">Select Clearance Status</option>
+                                    <option value="Pending" {{ ($employee_profile->clearance_status ?? '') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="Cleared" {{ ($employee_profile->clearance_status ?? '') === 'Cleared' ? 'selected' : '' }}>Cleared</option>
+                                 </select>
+                              </div>
+                           </div>
+                           <div class="col-sm-4">
+                              <div class="form-group">
+                                 <label>Reason:</label>
+                                 <textarea name="separation_reason" rows="2" placeholder="Enter reason">{{ $employee_profile->separation_reason ?? '' }}</textarea>
                               </div>
                            </div>
                         </div>

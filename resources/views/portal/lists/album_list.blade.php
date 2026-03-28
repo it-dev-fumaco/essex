@@ -7,7 +7,7 @@
           <figure class="item-thumb">
             <a class="hover-effect" href="/gallery/album/{{ $album->id }}">
               @if($album->featured_image)
-              <img src="{{ asset('storage/'. $album->featured_image) }}" alt="" width="340" height="210">
+              <img src="{{ Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($album->featured_image) }}" alt="" width="340" height="210">
               @else
               <img src="{{ asset('storage/img/notfound.png') }}" alt="" width="340" height="210">
               @endif
@@ -36,7 +36,7 @@
       <div class="item-foot date hide-on-list">
         <div class="pull-left">
           <p class="prop-user-agent"><i class="icon-user"></i><a href="/gallery/album/{{ $album->id }}" class="text-decoration-none">{{
-              str_limit($album->created_by, 14) }}</a>
+              Illuminate\Support\Str::limit($album->created_by, 14) }}</a>
           </p>
         </div>
         <div class="pull-right">
@@ -51,6 +51,6 @@
   @endforeach
 
   <div class="col-md-12" id="album_pagination">
-    <div class="pagination-bar center">{{ $albums->links()}}</div>
+    <div class="pagination-bar center">{{ $albums->links('vendor.pagination.bootstrap-4') }}</div>
   </div>
 </div>

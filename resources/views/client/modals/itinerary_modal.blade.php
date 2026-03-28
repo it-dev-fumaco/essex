@@ -1,5 +1,5 @@
 <div class="modal fade" id="view-list-{{ $row->parent }}" style="text-align: left;">
-   <div class="modal-dialog" style="width:720px;">
+  <div class="modal-dialog">
       <div class="modal-content">
          <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>

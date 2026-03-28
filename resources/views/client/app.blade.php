@@ -290,9 +290,26 @@ button.switch-month:hover {
                 <div class="row" style="padding: 3px;">
                   <div style="float: left; margin-right: 5px;">
                       @php
-                     $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png'
+                     use Illuminate\Support\Facades\Storage;
+                     use Illuminate\Support\Str;
+
+                     $imgValue = Auth::user()->image ? (string) Auth::user()->image : '/storage/img/user.png';
+                     $img = null;
+                     if (Str::startsWith($imgValue, ['http://', 'https://'])) {
+                       $img = $imgValue;
+                     } elseif (Str::startsWith($imgValue, ['/storage/', 'storage/'])) {
+                       $img = asset(ltrim($imgValue, '/'));
+                     } else {
+                       try {
+                         $disk = Storage::disk('upcloud');
+                         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                         $img = $disk->url(ltrim($imgValue, '/'));
+                       } catch (\Throwable $e) {
+                         $img = asset('storage/img/user.png');
+                       }
+                     }
                      @endphp
-                    <img src="{{ asset($img) }}" width="60" height="60" class="user-image">
+                    <img src="{{ $img }}" width="60" height="60" class="user-image">
                   </div>
                   <div style="float: right; margin-top: 8px;">
                     <span style="display: block;">
