@@ -52,6 +52,7 @@
         display: flex;
         flex-direction: column;
         background-color: #f2f4f4;
+        overflow-x: hidden;
     }
     .portal-app > .header {
         flex-shrink: 0;
@@ -190,31 +191,33 @@
         font-size: 2.5rem;
     }
 
+    /* Account / welcome pill (navbar — former top-bar removed) */
     .account-setting {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
     }
 
     .account-setting .account-menu-toggle {
-        color: #ffffff;
+        color: #1a1a2e;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 12px;
         padding: 8px 12px;
         border-radius: 999px;
-        background-color: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
+        background-color: rgba(17, 112, 60, 0.1);
+        border: 1px solid rgba(17, 112, 60, 0.22);
         min-height: 44px;
         transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
 
     .account-setting .account-menu-toggle:hover,
     .account-setting .account-menu-toggle:focus {
-        color: #ffffff;
-        background-color: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.35);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+        color: #1a1a2e;
+        background-color: rgba(17, 112, 60, 0.16);
+        border-color: rgba(17, 112, 60, 0.3);
+        box-shadow: 0 0 0 3px rgba(17, 112, 60, 0.12);
     }
 
     .account-setting .account-menu-toggle::after {
@@ -226,8 +229,7 @@
         font-size: 15px;
         font-weight: 700;
         line-height: 1.2;
-        color: #ffffff;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        color: #1a1a2e;
         max-width: 320px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -242,7 +244,8 @@
         align-items: center;
         justify-content: center;
         font-size: 16px;
-        background-color: rgba(0, 0, 0, 0.14);
+        background-color: rgba(17, 112, 60, 0.15);
+        color: #11703c;
     }
 
     .account-setting .dropdown-menu {
@@ -298,16 +301,6 @@
             font-size: 1.5rem;
         }
 
-        .account-setting .account-menu-toggle {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .account-setting .account-welcome {
-            max-width: 210px;
-            font-size: 13px;
-        }
-
     }
 </style>
 </head>
@@ -326,54 +319,6 @@
     ];
 @endphp
 <div class="header portal-header-modern">
-    <div class="top-bar">
-        <div class="container-fluid">
-            <div class="col-md-12">
-                <div class="row">
-                    <div class="col-md-7 col-sm-6">
-                        <ul class="contact-details">
-                        </ul>
-                    </div>
-                    <div class="col-md-5 col-sm-6">
-                        <div class="account-setting">
-                            @if(Auth::user())
-                            <div class="dropdown d-inline-block">
-                                <a href="#"
-                                   class="account-menu-toggle dropdown-toggle"
-                                   id="accountActionDropdown"
-                                   role="button"
-                                   data-bs-toggle="dropdown"
-                                   aria-expanded="false">
-                                    <span class="account-welcome">Welcome, {{ Auth::user()->employee_name }}!</span>
-                                    <span class="account-gear-icon" aria-hidden="true">
-                                        <i class="fas fa-cog"></i>
-                                    </span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountActionDropdown">
-                                    <li>
-                                        <a class="dropdown-item header-change-password" href="/home" data-bs-toggle="modal" data-bs-target="#changePassword">
-                                            <i class="fas fa-key me-2" aria-hidden="true"></i>Change Password
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ url('/userLogout') }}">
-                                            <i class="icon-logout me-2" aria-hidden="true"></i>Logout
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            @else
-                            <a href="#"  data-bs-toggle="modal" data-bs-target="#loginModal">
-                                <i class="icon-login"></i> <span>Login</span>
-                            </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     @include('nav')
 </div>
 <main class="portal-main">

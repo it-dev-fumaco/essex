@@ -16,16 +16,10 @@ return [
     */
     'systems' => [
         [
-            'name' => 'ERPNExt',
+            'name' => 'ERPNext',
             'label' => 'Enterprise Resource Planning',
-            'url' => '10.0.0.83:8000',
+            'url' => 'http://10.0.0.83',
             'icon' => 'fa-building',
-        ],
-        [
-            'name' => 'Essex',
-            'label' => 'Employee Portal',
-            'url' => 'http://essex.fumaco.com',
-            'icon' => 'fa-user',
         ],
         [
             'name' => 'Athena ERP',
