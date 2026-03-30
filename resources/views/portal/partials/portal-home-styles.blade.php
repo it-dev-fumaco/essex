@@ -63,22 +63,28 @@
 
 .portal-hero .input-group {
     flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+}
+
+/* Icon segment: round only the outer-left corners; input must stay square on the left so it meets flush */
+.portal-hero .input-group-text {
+    border-radius: 12px 0 0 12px;
+    border: none;
+    padding-left: 1rem;
+    padding-right: 0.75rem;
+    color: #6c757d;
 }
 
 .portal-hero .carousel-search {
     font-family: 'Poppins-Regular', sans-serif !important;
     font-size: 1rem;
-    border-radius: 12px 0 0 12px !important;
+    border-radius: 0 !important;
     border: none;
     padding: 0.65rem 1rem;
     min-height: 48px;
-}
-
-.portal-hero .input-group-text {
-    border-radius: 12px 0 0 12px;
-    border: none;
-    padding-left: 1rem;
-    color: #6c757d;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .portal-hero .submit-search.portal-btn-gradient {
@@ -207,9 +213,9 @@
 
 .portal-vision-card {
     position: relative;
-    border-radius: var(--portal-card-radius);
+    border-radius: 12px;
     overflow: hidden;
-    min-height: 200px;
+    min-height: 300px;
     box-shadow: var(--portal-shadow);
 }
 
@@ -220,27 +226,151 @@
     background-position: center;
 }
 
-.portal-vision-card .portal-vision-body {
-    position: relative;
+.portal-vision-card .portal-vision-overlay {
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    padding: 1.25rem;
+    background: rgba(0, 0, 0, 0.58);
+}
+
+.portal-vision-carousel {
+    position: relative;
+    z-index: 2;
+    min-height: 300px;
+}
+
+.portal-vision-carousel .carousel-inner {
+    min-height: 300px;
+}
+
+.portal-vision-carousel .carousel-item {
+    min-height: 300px;
+    transition: transform 0.5s ease-in-out;
+}
+
+.portal-vision-slide-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 300px;
+    padding: 2rem 3rem 2.5rem;
+    margin: 0 auto;
+    max-width: 92%;
     color: #fff;
-    text-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.85),
-        0 2px 16px rgba(0, 0, 0, 0.45);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.portal-vision-card h2 {
-    font-size: 1.15rem;
+.portal-vision-heading {
+    font-family: 'Poppins-Bold', 'Poppins-Regular', sans-serif;
+    font-size: clamp(1.75rem, 4vw, 2.35rem);
     font-weight: 700;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    color: #fff;
 }
 
-.portal-vision-card p {
-    font-size: 0.88rem;
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-    opacity: 0.98;
+.portal-vision-slide-inner p {
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    max-width: 36rem;
+    color: #fff;
+}
+
+.portal-vision-carousel .portal-vision-carousel-btn {
+    width: 14%;
+    opacity: 1;
+    border: none;
+    background: transparent;
+    z-index: 3;
+}
+
+.portal-vision-carousel .portal-vision-carousel-btn i {
+    font-size: 1.75rem;
+    color: #fff;
+    opacity: 0.92;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.portal-vision-carousel .portal-vision-carousel-btn:hover i {
+    opacity: 1;
+}
+
+.portal-vision-carousel .carousel-control-prev-icon,
+.portal-vision-carousel .carousel-control-next-icon {
+    display: none;
+}
+
+/* Maximize Vision: wider column (xl-4) + tall panel on desktop */
+@media (min-width: 1200px) {
+    .portal-vision-card--max {
+        min-height: min(620px, 62vh);
+    }
+
+    .portal-vision-card--max .portal-vision-carousel,
+    .portal-vision-card--max .portal-vision-carousel .carousel-inner,
+    .portal-vision-card--max .portal-vision-carousel .carousel-item {
+        min-height: min(620px, 62vh);
+    }
+
+    .portal-vision-card--max .portal-vision-slide-inner {
+        min-height: min(620px, 62vh);
+        padding: 2.25rem 1.75rem 2.75rem;
+    }
+
+    .portal-vision-card--max .portal-vision-heading {
+        font-size: clamp(2rem, 2.8vw, 2.6rem);
+    }
+
+    .portal-vision-card--max .portal-vision-slide-inner p {
+        font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .portal-hero-glass {
+        padding: 0.65rem 0.85rem;
+        border-radius: 12px;
+    }
+
+    .portal-hero .carousel-search,
+    .portal-hero .submit-search.portal-btn-gradient {
+        min-height: 44px;
+    }
+
+    .portal-hero .carousel-search {
+        font-size: 0.9375rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .portal-hero-title {
+        font-size: 1.35rem;
+    }
+
+    .portal-vision-carousel,
+    .portal-vision-carousel .carousel-inner,
+    .portal-vision-carousel .carousel-item {
+        min-height: 240px;
+    }
+
+    .portal-vision-slide-inner {
+        min-height: 220px;
+        padding: 1.25rem 1rem 1.5rem;
+    }
+
+    .portal-vision-carousel .portal-vision-carousel-btn {
+        width: 11%;
+    }
+
+    .portal-vision-carousel .portal-vision-carousel-btn i {
+        font-size: 1.35rem;
+    }
+}
+
+.portal-reminders .form-check-label {
+    color: #3d4450;
 }
 
 .portal-reminders .form-check-input {
