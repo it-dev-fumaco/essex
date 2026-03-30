@@ -33,11 +33,11 @@
 <div class="portal-home portal-home-main">
     <div class="portal-hero">
         <div class="container-fluid px-3 px-xl-4">
-            <div class="row align-items-center py-3 py-xl-4">
-                <div class="col-lg-5 mb-3 mb-lg-0">
+            <div class="row align-items-center py-2 py-md-3 py-xl-4 g-3">
+                <div class="col-12 col-lg-5 text-center text-lg-start mb-0 mb-lg-0">
                     <h1 class="portal-hero-title">Welcome to Essex!</h1>
                 </div>
-                <div class="col-lg-7">
+                <div class="col-12 col-lg-7">
                     <div class="portal-hero-glass portal-hero-search-wrap">
                         <form action="{{ route('search') }}" id="searh-form" method="get" class="m-0">
                             <div class="input-group">
@@ -83,7 +83,7 @@
             </div>
 
             {{-- Center: systems --}}
-            <div class="col-12 col-xl-6">
+            <div class="col-12 col-xl-5">
                 <h2 class="portal-systems-title">FUMACO Systems</h2>
                 <div class="row g-3">
                     @foreach ($portalSystems as $idx => $sys)
@@ -102,14 +102,35 @@
                 </div>
             </div>
 
-            {{-- Right: vision + widgets --}}
-            <div class="col-12 col-xl-3">
-                <div class="portal-vision-card mb-3 mb-xl-4">
+            {{-- Right: vision + widgets (wider column + tall Vision on xl+) --}}
+            <div class="col-12 col-xl-4 d-flex flex-column gap-3 portal-home-right-col">
+                <div class="portal-vision-card portal-vision-card--max mb-0">
                     <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
-                    <div class="portal-vision-body">
-                        <h2>Vision</h2>
-                        <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
-                        <p>We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
+                    <div class="portal-vision-overlay" aria-hidden="true"></div>
+                    <div id="portalVisionCarousel" class="carousel slide portal-vision-carousel" data-bs-ride="carousel" data-bs-interval="9000" data-bs-wrap="true">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="portal-vision-slide-inner">
+                                    <h2 class="portal-vision-heading">Vision</h2>
+                                    <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
+                                    <p class="mb-0">We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="portal-vision-slide-inner">
+                                    <h2 class="portal-vision-heading">Mission</h2>
+                                    <p class="mb-0">To design and provide excellent, affordable, quality, energy efficient lighting solutions that don&apos;t jeopardize the environment.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="carousel-control-prev portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="prev">
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="next">
+                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
                 </div>
 

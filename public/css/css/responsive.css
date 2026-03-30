@@ -429,6 +429,24 @@
   }
 }
 
+/* My Attendance widget: centered title, emphasis above the note */
+.my-attendance-widget-title.widget-title:before {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.my-attendance-heading {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+.my-attendance-note {
+  font-size: 0.7rem !important;
+  line-height: 1.35;
+}
+
 /* Ensure My Attendance card handles wide content gracefully */
 #my-attendance {
   overflow-x: auto;

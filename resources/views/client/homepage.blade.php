@@ -628,14 +628,14 @@
                         <div class="inner-box featured p-2">
                             <div class="widget property-agent p-0">
                                 <div class="d-flex w-100 p-0">
-                                    <h3 class="widget-title mb-2 pb-2 w-100">
-                                        <div class="d-flex flex-row align-items-center justify-content-between" style="font-size: 12px !important;">
-                                            <span class="col-12">My Attendance</span>
+                                    <h3 class="widget-title mb-2 pb-2 w-100 my-attendance-widget-title">
+                                        <div class="text-center">
+                                            <span class="d-block my-attendance-heading">My Attendance</span>
+                                            <small class="d-flex align-items-center justify-content-center gap-1 text-info mt-2 my-attendance-note flex-wrap">
+                                                <i class="fas fa-info-circle flex-shrink-0" aria-hidden="true"></i>
+                                                <span><strong>Note:</strong> Attendance data is synced every 15 minutes.</span>
+                                            </small>
                                         </div>
-                                        <small class="d-flex align-items-center gap-1 text-info mt-1" style="font-size: 10px;">
-                                            <i class="fas fa-info-circle flex-shrink-0" aria-hidden="true"></i>
-                                            <span><strong>Note:</strong> Attendance data is synced every 15 minutes.</span>
-                                        </small>
                                     </h3>
                                 </div>
                                 <div class="agent-info">

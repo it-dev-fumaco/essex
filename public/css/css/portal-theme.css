@@ -1,21 +1,11 @@
 /**
- * Shared portal chrome: header, top bar, main nav (all pages using portal.app).
+ * Shared portal chrome: main nav (all pages using portal.app).
  */
 :root {
     --portal-gradient-start: #1a5fb4;
     --portal-gradient-mid: #0f8f8a;
     --portal-gradient-end: #159957;
     --portal-header-glass: rgba(255, 255, 255, 0.88);
-}
-
-.header.portal-header-modern .top-bar {
-    background: linear-gradient(
-        90deg,
-        rgba(26, 95, 180, 0.92) 0%,
-        rgba(15, 143, 138, 0.88) 50%,
-        rgba(21, 153, 87, 0.9) 100%
-    );
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .header.portal-header-modern .navbar {
@@ -68,6 +58,30 @@
     font-size: 0.75rem;
     color: #5c6370;
     font-weight: 500;
+}
+
+.header.portal-header-modern .navbar .portal-nav-account .account-menu-toggle {
+    color: #1a1a2e !important;
+    background-color: rgba(17, 112, 60, 0.1) !important;
+    border: 1px solid rgba(17, 112, 60, 0.22) !important;
+    box-shadow: none;
+}
+
+.header.portal-header-modern .navbar .portal-nav-account .account-menu-toggle:hover,
+.header.portal-header-modern .navbar .portal-nav-account .account-menu-toggle:focus {
+    color: #1a1a2e !important;
+    background-color: rgba(17, 112, 60, 0.16) !important;
+    border-color: rgba(17, 112, 60, 0.3) !important;
+}
+
+.header.portal-header-modern .navbar .portal-nav-account .account-welcome {
+    color: #1a1a2e !important;
+    text-shadow: none !important;
+}
+
+.header.portal-header-modern .navbar .portal-nav-account .account-gear-icon {
+    background-color: rgba(17, 112, 60, 0.15) !important;
+    color: #11703c !important;
 }
 
 .portal-nav-avatar {
