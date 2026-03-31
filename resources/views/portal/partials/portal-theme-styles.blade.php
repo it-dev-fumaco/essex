@@ -54,7 +54,7 @@
 }
 
 .portal-nav-brand-sub {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: #5c6370;
     font-weight: 500;
 }
@@ -68,7 +68,7 @@
 
 .portal-nav-fumaco-logo {
     display: block;
-    max-height: 25px;
+    max-height: 20px;
     width: auto;
     object-fit: contain;
 }
