@@ -118,20 +118,6 @@
                                 >
 
                                 <div class="profile-photo-overlay-home" aria-hidden="true"></div>
-                                <button
-                                    type="button"
-                                    class="btn btn-primary profile-photo-change-btn-home"
-                                    id="homeProfilePhotoChangeBtn"
-                                >
-                                    <i class="fa fa-upload"></i> Change Photo
-                                </button>
-                                <input
-                                    type="file"
-                                    id="homeProfilePhotoInput"
-                                    name="empImage"
-                                    accept="image/png,image/jpeg,image/jpg"
-                                    style="display: none;"
-                                >
                             </div>
 
                             <div id="home-profile-photo-message" style="display:none; margin-top: 10px;"></div>

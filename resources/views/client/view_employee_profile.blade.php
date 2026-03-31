@@ -43,10 +43,6 @@
 			>
 
 			<div class="profile-photo-overlay" aria-hidden="true"></div>
-			<button type="button" class="btn btn-primary profile-photo-change-btn" id="profilePhotoChangeBtn">
-				<i class="fa fa-upload"></i> Change Photo
-			</button>
-			<input type="file" id="profilePhotoInput" name="empImage" accept="image/png,image/jpeg,image/jpg" style="display: none;">
 		</div>
         <div style="float: left; padding: 1.5% 0;">
         	<span style="font-size: 18pt; display: block;">{{ $employee_profile->employee_name }}</span>

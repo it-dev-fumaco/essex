@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light w-100 portal-navbar">
     <div class="container-fluid portal-navbar-inner d-flex flex-wrap align-items-center px-2 px-lg-3">
-        <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-2 flex-shrink-0 min-w-0" href="{{ url('/') }}">
+        <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-1 flex-shrink-0 min-w-0" href="{{ url('/') }}">
             <img src="{{ asset('storage/img/logo5.png') }}" alt="" class="portal-nav-essex-logo flex-shrink-0">
             <span class="d-none d-sm-inline-block text-start portal-nav-brand-stack min-w-0">
                 <img src="{{ \Illuminate\Support\Facades\Storage::disk('upcloud')->url('logo/fumaco-transparent.png') }}" alt="Fumaco" class="portal-nav-fumaco-logo d-block mb-1">
