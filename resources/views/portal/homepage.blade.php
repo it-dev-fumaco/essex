@@ -82,58 +82,58 @@
                 </div>
             </div>
 
-            {{-- Center: systems --}}
-            <div class="col-12 col-xl-5">
-                <h2 class="portal-systems-title">FUMACO Systems</h2>
-                <div class="row g-3">
-                    @foreach ($portalSystems as $idx => $sys)
-                        <div class="col-md-6">
-                            <div class="card portal-system-card h-100 p-3">
-                                <div class="portal-system-icon accent-{{ $idx % 4 }}">
-                                    <i class="fas {{ $sys['icon'] ?? 'fa-link' }}" aria-hidden="true"></i>
+            {{-- Center + vision: same row on xl so heights match; widgets stack under vision column --}}
+            <div class="col-12 col-xl-9">
+                <div class="row g-4 align-items-xl-start">
+                    <div class="col-12 portal-home-systems-split">
+                        <h2 class="portal-systems-title">FUMACO Systems</h2>
+                        <div class="row g-3">
+                            @foreach ($portalSystems as $idx => $sys)
+                                <div class="col-md-6">
+                                    <div class="card portal-system-card h-100 p-3">
+                                        <div class="portal-system-icon accent-{{ $idx % 4 }}">
+                                            <i class="fas {{ $sys['icon'] ?? 'fa-link' }}" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="portal-system-name">{{ $sys['name'] }}</div>
+                                        <div class="portal-system-url">{{ $sys['label'] }}</div>
+                                        <div class="small text-muted mb-2 text-break">{{ $sys['url'] }}</div>
+                                        <a href="{{ $sys['url'] }}" class="portal-btn-open" target="_blank" rel="noopener noreferrer">Open system</a>
+                                    </div>
                                 </div>
-                                <div class="portal-system-name">{{ $sys['name'] }}</div>
-                                <div class="portal-system-url">{{ $sys['label'] }}</div>
-                                <div class="small text-muted mb-2 text-break">{{ $sys['url'] }}</div>
-                                <a href="{{ $sys['url'] }}" class="portal-btn-open" target="_blank" rel="noopener noreferrer">Open system</a>
-                            </div>
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Right: vision + widgets (wider column + tall Vision on xl+) --}}
-            <div class="col-12 col-xl-4 d-flex flex-column gap-3 portal-home-right-col">
-                <div class="portal-vision-card portal-vision-card--max mb-0">
-                    <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
-                    <div class="portal-vision-overlay" aria-hidden="true"></div>
-                    <div id="portalVisionCarousel" class="carousel slide portal-vision-carousel" data-bs-ride="carousel" data-bs-interval="9000" data-bs-wrap="true">
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <div class="portal-vision-slide-inner">
-                                    <h2 class="portal-vision-heading">Vision</h2>
-                                    <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
-                                    <p class="mb-0">We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="portal-vision-slide-inner">
-                                    <h2 class="portal-vision-heading">Mission</h2>
-                                    <p class="mb-0">To design and provide excellent, affordable, quality, energy efficient lighting solutions that don&apos;t jeopardize the environment.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="carousel-control-prev portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="prev">
-                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="next">
-                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                            <span class="visually-hidden">Next</span>
-                        </button>
                     </div>
-                </div>
-
+                    <div class="col-12 portal-home-vision-split d-flex flex-column gap-3">
+                        <div class="portal-vision-card mb-0 d-flex flex-column">
+                            <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
+                            <div class="portal-vision-overlay" aria-hidden="true"></div>
+                            <div id="portalVisionCarousel" class="carousel slide portal-vision-carousel d-flex flex-column" data-bs-ride="carousel" data-bs-interval="9000" data-bs-wrap="true">
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        <div class="portal-vision-slide-inner">
+                                            <h2 class="portal-vision-heading">Vision</h2>
+                                            <p><strong>FUMACO</strong> is the leading lighting solutions provider in the Philippines and in the ASEAN Region manned by highly motivated and equipped people.</p>
+                                            <p class="mb-0">We drive new technologies and standards throughout our organization and the industry, lifting and inspiring the various stakeholders around us.</p>
+                                        </div>
+                                    </div>
+                                    <div class="carousel-item">
+                                        <div class="portal-vision-slide-inner">
+                                            <h2 class="portal-vision-heading">Mission</h2>
+                                            <p class="mb-0">To design and provide excellent, affordable, quality, energy efficient lighting solutions that don&apos;t jeopardize the environment.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="carousel-control-prev portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="prev">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next portal-vision-carousel-btn" type="button" data-bs-target="#portalVisionCarousel" data-bs-slide="next">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-3 portal-home-right-widgets w-100">
                 <div class="card portal-card portal-widget-time shadow d-xl-none mb-3">
                     <div class="card-body">
                         <div class="row">
@@ -306,6 +306,9 @@
                     <div class="card-body">
                         <p class="responsive-font mb-0">If you cannot find an answer in the knowledge base, email IT at <b>it@fumaco.com</b></p>
                     </div>
+                </div>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>

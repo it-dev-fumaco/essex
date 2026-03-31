@@ -91,7 +91,7 @@
 .header.portal-header-modern .navbar .portal-nav-account .account-welcome {
     color: #1a1a2e !important;
     text-shadow: none !important;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     text-align: left;
 }
@@ -161,23 +161,23 @@
     }
 
     .portal-nav-account {
-        width: 100% !important;
+        width: auto !important;
         max-width: 100%;
         min-width: 0;
     }
 
     .portal-nav-account .account-setting {
-        width: 100%;
+        width: auto;
         max-width: 100%;
         min-width: 0;
     }
 
-    /* Welcome control: always stays inside the row; long names ellipsis */
+    /* Welcome control: pill hugs text + controls; long names ellipsis inside natural max width */
     .header.portal-header-modern .navbar .portal-nav-account .account-menu-toggle {
-        width: 100%;
-        max-width: 100%;
+        width: auto;
+        max-width: min(100%, 42rem);
         min-width: 0;
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: flex-start;
         gap: 0.5rem 0.75rem;
@@ -185,7 +185,7 @@
     }
 
     .header.portal-header-modern .navbar .portal-nav-account .account-gear-icon {
-        margin-left: auto;
+        margin-left: 0;
         flex-shrink: 0;
     }
 
@@ -196,7 +196,7 @@
 
     .header.portal-header-modern .navbar .portal-nav-account .account-welcome {
         max-width: none !important;
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
