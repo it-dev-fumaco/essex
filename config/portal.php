@@ -41,9 +41,9 @@ return [
         ],
         [
             'name' => 'LMS',
-            'label' => 'Learning Portal',
+            'label' => 'Logistic Management System',
             'url' => 'http://lms.fumaco.com',
-            'icon' => 'fa-book',
+            'icon' => 'fa-truck',
         ],
     ],
 ];

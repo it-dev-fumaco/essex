@@ -204,7 +204,7 @@
     position: relative;
     border-radius: 12px;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 220px;
     box-shadow: var(--portal-shadow);
 }
 
@@ -225,15 +225,15 @@
 .portal-vision-carousel {
     position: relative;
     z-index: 2;
-    min-height: 300px;
+    min-height: 220px;
 }
 
 .portal-vision-carousel .carousel-inner {
-    min-height: 300px;
+    min-height: 220px;
 }
 
 .portal-vision-carousel .carousel-item {
-    min-height: 300px;
+    min-height: 220px;
     transition: transform 0.5s ease-in-out;
 }
 
@@ -243,8 +243,8 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 300px;
-    padding: 2rem 3rem 2.5rem;
+    min-height: 220px;
+    padding: 1.35rem 1.5rem 1.5rem;
     margin: 0 auto;
     max-width: 92%;
     color: #fff;
@@ -253,16 +253,16 @@
 
 .portal-vision-heading {
     font-family: 'Poppins-Bold', 'Poppins-Regular', sans-serif;
-    font-size: clamp(1.75rem, 4vw, 2.35rem);
+    font-size: clamp(1.35rem, 3vw, 1.85rem);
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.65rem;
     color: #fff;
 }
 
 .portal-vision-slide-inner p {
-    font-size: clamp(1rem, 2.2vw, 1.2rem);
-    line-height: 1.55;
-    margin-bottom: 1rem;
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    line-height: 1.45;
+    margin-bottom: 0.65rem;
     max-width: 36rem;
     color: #fff;
 }
@@ -276,7 +276,7 @@
 }
 
 .portal-vision-carousel .portal-vision-carousel-btn i {
-    font-size: 1.75rem;
+    font-size: 1.45rem;
     color: #fff;
     opacity: 0.92;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));

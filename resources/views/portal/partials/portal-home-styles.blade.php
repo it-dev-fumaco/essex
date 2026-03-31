@@ -215,7 +215,7 @@
     position: relative;
     border-radius: 12px;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 220px;
     box-shadow: var(--portal-shadow);
 }
 
@@ -236,15 +236,15 @@
 .portal-vision-carousel {
     position: relative;
     z-index: 2;
-    min-height: 300px;
+    min-height: 220px;
 }
 
 .portal-vision-carousel .carousel-inner {
-    min-height: 300px;
+    min-height: 220px;
 }
 
 .portal-vision-carousel .carousel-item {
-    min-height: 300px;
+    min-height: 220px;
     transition: transform 0.5s ease-in-out;
 }
 
@@ -254,8 +254,8 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 300px;
-    padding: 2rem 3rem 2.5rem;
+    min-height: 220px;
+    padding: 1.35rem 1.5rem 1.5rem;
     margin: 0 auto;
     max-width: 92%;
     color: #fff;
@@ -264,16 +264,16 @@
 
 .portal-vision-heading {
     font-family: 'Poppins-Bold', 'Poppins-Regular', sans-serif;
-    font-size: clamp(1.75rem, 4vw, 2.35rem);
+    font-size: clamp(1.35rem, 3vw, 1.85rem);
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.65rem;
     color: #fff;
 }
 
 .portal-vision-slide-inner p {
-    font-size: clamp(1rem, 2.2vw, 1.2rem);
-    line-height: 1.55;
-    margin-bottom: 1rem;
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    line-height: 1.45;
+    margin-bottom: 0.65rem;
     max-width: 36rem;
     color: #fff;
 }
@@ -287,7 +287,7 @@
 }
 
 .portal-vision-carousel .portal-vision-carousel-btn i {
-    font-size: 1.75rem;
+    font-size: 1.45rem;
     color: #fff;
     opacity: 0.92;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
@@ -302,8 +302,58 @@
     display: none;
 }
 
-/* Maximize Vision: wider column (xl-4) + tall panel on desktop */
+/* Systems + Vision share one row on xl: 5:4 of the nine columns — heights match */
 @media (min-width: 1200px) {
+    .portal-home > .container-fluid > .row > .col-xl-9 > .row.align-items-xl-start {
+        flex-wrap: nowrap;
+    }
+
+    .portal-home-systems-split.col-12 {
+        flex: 0 0 55.555555% !important;
+        max-width: 55.555555% !important;
+        width: 55.555555% !important;
+    }
+
+    .portal-home-vision-split.col-12 {
+        flex: 0 0 44.444444% !important;
+        max-width: 44.444444% !important;
+        width: 44.444444% !important;
+    }
+
+    .portal-home-vision-split .portal-vision-card {
+        min-height: 0;
+        height: auto;
+        width: 100%;
+        max-height: min(380px, 48vh);
+    }
+
+    .portal-home-vision-split .portal-vision-carousel,
+    .portal-home-vision-split .portal-vision-carousel .carousel-inner {
+        min-height: 0;
+    }
+
+    .portal-home-vision-split .portal-vision-carousel .carousel-inner {
+        flex: 1 1 auto;
+    }
+
+    .portal-home-vision-split .portal-vision-carousel .carousel-item {
+        min-height: 100%;
+    }
+
+    .portal-home-vision-split .portal-vision-slide-inner {
+        min-height: 0;
+        padding: 1.1rem 1rem 1.25rem;
+    }
+
+    .portal-home-vision-split .portal-vision-heading {
+        font-size: clamp(1.35rem, 1.9vw, 1.75rem);
+    }
+
+    .portal-home-vision-split .portal-vision-slide-inner p {
+        font-size: clamp(0.85rem, 1.1vw, 0.98rem);
+    }
+
+    /* Optional: legacy class if reused elsewhere */
     .portal-vision-card--max {
         min-height: min(620px, 62vh);
     }
@@ -352,12 +402,12 @@
     .portal-vision-carousel,
     .portal-vision-carousel .carousel-inner,
     .portal-vision-carousel .carousel-item {
-        min-height: 240px;
+        min-height: 200px;
     }
 
     .portal-vision-slide-inner {
-        min-height: 220px;
-        padding: 1.25rem 1rem 1.5rem;
+        min-height: 200px;
+        padding: 1.1rem 0.85rem 1.25rem;
     }
 
     .portal-vision-carousel .portal-vision-carousel-btn {
@@ -365,7 +415,7 @@
     }
 
     .portal-vision-carousel .portal-vision-carousel-btn i {
-        font-size: 1.35rem;
+        font-size: 1.2rem;
     }
 }
 
