@@ -28,6 +28,7 @@ use App\Http\Controllers\BackgroundCheckController;
 use App\Http\Controllers\BiometricLogsController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CalendarViewController;
+use App\Http\Controllers\PortalCalendarController;
 use App\Http\Controllers\ClientExamsController;
 use App\Http\Controllers\DepartmentHeadListController;
 use App\Http\Controllers\DepartmentsController;
@@ -121,6 +122,10 @@ Route::prefix('admin')->group(function () {
 });
 Route::post('/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
 
+// Public Calendar page (role-aware; shows OOO only when logged in)
+Route::get('/calendar', [PortalCalendarController::class, 'index']);
+Route::get('/calendar/events', [PortalCalendarController::class, 'events']);
+
 // C L I E N T
 Route::middleware('auth')->group(function () {
 
@@ -130,7 +135,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/module/hr/designation/update', [DesignationsController::class, 'update']);
     Route::post('/module/hr/designation/delete', [DesignationsController::class, 'delete']);
 
-    // calendar
+    // calendar (legacy leave calendar endpoints)
     Route::post('/addEvent', [CalendarViewController::class, 'store']);
     Route::get('/calendar/fetch', [HomeController::class, 'getLeaves']);
     Route::get('/holidays', [CalendarViewController::class, 'getholidays']);
@@ -261,8 +266,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/editExaminee', [ExamineesController::class, 'editExaminee']);
     Route::post('/deleteExaminee', [ExamineesController::class, 'deleteExaminee']);
 
-    Route::get('/calendar', [HomeController::class, 'showCalendar']);
-    Route::get('/calendar/fetch', [HomeController::class, 'getLeaves']);
+    // Route::get('/calendar', [HomeController::class, 'showCalendar']);
+    // Route::get('/calendar/fetch', [HomeController::class, 'getLeaves']);
 
     // EVALUATION MODULE
     Route::get('/getEvaluations', [HomeController::class, 'getEvaluations']);

@@ -50,6 +50,9 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('services/directory*') ? 'active' : '' }}" href="{{ url('/services/directory') }}"><i class="icon-briefcase"></i> Employee Directory</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('calendar') ? 'active' : '' }}" href="{{ url('/calendar') }}"><i class="icon-calendar"></i> Calendar</a>
+                    </li>
                     @if(Auth::check())
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('home') ? 'active' : '' }}" href="{{ url('/home') }}"><i class="icon-user"></i> My profile</a>
