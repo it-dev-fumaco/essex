@@ -95,8 +95,13 @@
                     center: 'title',
                     right: 'month,agendaWeek,agendaDay'
                 },
+                // Refetch when navigating months; avoid stale cached GET responses
+                lazyFetching: true,
                 eventSources: [
-                    '{{ url('/calendar/events') }}'
+                    {
+                        url: '{{ url('/calendar/events') }}',
+                        cache: false
+                    }
                 ],
                 selectable: false,
                 editable: false,

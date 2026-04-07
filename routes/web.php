@@ -814,6 +814,10 @@ Route::prefix('attendance')->middleware('auth')->group(function () {
     Route::get('/deductions/{employee}', [AttendanceController::class, 'employeeLateDeductions']);
 });
 
+// No standalone kiosk landing page; /kiosk and /kiosk/ would otherwise 404.
+Route::redirect('/kiosk', '/kiosk/login');
+Route::redirect('/kiosk/', '/kiosk/login');
+
 Route::get('/kiosk/login', [KioskController::class, 'loginForm']);
 Route::post('/kiosk/loguser', [KioskController::class, 'kioskLogin']);
 Route::get('/kiosk/logoutuser', [KioskController::class, 'kioskLogout']);
