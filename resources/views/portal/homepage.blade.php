@@ -438,11 +438,12 @@
 
 <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
 <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
-<script src="{{ asset('/js/jquery-3.6.0.min.js') }}"></script>
+{{-- Do not load a second jQuery here: it replaces window.jQuery and drops Slider Revolution (jquery.fn.revolution). --}}
 
     <script>
-        const modal_ctrl = (modal, action) => {
-            $(modal).modal(action)
+(function ($) {
+        function modal_ctrl(modal, action) {
+            $(modal).modal(action);
         }
         $(document).ready(function () {
             @if (session()->has('notice_data'))
@@ -545,5 +546,6 @@
             }
         });
     }
+})(jQuery);
     </script>
 @endsection

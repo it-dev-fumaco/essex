@@ -43,8 +43,8 @@
                         }
                     @endphp
                     <a href="{{ $url }}" class="text-decoration-none">
-                        <b>{{ $title }}</b> - <span style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span><br/>
-                        {!! Illuminate\Support\Str::limit($description, 70, '...') !!}
+                        <b>{{ \Illuminate\Support\Str::limit(strip_tags((string) $title), 120) }}</b> - <span style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span><br/>
+                        {{ \Illuminate\Support\Str::limit(strip_tags((string) $description), 70, '...') }}
                     </a>
                     <hr style="border: 1px solid rgba(0,0,0,.1);">
                 @endforeach
