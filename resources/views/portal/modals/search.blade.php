@@ -13,7 +13,7 @@
     <div class="section" style="padding: 0 !important; min-height: 80vh">
       <div id="imagecontainer" class="container-fluid">
         <div class="container-fluid">
-          <div class="col-8 col-xl-6 mx-auto" style="padding-top: 30px;">
+          <div class="col-8 col-xl-6 mx-auto portal-search-field-area" style="padding-top: 30px;">
             <form action="{{ route('search') }}" id="searh-form" method="get">
               <div class="row" style="padding: 0; margin:0 ">
                 <div class="col-md-12 text-center">
@@ -27,7 +27,7 @@
                 </div>
               </div>
             </form>
-            <div id="autocomplete-container" class="container p-0 w-50 bg-white border-secondary d-none"></div>
+            <div id="autocomplete-container" class="portal-search-autocomplete container p-0 w-50 bg-white border-secondary d-none" role="listbox" aria-live="polite"></div>
           </div>
         </div>
       </div>
@@ -168,23 +168,68 @@
         $('#deletePolicyModal').modal('show');
     });
 
+    var portalSearchAjaxTimer = null;
+    var portalSearchAjaxSeq = 0;
+
+    function showPortalSearchLoading($ac) {
+        $ac.removeClass('d-none').html(
+            '<div class="portal-search-loading text-muted small">' +
+            '<span class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></span>' +
+            '<span> Loading suggestions…</span></div>'
+        );
+    }
+
+    function sanitizeAutocompleteFragment($ac) {
+        $ac.find('[class*="portal-header-modern"]').remove();
+        $ac.find('nav, .navbar, .portal-navbar').remove();
+    }
+
     $(document).on('keyup', '.carousel-search', function (e){
         e.preventDefault();
-        if($(this).val() != ''){
+        var query = $.trim($(this).val());
+        var $ac = $('#autocomplete-container');
+        if (portalSearchAjaxTimer) {
+            clearTimeout(portalSearchAjaxTimer);
+            portalSearchAjaxTimer = null;
+        }
+        if (query === '') {
+            $ac.addClass('d-none').empty();
+            return;
+        }
+        showPortalSearchLoading($ac);
+        portalSearchAjaxTimer = setTimeout(function () {
+            var seq = ++portalSearchAjaxSeq;
             $.ajax({
                 url: '/search',
                 type: 'get',
-                data: {
-                    query: $(this).val()
+                data: { query: query },
+                success: function (response) {
+                    if (seq !== portalSearchAjaxSeq) {
+                        return;
+                    }
+                    if ($.trim($('.carousel-search').first().val()) !== query) {
+                        return;
+                    }
+                    $ac.removeClass('d-none').empty();
+                    var nodes = $.parseHTML(response, document, false);
+                    if (nodes && nodes.length) {
+                        $ac.append(nodes);
+                    }
+                    sanitizeAutocompleteFragment($ac);
                 },
-                success:function(response){
-                    $('#autocomplete-container').removeClass('d-none').html(response);
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.log(jqXHR, textStatus, errorThrown);
+                error: function () {
+                    if (seq !== portalSearchAjaxSeq) {
+                        return;
+                    }
+                    if ($.trim($('.carousel-search').first().val()) !== query) {
+                        return;
+                    }
+                    $ac.removeClass('d-none').html(
+                        '<div class="p-3 small text-danger">Unable to load suggestions. Try again.</div>'
+                    );
                 }
             });
-        }
+        }, 280);
     });
 
     $(document).on('click', '.submit-search', function (e){
@@ -192,12 +237,11 @@
         $('#searh-form').submit();
     });
 
-    $(document).mouseup(function(e){
-        var container = $("#autocomplete-container");
-
-        if (!container.is(e.target) && container.has(e.target).length === 0){
-            container.addClass('d-none');
+    $(document).on('click.portalAutocompleteDismiss', function (e) {
+        if ($(e.target).closest('.portal-search-field-area').length) {
+            return;
         }
+        $('#autocomplete-container').addClass('d-none');
     });
 
     $(document).on('scroll', function (e){

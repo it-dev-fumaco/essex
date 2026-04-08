@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\SendMail_notice;
 use App\Events\AbsentNoticeStatusChanged;
+use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -716,34 +716,63 @@ class AbsentNoticesController extends Controller
 
     public function getNoticeDetails(Request $request)
     {
-        $notice_slip = DB::table('notice_slip')
-            ->join('users', 'users.user_id', '=', 'notice_slip.user_id')
-            ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-            ->join('departments', 'users.department_id', '=', 'departments.department_id')
-            ->where('notice_slip.notice_id', $request->id)
-            ->select('notice_slip.*', 'users.employee_name', 'leave_types.leave_type', 'departments.department', DB::raw('(SELECT employee_name FROM users WHERE user_id = notice_slip.approved_by) as approved_by'))
-            ->first();
+        // Prefer explicit query params. Accept notice_id alias (some clients send it). Avoid $request->id (magic / route shadowing).
+        $rawId = $request->query('id')
+            ?? $request->query('notice_id')
+            ?? $request->input('id')
+            ?? $request->input('notice_id');
+        $noticeId = is_numeric($rawId) ? (int) $rawId : 0;
+        if ($noticeId < 1) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Invalid or missing notice id.',
+            ]);
+        }
+
+        $row = DB::table('notice_slip')->where('notice_id', $noticeId)->first();
+        if (! $row) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Notice not found.',
+            ]);
+        }
+
+        $user = DB::table('users')->where('user_id', $row->user_id)->first();
+        $department = ($user && $user->department_id)
+            ? DB::table('departments')->where('department_id', $user->department_id)->value('department')
+            : null;
+        $leaveType = DB::table('leave_types')->where('leave_type_id', $row->leave_type_id)->value('leave_type');
+        $approverName = $row->approved_by
+            ? DB::table('users')->where('user_id', $row->approved_by)->value('employee_name')
+            : null;
+
+        $dateFiledRaw = data_get($row, 'date_filed') ?? data_get($row, 'date_filled');
 
         $data = [
-            'date_from' => $notice_slip->date_from,
-            'date_to' => $notice_slip->date_to,
-            'leave_type_id' => $notice_slip->leave_type_id,
-            'user_id' => $notice_slip->user_id,
-            'notice_id' => $notice_slip->notice_id,
-            'employee_name' => $notice_slip->employee_name,
-            'department' => $notice_slip->department,
-            'leave_type' => $notice_slip->leave_type,
-            'time_from' => $notice_slip->time_from,
-            'time_to' => $notice_slip->time_to,
-            'means' => $notice_slip->means,
-            'time_reported' => $notice_slip->time_reported,
-            'info_by' => $notice_slip->info_by,
-            'approved_by' => $notice_slip->approved_by,
-            'approved_date' => Carbon::parse($notice_slip->approved_date)->format('M. d, Y h:i A'),
-            'reason' => $notice_slip->reason,
-            'remarks' => $notice_slip->remarks,
-            'status' => $notice_slip->status,
-            'date_filed' => Carbon::parse($notice_slip->date_filed)->format('M. d, Y h:i A'),
+            'found' => true,
+            'date_from' => $row->date_from,
+            'date_to' => $row->date_to,
+            'leave_type_id' => $row->leave_type_id,
+            'user_id' => $row->user_id,
+            'notice_id' => $row->notice_id,
+            'employee_name' => $user?->employee_name ?? '',
+            'department' => $department ?? '',
+            'leave_type' => $leaveType ?? '',
+            'time_from' => $row->time_from,
+            'time_to' => $row->time_to,
+            'means' => $row->means,
+            'time_reported' => $row->time_reported,
+            'info_by' => $row->info_by,
+            'approved_by' => $approverName,
+            'approved_date' => $row->approved_date
+                ? Carbon::parse($row->approved_date)->format('M. d, Y h:i A')
+                : '',
+            'reason' => $row->reason,
+            'remarks' => $row->remarks,
+            'status' => $row->status,
+            'date_filed' => $dateFiledRaw
+                ? Carbon::parse($dateFiledRaw)->format('M. d, Y h:i A')
+                : '',
         ];
 
         return response()->json($data);

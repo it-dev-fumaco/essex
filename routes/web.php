@@ -183,7 +183,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance_history/fetch', [AttendanceController::class, 'attendance_history']);
     // Absent Notice
     Route::get('/notice_slip/fetch', [AbsentNoticesController::class, 'fetchNotices']);
-    Route::get('/notice_slip/getDetails', [AbsentNoticesController::class, 'getNoticeDetails']);
+    Route::get('/notice_slip/getDetails', [AbsentNoticesController::class, 'getNoticeDetails'])->name('notice_slip.getDetails');
     Route::post('/notice_slip/create', [AbsentNoticesController::class, 'store']);
     Route::post('/notice_slip/resend-manager-notification', [AbsentNoticesController::class, 'resendManagerNotification']);
     Route::post('/notice_slip/updateDetails', [AbsentNoticesController::class, 'updateNoticeDetails']);
@@ -813,6 +813,10 @@ Route::prefix('attendance')->middleware('auth')->group(function () {
     Route::get('/dashboard/{employee}', [AttendanceController::class, 'employeeAttendanceDashboard']);
     Route::get('/deductions/{employee}', [AttendanceController::class, 'employeeLateDeductions']);
 });
+
+// No standalone kiosk landing page; /kiosk and /kiosk/ would otherwise 404.
+Route::redirect('/kiosk', '/kiosk/login');
+Route::redirect('/kiosk/', '/kiosk/login');
 
 Route::get('/kiosk/login', [KioskController::class, 'loginForm']);
 Route::post('/kiosk/loguser', [KioskController::class, 'kioskLogin']);
