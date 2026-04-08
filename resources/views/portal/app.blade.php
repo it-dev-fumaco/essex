@@ -98,13 +98,7 @@
         background-color: #5CB85C !important;
     }
 
-    #autocomplete-container{
-        z-index: 1000 !important;
-        position: absolute;
-        top: 20;
-        left: 50 !important;
-        width: 95%;
-    }
+    /* Autocomplete positioning is defined per-page (.portal-hero #autocomplete-container in portal-home-styles; #imagecontainer below for /search). */
 
     .profile-image{
         display: block;
@@ -118,11 +112,46 @@
     }
 
     #imagecontainer {
+        position: relative;
+        overflow: visible;
         background: url("{{ asset('storage/img/slider/businessman.jpg') }}") no-repeat;
         height: 175px;
         background-size: 100% auto;
         background-repeat: no-repeat;
         background-position: center center;
+    }
+
+    .portal-search-field-area {
+        position: relative;
+        overflow: visible;
+        z-index: 2;
+    }
+
+    #imagecontainer #autocomplete-container.portal-search-autocomplete {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        margin-top: 6px;
+        width: 100%;
+        max-width: 100%;
+        max-height: min(70vh, 28rem);
+        overflow-y: auto;
+        overflow-x: hidden;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+    }
+
+    #imagecontainer #autocomplete-container .portal-search-loading {
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
     .carousel-search{

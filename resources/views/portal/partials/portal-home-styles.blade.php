@@ -28,6 +28,7 @@
     width: 100vw;
     max-width: 100vw;
     margin-top: 0;
+    overflow: visible;
 }
 
 .portal-hero-title {
@@ -52,7 +53,10 @@
 }
 
 .portal-hero-search-wrap {
+    position: relative;
+    overflow: visible;
     width: 100%;
+    z-index: 2;
 }
 
 @media (min-width: 992px) {
@@ -103,14 +107,32 @@
     color: #fff;
 }
 
-.portal-hero #autocomplete-container {
+/* Search suggestions: out of document flow so the page never reflows when open */
+.portal-hero #autocomplete-container.portal-search-autocomplete {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: 4px;
+    left: 0 !important;
+    right: auto !important;
+    top: 100% !important;
+    margin-top: 6px;
     width: 100% !important;
-    z-index: 1050 !important;
+    max-width: 100%;
+    z-index: 9999 !important;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: min(70vh, 28rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.portal-hero #autocomplete-container .portal-search-loading {
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .portal-card {
@@ -429,5 +451,70 @@
 
 .portal-widget-time {
     border-top: 3px solid #11703c;
+}
+
+/* Helpful Articles (was injected via <style> in AJAX fragment — keep rules here to avoid cascade/stacking glitches) */
+.portal-tbl-manuals {
+    position: relative;
+    z-index: 1;
+}
+
+.portal-helpful-articles .portal-article-list {
+    padding: 0.5rem 0;
+}
+
+.portal-helpful-articles .portal-article-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background 0.15s ease;
+}
+
+.portal-helpful-articles .portal-article-item:last-child {
+    border-bottom: none;
+}
+
+.portal-helpful-articles .portal-article-item:hover {
+    background: rgba(26, 95, 180, 0.04);
+}
+
+.portal-helpful-articles .portal-article-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+.portal-helpful-articles .portal-article-icon--blue {
+    background: linear-gradient(135deg, #1a5fb4, #3d8bfd);
+}
+
+.portal-helpful-articles .portal-article-icon--green {
+    background: linear-gradient(135deg, #159957, #20c997);
+}
+
+.portal-helpful-articles .portal-article-icon--teal {
+    background: linear-gradient(135deg, #0f8f8a, #2dd4bf);
+}
+
+.portal-helpful-articles .portal-article-icon--muted {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+}
+
+.portal-helpful-articles .portal-article-link {
+    color: #1a1a2e;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.portal-helpful-articles .portal-article-link:hover {
+    color: #1a5fb4;
 }
 </style>

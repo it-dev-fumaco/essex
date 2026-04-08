@@ -1706,15 +1706,21 @@
 
             $(document).on('click', '#view-notice', function(event) {
                 event.preventDefault();
-                var id = $(this).data('id');
+                // Use attr('data-id'): .data('id') can be undefined for AJAX-injected rows (jQuery internal cache).
+                var id = $(this).attr('data-id') || $(this).closest('[data-id]').attr('data-id');
                 data = {
-                    'id': id
+                    'id': id,
+                    'notice_id': id
                 }
 
                 $.ajax({
-                    url: "/notice_slip/getDetails",
+                    url: "{{ route('notice_slip.getDetails') }}",
                     data: data,
                     success: function(data) {
+                        if (data.found === false) {
+                            alert(data.message || 'Notice not found.');
+                            return;
+                        }
                         $('#viewNoticeModal .date-from-val').val(data.date_from);
                         $('#viewNoticeModal .date-to-val').val(data.date_to);
                         $('#viewNoticeModal .leave-type-id-val').val(data.leave_type_id);
@@ -2060,16 +2066,21 @@
                 });
             });
 
-            $(document).on('click', '#editAbsent', function(event) {
+            $(document).on('click', '.edit-absent', function(event) {
                 event.preventDefault();
-                var id = $(this).data('id');
+                var id = $(this).attr('data-id') || $(this).closest('[data-id]').attr('data-id');
                 data = {
-                    'id': id
+                    'id': id,
+                    'notice_id': id
                 }
                 $.ajax({
-                    url: "/notice_slip/getDetails",
+                    url: "{{ route('notice_slip.getDetails') }}",
                     data: data,
                     success: function(data) {
+                        if (data.found === false) {
+                            alert(data.message || 'Notice not found.');
+                            return;
+                        }
                         var leave_type = "leave_type_id" + data.leave_type_id;
                         $('#edit-notice-form .' + leave_type).prop('checked', true);
                         $('#edit-notice-form .notice_id').val(data.notice_id);

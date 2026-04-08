@@ -257,4 +257,15 @@
     }
 }
 
+/* Navbar stacks below portal search dropdown (dropdown z-index 9999 in portal-home-styles) */
+.portal-app > .header.portal-header-modern {
+    position: relative;
+    z-index: 1000;
+}
+
+.portal-app main.portal-main {
+    position: relative;
+    z-index: 0;
+}
+
 </style>

@@ -5,7 +5,7 @@
                 @foreach ($searchResults as $searchResult)
                     @php
                         if ($searchResult instanceof \Spatie\Searchable\SearchResult) {
-                            $url = $searchResult->url ?? '#';
+                            $url = \Illuminate\Support\Str::limit((string) ($searchResult->url ?? '#'), 2000, '…');
                             $title = $searchResult->title ?? '';
                             $category = $searchResult->type ?? '';
                             $description = '';
@@ -29,7 +29,7 @@
                                 $icon = 'fas fa-file';
                             }
                         } elseif (is_array($searchResult)) {
-                            $url = $searchResult['url'] ?? '#';
+                            $url = \Illuminate\Support\Str::limit((string) ($searchResult['url'] ?? '#'), 2000, '…');
                             $title = $searchResult['title'] ?? '';
                             $category = $searchResult['category'] ?? '';
                             $description = $searchResult['description'] ?? '';

@@ -136,7 +136,20 @@ class SearchController extends Controller
             $count = count($searchResults);
             $searchResults = collect($searchResults)->take(4);
 
-            return view('portal.modals.search_autocomplete', compact('searchResults', 'count', 'search_term'));
+            $html = view('portal.modals.search_autocomplete', compact('searchResults', 'count', 'search_term'))->render();
+
+            // Prevent any markup/scripts in indexed content from becoming active DOM or scripts when jQuery injects HTML.
+            $html = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $html);
+            $html = preg_replace('#<style\b[^>]*>.*?</style>#is', '', $html);
+            // Break accidental copies of portal layout class names from indexed HTML so they cannot match site header selectors.
+            $html = str_ireplace('portal-header-modern', 'autocomplete-sanitized', $html);
+            // Drop structural tags that should never appear in this partial (indexed HTML can embed full page fragments).
+            $allowedAutocompleteTags = '<div><span><a><b><br><hr><center><p><strong><small><i><u>';
+            $html = strip_tags($html, $allowedAutocompleteTags);
+            $html = preg_replace('#<\s*nav\b[^>]*>.*?</nav>#is', '', $html);
+            $html = preg_replace('#<\s*header\b[^>]*>.*?</header>#is', '', $html);
+
+            return response($html);
         }
 
         return view('portal.modals.search', compact('searchResults'));
