@@ -306,7 +306,7 @@ class EmployeesController extends Controller
                     'template' => 'admin.email_template.resigned_employee',
                     'template_data' => json_encode($data),
                 ];
-
+                // Keep resigned notice email even on update/edit.
                 try {
                     $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.resigned_employee', $employee->email, $data, $log);
                 } catch (\Throwable $th) {
@@ -317,18 +317,7 @@ class EmployeesController extends Controller
 
             $employee->save();
 
-            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
-            $newStatus = (string) ($employee->status ?? '');
-            if (
-                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
-                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
-                && empty($employee->offboarding_email_sent_at)
-            ) {
-                $this->triggerOffboardingEmail($employee);
-            }
-
-            // Re-trigger welcome if joining date was added/updated and not yet sent.
-            $this->triggerWelcomeEmail($employee);
+            // Email notifications are intentionally suppressed for employee update/edit actions.
 
             DB::commit();
 
@@ -786,7 +775,7 @@ class EmployeesController extends Controller
                     'template' => 'admin.email_template.resigned_employee',
                     'template_data' => json_encode($data),
                 ];
-
+                // Keep resigned notice email even on update/edit.
                 try {
                     $mail = $this->send_mail($log['subject'], $log['template'], $log['recipient'], $data, $log);
                 } catch (\Throwable $th) {
@@ -797,18 +786,7 @@ class EmployeesController extends Controller
 
             $employee->save();
 
-            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
-            $newStatus = (string) ($employee->status ?? '');
-            if (
-                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
-                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
-                && empty($employee->offboarding_email_sent_at)
-            ) {
-                $this->triggerOffboardingEmail($employee);
-            }
-
-            // Re-trigger welcome if joining date was added/updated and not yet sent.
-            $this->triggerWelcomeEmail($employee);
+            // Email notifications are intentionally suppressed for employee update/edit actions.
 
             DB::commit();
 
@@ -979,6 +957,7 @@ class EmployeesController extends Controller
         $path = 'employees/profile/'.(string) $user_id.'.jpg';
 
         try {
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
             $disk = Storage::disk('upcloud');
 
             $employee = User::where('user_id', $user_id)->first();
