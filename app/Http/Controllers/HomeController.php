@@ -68,14 +68,14 @@ class HomeController extends Controller
 
         $pending_notices = DB::table('notice_slip')
             ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
-            ->where('status', '=', 'For Approval')
+            ->whereIn('notice_slip.status', ['FOR APPROVAL', 'For Approval'])
             ->where('user_id', '=', Auth::user()->user_id);
 
         $pending_notices = $pending_notices->get();
         $pending_notices_count = $pending_notices->count();
 
         $pending_gatepasses = DB::table('gatepass')
-            ->where('status', '=', 'For Approval')
+            ->whereIn('status', ['FOR APPROVAL', 'For Approval'])
             ->where('user_id', '=', Auth::user()->user_id);
 
         $pending_gatepasses = $pending_gatepasses->get();
@@ -92,7 +92,7 @@ class HomeController extends Controller
 
         $awaiting_notices = DB::table('notice_slip')
             ->join('department_approvers', 'department_approvers.department_id', '=', 'notice_slip.dept_id')
-            ->where('notice_slip.status', 'For Approval')
+            ->whereIn('notice_slip.status', ['FOR APPROVAL', 'For Approval'])
             ->where('department_approvers.employee_id', Auth::user()->user_id)
             ->count();
 
@@ -101,7 +101,7 @@ class HomeController extends Controller
         if (in_array($designation, $gatepass_approvers)) {
             $awaiting_gatepass = DB::table('gatepass')
                 ->join('users', 'users.user_id', '=', 'gatepass.user_id')
-                ->where('gatepass.status', '=', 'For Approval')
+                ->whereIn('gatepass.status', ['FOR APPROVAL', 'For Approval'])
                 ->select('gatepass.*', 'users.employee_name')
                 ->count();
         }
