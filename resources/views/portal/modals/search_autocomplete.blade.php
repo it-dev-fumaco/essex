@@ -5,7 +5,7 @@
                 @foreach ($searchResults as $searchResult)
                     @php
                         if ($searchResult instanceof \Spatie\Searchable\SearchResult) {
-                            $url = $searchResult->url ?? '#';
+                            $url = \Illuminate\Support\Str::limit((string) ($searchResult->url ?? '#'), 2000, '…');
                             $title = $searchResult->title ?? '';
                             $category = $searchResult->type ?? '';
                             $description = '';
@@ -29,7 +29,7 @@
                                 $icon = 'fas fa-file';
                             }
                         } elseif (is_array($searchResult)) {
-                            $url = $searchResult['url'] ?? '#';
+                            $url = \Illuminate\Support\Str::limit((string) ($searchResult['url'] ?? '#'), 2000, '…');
                             $title = $searchResult['title'] ?? '';
                             $category = $searchResult['category'] ?? '';
                             $description = $searchResult['description'] ?? '';
@@ -43,8 +43,8 @@
                         }
                     @endphp
                     <a href="{{ $url }}" class="text-decoration-none">
-                        <b>{{ $title }}</b> - <span style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span><br/>
-                        {!! Illuminate\Support\Str::limit($description, 70, '...') !!}
+                        <b>{{ \Illuminate\Support\Str::limit(strip_tags((string) $title), 120) }}</b> - <span style="text-transform: capitalize !important">{{ str_replace('_', ' ', $category) }}</span><br/>
+                        {{ \Illuminate\Support\Str::limit(strip_tags((string) $description), 70, '...') }}
                     </a>
                     <hr style="border: 1px solid rgba(0,0,0,.1);">
                 @endforeach

@@ -311,30 +311,27 @@
 </style>
 
 <script>
-    // VARIABLES
-    const elH = document.querySelectorAll(".timeline li > div");
+(function () {
+    var elH = document.querySelectorAll(".timeline li > div");
 
-    // START
     window.addEventListener("load", init);
 
     function init() {
-    setEqualHeights(elH);
+        setEqualHeights(elH);
     }
 
-    // SET EQUAL HEIGHTS
     function setEqualHeights(el) {
-    let counter = 0;
-    for (let i = 0; i < el.length; i++) {
-        const singleHeight = el[i].offsetHeight;
-
-        if (counter < singleHeight) {
-        counter = singleHeight;
+        var counter = 0;
+        var i;
+        for (i = 0; i < el.length; i++) {
+            var singleHeight = el[i].offsetHeight;
+            if (counter < singleHeight) {
+                counter = singleHeight;
+            }
+        }
+        for (i = 0; i < el.length; i++) {
+            el[i].style.height = counter + "px";
         }
     }
-
-    for (let i = 0; i < el.length; i++) {
-        el[i].style.height = `${counter}px`;
-    }
-    }
-
+})();
 </script>

@@ -133,13 +133,17 @@ $(document).on('click', '#manage_notices_pagination a', function(event){
 
       $(document).on('click', '#view-notice', function(event){
       event.preventDefault();
-      var id = $(this).data('id');
-      data = {'id' : id }
+      var id = $(this).attr('data-id') || $(this).closest('[data-id]').attr('data-id');
+      data = {'id' : id, 'notice_id': id }
 
       $.ajax({  
-            url:"/notice_slip/getDetails",  
+            url: "{{ route('notice_slip.getDetails') }}",  
             data:data,  
             success:function(data){
+               if (data.found === false) {
+                  alert(data.message || 'Notice not found.');
+                  return;
+               }
                $('#viewNoticeModal .date-from-val').val(data.date_from);
                $('#viewNoticeModal .date-to-val').val(data.date_to);
                $('#viewNoticeModal .leave-type-id-val').val(data.leave_type_id);

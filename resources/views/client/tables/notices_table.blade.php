@@ -41,7 +41,7 @@
             @endswitch
          </td>
          <td class="text-center" style="width: 10%;">
-            <a href="#" data-id="{{ $notice_slip->notice_id }}" id="editAbsent" class="hover-icon text-decoration-none">
+            <a href="#" data-id="{{ $notice_slip->notice_id }}" class="edit-absent hover-icon text-decoration-none" title="View / edit notice">
                <i class="fa fa-search" style="font-size: 18pt; color: #27AE60"></i>
             </a>
             @if(strtolower($notice_slip->status) == 'for approval')
