@@ -106,7 +106,7 @@ class AbsentNoticesController extends Controller
                 ->whereIn('users.department_id', function ($query) use ($user) {
                     $query->select('department_id')->from('department_approvers')->where('employee_id', $user);
                 })
-                ->where('notice_slip.status', 'For Approval')
+                ->whereIn('notice_slip.status', ['FOR APPROVAL', 'For Approval'])
                 ->select('users.employee_name', 'notice_slip.*', 'departments.department', 'leave_types.leave_type')
                 ->paginate(8);
 
@@ -955,7 +955,7 @@ class AbsentNoticesController extends Controller
                 ->join('departments', 'departments.department_id', '=', 'users.department_id')
                 ->join('leave_types', 'leave_types.leave_type_id', '=', 'notice_slip.leave_type_id')
                 ->join('department_approvers', 'department_approvers.department_id', '=', 'notice_slip.dept_id')
-                ->where('notice_slip.status', 'FOR APPROVAL')
+                ->whereIn('notice_slip.status', ['FOR APPROVAL', 'For Approval'])
                 ->where('department_approvers.employee_id', Auth::user()->user_id)
                 ->count();
 
