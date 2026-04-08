@@ -256,7 +256,7 @@ textarea{
                $('#edit-employee-form .contact_person').val(response.contact_person);
                $('#edit-employee-form .contact_person_no').val(response.contact_person_no);
                $('#edit-employee-form .tin_no').val(response.tin_no);
-               $('#edit-employee-form .sss_no').val(response.sss_no);
+               $('#edit-employee-form .sss_no').val(response['sss_no'] || '');
                $('#edit-employee-form .philhealth_no').val(response.philhealth_no);
                $('#edit-employee-form .pagibig_no').val(response.pagibig_no);
                $('#edit-employee-form .employee_id').val(response.employee_id);
@@ -266,7 +266,6 @@ textarea{
                $('#edit-employee-form .employment_status').val(response.employment_status);
                $('#edit-employee-form .branch').val(response.branch);
                $('#edit-employee-form .date_joined').val(response.date_joined);
-               $('#edit-employee-form .user_group').val(response.user_group);
                $('#edit-employee-form .reporting-to').val(response.reporting_to);
                $('#edit-employee-form .telephone').val(response.telephone);
                $('#edit-employee-form .email').val(response.email);
@@ -280,7 +279,8 @@ textarea{
                $('#edit-employee-form input[name="date_joined"]').val(response.date_joined);
                $('#edit-employee-form select[name="company"]').val(response.company);
                $('#edit-employee-form select[name="branch"]').val(response.branch);
-               $('#edit-employee-form select[name="user_group"]').val(response.user_type);
+               $('#edit-employee-form select[name="user_group"]').val(response.user_group || response.user_type || 'Employee');
+               $('#edit-employee-form select[name="payroll_type"]').val(response.payroll_type);
                $('#edit-employee-form select[name="department"]').val(response.department_id);
                $('#edit-employee-form select[name="reporting_to"]').val(response.reporting_to);
                $('#edit-employee-form select[name="shift"]').val(response.shift_group_id);

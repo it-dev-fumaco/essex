@@ -707,6 +707,12 @@ class EmployeesController extends Controller
             }
 
             $employee = User::find($id);
+            if (! $employee) {
+                DB::rollBack();
+
+                return redirect()->back()->with(['message' => 'Employee record was not found. Please refresh the page and try again.']);
+            }
+
             $previousStatus = (string) ($employee->status ?? '');
             $employee->user_id = $request->user_id;
             $employee->department_id = $request->department;
@@ -739,6 +745,9 @@ class EmployeesController extends Controller
             $employee->designation_name = $request->designation_name;
             $employee->last_modified_by = Auth::user()->employee_name;
             $employee->company = $request->company ?: ($employee->company ?: 'FUMACO Inc.');
+            if ($request->filled('payroll_type')) {
+                $employee->payroll_type = $request->payroll_type;
+            }
 
             $employee->separation_date = $request->filled('separation_date') ? $request->separation_date : null;
             $employee->separation_type = $request->filled('separation_type')

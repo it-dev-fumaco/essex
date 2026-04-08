@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class AbsentNoticesController extends Controller
 {
@@ -93,6 +94,58 @@ class AbsentNoticesController extends Controller
             'has_recipient' => $hasRecipient,
             'email_sent' => $emailSent,
         ];
+    }
+
+    /**
+     * GET requests from the approval email: explicit flag and/or token link query params.
+     */
+    private function isAbsentNoticeMailApprovalRequest(Request $request): bool
+    {
+        if (! $request->isMethod('get')) {
+            return false;
+        }
+
+        if ($request->boolean('update_from_mail')) {
+            return true;
+        }
+
+        // Some clients strip `update_from_mail`; still treat as mail flow when link params are present.
+        return $request->filled('notice_id')
+            && $request->filled('token')
+            && $request->filled('approver_id');
+    }
+
+    /**
+     * Department approver or the employee's reporting manager (also emailed in sendApprovalNotificationToManagers).
+     */
+    private function resolveMailApproverForNotice(Request $request, AbsentNotice $noticeSlip): ?object
+    {
+        $approverId = (int) $request->approver_id;
+
+        $approver = DB::table('department_approvers as da')
+            ->join('users as u', 'da.employee_id', 'u.user_id')
+            ->where('da.employee_id', $approverId)
+            ->where('da.department_id', $noticeSlip->dept_id)
+            ->select('u.user_id', 'u.email')
+            ->first();
+
+        if ($approver) {
+            return $approver;
+        }
+
+        $owner = DB::table('users')
+            ->where('user_id', $noticeSlip->user_id)
+            ->select('reporting_to')
+            ->first();
+
+        if ($owner && (int) $owner->reporting_to === $approverId) {
+            return DB::table('users')
+                ->where('user_id', $approverId)
+                ->select('user_id', 'email')
+                ->first();
+        }
+
+        return null;
     }
 
     public function noticesForApproval(Request $request)
@@ -494,24 +547,37 @@ class AbsentNoticesController extends Controller
             $notice_id = $request->notice_id;
 
             $notice_slip = AbsentNotice::find($notice_id);
-            $previousStatus = $notice_slip?->status;
-            if ($request->update_from_mail && request()->isMethod('get')) {
-                if (! $notice_slip || $notice_slip->status != 'FOR APPROVAL') {
-                    $message = 'Absent Notice Slip no. <b>'.$notice_id.'</b> not found.';
-                    if ($notice_slip) {
-                        $message = 'Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b> has already been <b>'.$notice_slip->status.'</b>.';
-                    }
+            if (! $notice_slip) {
+                DB::rollBack();
+                if ($this->isAbsentNoticeMailApprovalRequest($request)) {
+                    session()->flash('notice_data', [
+                        'success' => 0,
+                        'status' => 'Not Found',
+                        'approved_by' => null,
+                        'approved_date' => null,
+                        'message' => 'Absent Notice Slip no. <b>'.$notice_id.'</b> not found.',
+                    ]);
 
-                    $approved_by = null;
-                    if ($notice_slip) {
-                        $approved_by = DB::table('users')->where('user_id', $notice_slip->approved_by)->pluck('employee_name')->first();
-                    }
+                    return redirect('/');
+                }
+
+                return response()->json(['message' => 'Absent notice slip was not found.'], 404);
+            }
+
+            $previousStatus = $notice_slip->status;
+            if ($this->isAbsentNoticeMailApprovalRequest($request)) {
+                if (strtoupper(trim((string) $notice_slip->status)) !== 'FOR APPROVAL') {
+                    $message = 'Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b> has already been <b>'.$notice_slip->status.'</b>.';
+
+                    $approved_by = DB::table('users')->where('user_id', $notice_slip->approved_by)->pluck('employee_name')->first();
 
                     $flash_data = [
                         'success' => 0,
-                        'status' => $notice_slip ? $notice_slip->status : 'Not Found',
+                        'status' => $notice_slip->status,
                         'approved_by' => $approved_by ? $approved_by : null,
-                        'approved_date' => $notice_slip ? Carbon::parse($notice_slip->approved_date)->format('M. d, Y') : null,
+                        'approved_date' => $notice_slip->approved_date
+                            ? Carbon::parse($notice_slip->approved_date)->format('M. d, Y')
+                            : null,
                         'message' => $message,
                     ];
 
@@ -520,41 +586,58 @@ class AbsentNoticesController extends Controller
                     return redirect('/');
                 }
 
-                $approver = DB::table('department_approvers as da')
-                    ->join('users as u', 'da.employee_id', 'u.user_id')
-                    ->where('da.employee_id', $request->approver_id)
-                    ->select('u.user_id', 'u.email')->first();
+                $approver = $this->resolveMailApproverForNotice($request, $notice_slip);
 
-                if (! $request->token || $notice_slip->token != $request->token || ! $approver) {
-                    Abort(401); // Unauthorized.
+                $tokenOk = $request->filled('token') && $notice_slip->token !== null
+                    && hash_equals((string) $notice_slip->token, (string) $request->token);
+
+                if (! $tokenOk || ! $approver) {
+                    abort(401);
                 }
 
                 $fdate = $notice_slip->date_from;
                 $tdate = $notice_slip->date_to;
 
-                $leave_id = $notice_slip->leave_type;
+                $leave_id = $notice_slip->leave_type_id;
                 $user_id = $notice_slip->user_id;
 
                 $status = isset($request->approved) && $request->approved ? 'APPROVED' : 'DISAPPROVED';
                 $approved_by = $approver->user_id;
                 $remarks = null;
             } else {
-                $fdate = $request->date_from;
-                $tdate = $request->date_to;
+                $fdate = $request->input('date_from') ?: $notice_slip->date_from;
+                $tdate = $request->input('date_to') ?: $notice_slip->date_to;
 
-                $leave_id = $request->leave_type;
-                $user_id = $request->user_id;
+                $leave_id = $request->input('leave_type');
+                if ($leave_id === null || $leave_id === '') {
+                    $leave_id = $notice_slip->leave_type_id;
+                }
+                $user_id = $request->input('user_id') ?: $notice_slip->user_id;
 
                 $status = $request->status;
                 $approved_by = $request->approved_by;
                 $remarks = $request->remarks;
             }
 
-            $datetime1 = new DateTime($fdate);
-            $datetime2 = new DateTime($tdate);
-            $interval = $datetime1->diff($datetime2);
-            $days = $interval->format('%a');
-            $days = $days + 1;
+            if ($fdate === null || $fdate === '' || $tdate === null || $tdate === '') {
+                DB::rollBack();
+
+                if ($this->isAbsentNoticeMailApprovalRequest($request)) {
+                    session()->flash('notice_data', [
+                        'success' => 0,
+                        'status' => 'Error',
+                        'message' => 'Missing date range for this notice. Please try again from the portal.',
+                    ]);
+
+                    return redirect('/');
+                }
+
+                return response()->json(['message' => 'Missing date range for this notice. Please try again.'], 422);
+            }
+
+            $start = Carbon::parse($fdate)->startOfDay();
+            $end = Carbon::parse($tdate)->startOfDay();
+            $days = $start->diffInDays($end) + 1;
 
             // get total & remaining number of leaves
             $year = date('Y');
@@ -580,7 +663,9 @@ class AbsentNoticesController extends Controller
             $notice_slip->remarks = $remarks;
             $notice_slip->approved_by = $approved_by;
             $notice_slip->approved_date = date('Y-m-d H:i:s');
-            $notice_slip->last_modified_by = $approved_by;
+            $notice_slip->last_modified_by = Auth::check()
+                ? Auth::user()->employee_name
+                : (string) $approved_by;
             $notice_slip->save();
 
             DB::commit();
@@ -599,7 +684,7 @@ class AbsentNoticesController extends Controller
                 }
             }
 
-            if ($request->update_from_mail && request()->isMethod('get')) {
+            if ($this->isAbsentNoticeMailApprovalRequest($request)) {
                 $flash_data = [
                     'success' => 1,
                     'status' => $notice_slip->status,
@@ -620,14 +705,20 @@ class AbsentNoticesController extends Controller
                 'approved_by' => $request->approved_by ?? null,
                 'update_from_mail' => $request->update_from_mail ?? null,
                 'method' => $request->method(),
+                'exception' => $th::class,
                 'error' => $th->getMessage(),
             ]);
 
-            if ($request->update_from_mail && request()->isMethod('get')) {
+            if ($this->isAbsentNoticeMailApprovalRequest($request)) {
+                $message = 'An error occured. Please try again.';
+                if ($th instanceof HttpExceptionInterface && $th->getStatusCode() === 401) {
+                    $message = 'This approval link is invalid or you are not authorized to act on this request. Please sign in to the portal to approve or cancel.';
+                }
+
                 $flash_data = [
                     'success' => 0,
                     'status' => 'Error',
-                    'message' => 'An error occured. Please try again.',
+                    'message' => $message,
                 ];
 
                 session()->flash('notice_data', $flash_data);
