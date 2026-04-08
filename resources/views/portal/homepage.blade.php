@@ -585,9 +585,7 @@
             success:function(response){
                 $('#tbl-manuals').html(response);
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR, textStatus, errorThrown);
-            }
+            error: function() {}
         });
     }
 })(jQuery);

@@ -2105,8 +2105,6 @@
                         var end = new Date($("#enddate_notice").val());
                         var totaldays = workingDaysBetweenDates(new Date(start), new Date(end));
 
-                        console.log(totaldays);
-
                         var status = data.status;
                         $('#notify-manager-modal-btn').hide().prop('disabled', false).removeData('id');
                         if (status.toLowerCase() != 'for approval') {
@@ -2922,8 +2920,6 @@
             var fmon = $('#notice_end_time').val();
             var convertedFrom = (convertTime12to24(smon));
             var convertedTo = (convertTime12to24(fmon));
-            console.log(convertedFrom);
-            console.log(convertedTo);
             var remain_sick = $('#notice_remain_L2').val();
             var remain_vaca = $('#notice_remain_L1').val();
             var diff = 0;
@@ -3019,8 +3015,6 @@
             var fmon = $('#endtime').val();
             var convertedFrom = (convertTime12to24(smon));
             var convertedTo = (convertTime12to24(fmon));
-            //   console.log(convertedFrom);
-            //   console.log(convertedTo);
             var remain_sick = $('#remain_L2').val();
             var remain_vaca = $('#remain_L1').val();
             var diff = 0;
@@ -3033,7 +3027,6 @@
                 smon = ConvertToSeconds(convertedFrom);
                 fmon = ConvertToSeconds(convertedTo);
                 diff = Math.abs(fmon - smon);
-                console.log(secondsTohhmmss(diff));
                 if (secondsTohhmmss(diff) <= 3) {
                     $("#reg_L8").hide();
                     $("#reg_L9").show();
@@ -3082,12 +3075,10 @@
                             $("#emp_L1").hide();
                             $("#emp_L1-5").hide();
                             $(".remain_L1").hide();
-                            console.log('hide vaca');
                         } else {
                             $("#emp_L1").show();
                             $("#emp_L1-5").show();
                             $(".remain_L1").show();
-                            console.log('show vaca');
                         }
                     }
                     if (remain_sick > 0) {
@@ -3095,12 +3086,10 @@
                             $("#emp_L2").hide();
                             $("#emp_L2-5").hide();
                             $(".remain_L2").hide();
-                            console.log('hide sick');
                         } else {
                             $("#emp_L2").show();
                             $("#emp_L2-5").show();
                             $(".remain_L2").show();
-                            console.log('show sick');
                         }
                     }
 
@@ -3138,7 +3127,6 @@
                     excode: excode
                 },
                 success: function(data) {
-                    console.log(data);
                     $.bootstrapGrowl('<center><span id="msg-alert">' + data.message +
                         '</span></center>', {
                             type: data.status,

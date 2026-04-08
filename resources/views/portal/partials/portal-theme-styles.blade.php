@@ -263,9 +263,10 @@
     z-index: 1000;
 }
 
+/* No z-index here: a stacking context on main would trap .modal (inside main) below
+   .modal-backdrop (sibling on body), making the dimmer cover the dialog and block clicks. */
 .portal-app main.portal-main {
     position: relative;
-    z-index: 0;
 }
 
 </style>
