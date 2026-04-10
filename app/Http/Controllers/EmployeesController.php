@@ -1660,13 +1660,42 @@ class EmployeesController extends Controller
 
     public function checkEmployeeBirthday(Request $request)
     {
-        return DB::table('users')
+        $auth = Auth::user();
+        if (! $auth || ($auth->user_type ?? null) !== 'Employee') {
+            return collect();
+        }
+
+        $userId = $auth->user_id;
+        if ($userId === null || $userId === '') {
+            return collect();
+        }
+
+        $row = DB::table('users')
             ->where('user_type', 'Employee')
-            ->when($request->user_id, function ($query) use ($request) {
-                return $query->where('user_id', $request->user_id);
-            })
-            ->whereMonth('birth_date', date('m'))
-            ->whereDay('birth_date', date('d'))
-            ->select('user_id', 'employee_name')->get();
+            ->where('user_id', $userId)
+            ->whereNotNull('birth_date')
+            ->where('birth_date', '!=', '')
+            ->where('birth_date', '!=', '0000-00-00')
+            ->select('user_id', 'employee_name', 'birth_date')
+            ->first();
+
+        if (! $row) {
+            return collect();
+        }
+
+        try {
+            $birth = Carbon::parse($row->birth_date);
+        } catch (\Throwable $e) {
+            return collect();
+        }
+
+        if (! $birth->isBirthday(Carbon::today())) {
+            return collect();
+        }
+
+        return collect([(object) [
+            'user_id' => $row->user_id,
+            'employee_name' => $row->employee_name,
+        ]]);
     }
 }
