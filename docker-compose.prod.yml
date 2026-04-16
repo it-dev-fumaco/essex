@@ -1,10 +1,18 @@
-# Production (shared infra): PHP-FPM only; edge NGINX + Redis from athenaerp-1.
+# Production: PHP-FPM (essex-app:v4) + NGINX (essex-nginx:v4) + Redis on app_network.
+#
 # Usage:
+#   docker compose -f docker-compose.prod.yml build
 #   docker compose -f docker-compose.prod.yml up -d
+#
+# Defaults: ESSEX_APP_IMAGE=essex-app:v4, ESSEX_NGINX_IMAGE=essex-nginx:v4
+# HTTP: host ${ESSEX_HTTP_PORT:-8080} -> container nginx :80
 
 services:
   app:
-    image: ${ESSEX_APP_IMAGE:-devfumaco/essex-app:v4}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${ESSEX_APP_IMAGE:-essex-app:latest}
     container_name: essex-app
     restart: unless-stopped
     command: ["php-fpm"]
@@ -16,21 +24,21 @@ services:
     environment:
       - APP_ENV=production
       - HTTPS=false
-      # Use APP_URL / ASSET_URL from project .env (Compose interpolates from .env).
-      # Optional legacy: ESSEX_APP_URL / ESSEX_ASSET_URL if APP_URL is unset.
-      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
-      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
-      - REDIS_HOST=${SHARED_REDIS_HOST:-athenaerp-redis}
-      - REDIS_PORT=${SHARED_REDIS_PORT:-6379}
+      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local:8080}}
+      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local:8080}}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - REDIS_CLIENT=phpredis
       - CACHE_DRIVER=redis
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
     env_file:
       - .env
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - app_network
-      - shared_network
     healthcheck:
       test: ["CMD", "/usr/local/bin/php-fpm-healthcheck"]
       interval: 15s
@@ -38,15 +46,50 @@ services:
       retries: 5
       start_period: 45s
 
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: ${ESSEX_NGINX_IMAGE:-essex-nginx:latest}
+    container_name: essex-nginx
+    restart: unless-stopped
+    ports:
+      - "${ESSEX_HTTP_PORT:-8080}:80"
+    volumes:
+      # Same files as app so /storage/* and public/storage symlink stay in sync
+      - storage_public:/var/www/html/storage/app/public:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: essex-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - "6379"
+    volumes:
+      - essex_redis:/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
 volumes:
   storage_public:
     driver: local
   storage_logs:
     driver: local
+  essex_redis:
+    driver: local
 
 networks:
   app_network:
     driver: bridge
-  shared_network:
-    external: true
-    name: ${SHARED_NETWORK_NAME:-athenaerp-1_athenaerp}
