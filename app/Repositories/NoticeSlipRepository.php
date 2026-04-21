@@ -15,7 +15,7 @@ final class NoticeSlipRepository implements NoticeSlipRepositoryInterface
         return DB::table('notice_slip')
             ->join('leave_types', 'notice_slip.leave_type_id', 'leave_types.leave_type_id')
             ->where('user_id', $userId)
-            ->where('status', 'For Approval')
+            ->whereIn('status', ['FOR APPROVAL', 'For Approval'])
             ->select('notice_slip.*', 'leave_type')
             ->get();
     }

@@ -51,7 +51,7 @@ final class GatepassRepository implements GatepassRepositoryInterface
     {
         return DB::table('gatepass')
             ->join('users', 'users.user_id', '=', 'gatepass.user_id')
-            ->where('gatepass.status', '=', 'For Approval')
+            ->whereIn('gatepass.status', ['FOR APPROVAL', 'For Approval'])
             ->select('gatepass.*', 'users.employee_name')
             ->paginate($perPage);
     }
@@ -133,7 +133,7 @@ final class GatepassRepository implements GatepassRepositoryInterface
     {
         return (int) DB::table('gatepass')
             ->join('users', 'users.user_id', '=', 'gatepass.user_id')
-            ->where('gatepass.status', '=', 'For Approval')
+            ->whereIn('gatepass.status', ['FOR APPROVAL', 'For Approval'])
             ->count();
     }
 
@@ -180,7 +180,7 @@ final class GatepassRepository implements GatepassRepositoryInterface
     {
         return DB::table('gatepass')
             ->where('user_id', $userId)
-            ->where('status', 'For Approval')
+            ->whereIn('status', ['FOR APPROVAL', 'For Approval'])
             ->get();
     }
 

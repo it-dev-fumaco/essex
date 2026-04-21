@@ -306,7 +306,7 @@ class EmployeesController extends Controller
                     'template' => 'admin.email_template.resigned_employee',
                     'template_data' => json_encode($data),
                 ];
-
+                // Keep resigned notice email even on update/edit.
                 try {
                     $mail = $this->send_mail('WELCOME EMAIL ['.strtoupper($employee->employee_name).']', 'admin.email_template.resigned_employee', $employee->email, $data, $log);
                 } catch (\Throwable $th) {
@@ -317,18 +317,7 @@ class EmployeesController extends Controller
 
             $employee->save();
 
-            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
-            $newStatus = (string) ($employee->status ?? '');
-            if (
-                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
-                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
-                && empty($employee->offboarding_email_sent_at)
-            ) {
-                $this->triggerOffboardingEmail($employee);
-            }
-
-            // Re-trigger welcome if joining date was added/updated and not yet sent.
-            $this->triggerWelcomeEmail($employee);
+            // Email notifications are intentionally suppressed for employee update/edit actions.
 
             DB::commit();
 
@@ -707,6 +696,12 @@ class EmployeesController extends Controller
             }
 
             $employee = User::find($id);
+            if (! $employee) {
+                DB::rollBack();
+
+                return redirect()->back()->with(['message' => 'Employee record was not found. Please refresh the page and try again.']);
+            }
+
             $previousStatus = (string) ($employee->status ?? '');
             $employee->user_id = $request->user_id;
             $employee->department_id = $request->department;
@@ -739,6 +734,9 @@ class EmployeesController extends Controller
             $employee->designation_name = $request->designation_name;
             $employee->last_modified_by = Auth::user()->employee_name;
             $employee->company = $request->company ?: ($employee->company ?: 'FUMACO Inc.');
+            if ($request->filled('payroll_type')) {
+                $employee->payroll_type = $request->payroll_type;
+            }
 
             $employee->separation_date = $request->filled('separation_date') ? $request->separation_date : null;
             $employee->separation_type = $request->filled('separation_type')
@@ -777,7 +775,7 @@ class EmployeesController extends Controller
                     'template' => 'admin.email_template.resigned_employee',
                     'template_data' => json_encode($data),
                 ];
-
+                // Keep resigned notice email even on update/edit.
                 try {
                     $mail = $this->send_mail($log['subject'], $log['template'], $log['recipient'], $data, $log);
                 } catch (\Throwable $th) {
@@ -788,18 +786,7 @@ class EmployeesController extends Controller
 
             $employee->save();
 
-            // Offboarding email: trigger when status becomes "For Offboarding" (queued).
-            $newStatus = (string) ($employee->status ?? '');
-            if (
-                strtoupper(trim($previousStatus)) !== 'FOR OFFBOARDING'
-                && strtoupper(trim($newStatus)) === 'FOR OFFBOARDING'
-                && empty($employee->offboarding_email_sent_at)
-            ) {
-                $this->triggerOffboardingEmail($employee);
-            }
-
-            // Re-trigger welcome if joining date was added/updated and not yet sent.
-            $this->triggerWelcomeEmail($employee);
+            // Email notifications are intentionally suppressed for employee update/edit actions.
 
             DB::commit();
 
@@ -970,6 +957,7 @@ class EmployeesController extends Controller
         $path = 'employees/profile/'.(string) $user_id.'.jpg';
 
         try {
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
             $disk = Storage::disk('upcloud');
 
             $employee = User::where('user_id', $user_id)->first();
@@ -1672,13 +1660,42 @@ class EmployeesController extends Controller
 
     public function checkEmployeeBirthday(Request $request)
     {
-        return DB::table('users')
+        $auth = Auth::user();
+        if (! $auth || ($auth->user_type ?? null) !== 'Employee') {
+            return collect();
+        }
+
+        $userId = $auth->user_id;
+        if ($userId === null || $userId === '') {
+            return collect();
+        }
+
+        $row = DB::table('users')
             ->where('user_type', 'Employee')
-            ->when($request->user_id, function ($query) use ($request) {
-                return $query->where('user_id', $request->user_id);
-            })
-            ->whereMonth('birth_date', date('m'))
-            ->whereDay('birth_date', date('d'))
-            ->select('user_id', 'employee_name')->get();
+            ->where('user_id', $userId)
+            ->whereNotNull('birth_date')
+            ->where('birth_date', '!=', '')
+            ->where('birth_date', '!=', '0000-00-00')
+            ->select('user_id', 'employee_name', 'birth_date')
+            ->first();
+
+        if (! $row) {
+            return collect();
+        }
+
+        try {
+            $birth = Carbon::parse($row->birth_date);
+        } catch (\Throwable $e) {
+            return collect();
+        }
+
+        if (! $birth->isBirthday(Carbon::today())) {
+            return collect();
+        }
+
+        return collect([(object) [
+            'user_id' => $row->user_id,
+            'employee_name' => $row->employee_name,
+        ]]);
     }
 }
