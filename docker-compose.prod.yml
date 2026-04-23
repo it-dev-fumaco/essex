@@ -19,7 +19,6 @@ services:
       # Use APP_URL / ASSET_URL from project .env (Compose interpolates from .env).
       # Optional legacy: ESSEX_APP_URL / ESSEX_ASSET_URL if APP_URL is unset.
       - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
-      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
       - REDIS_HOST=${SHARED_REDIS_HOST:-athenaerp-redis}
       - REDIS_PORT=${SHARED_REDIS_PORT:-6379}
       - REDIS_CLIENT=phpredis
