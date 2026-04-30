@@ -4,29 +4,23 @@
 # - speed rebuilds (cache composer + node layers)
 # - ensure new image tags always reflect code changes (immutable code in image; no full-code volume in prod)
 
-FROM php:8.3-fpm-alpine AS php-base
-
-# Runtime libs (keep)
-RUN apk add --no-cache \
-    icu-libs \
-    libzip \
-    libpng \
-    libjpeg-turbo \
-    freetype \
-    libxml2 \
-    oniguruma
+FROM php:8.3-fpm AS php-base
 
 # Build and enable PHP extensions; remove build deps after
 RUN set -eux; \
-    apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        icu-dev \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        make \
+        autoconf \
+        pkg-config \
+        libicu-dev \
         libzip-dev \
         libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
+        libjpeg62-turbo-dev \
+        libfreetype6-dev \
         libxml2-dev \
-        oniguruma-dev; \
+        libonig-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
         bcmath \
@@ -38,16 +32,18 @@ RUN set -eux; \
         pdo_mysql \
         zip; \
     pecl install redis; \
-    docker-php-ext-enable redis; \
-    apk del .build-deps
+    pecl install opentelemetry; \
+    docker-php-ext-enable redis opentelemetry; \
+    rm -rf /var/lib/apt/lists/*
 
 # Production PHP settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY docker/php/php-production.ini /usr/local/etc/php/conf.d/99-production.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+RUN printf "opentelemetry.auto_trace=1\n" > /usr/local/etc/php/conf.d/98-opentelemetry.ini
 
 # app user for PHP-FPM pool workers
-RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /bin/sh -D app
+RUN groupadd -g 1000 app && useradd -u 1000 -g app -m -s /bin/sh app
 RUN set -eux; \
     sed -i 's/^user = .*/user = app/' /usr/local/etc/php-fpm.d/www.conf; \
     sed -i 's/^group = .*/group = app/' /usr/local/etc/php-fpm.d/www.conf; \

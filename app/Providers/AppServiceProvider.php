@@ -40,8 +40,10 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.bootstrap-4');
         Paginator::defaultSimpleView('vendor.pagination.simple-bootstrap-4');
 
-        // Force HTTP when HTTPS is disabled (Docker without SSL, local dev)
-        if (! config('app.force_https', false)) {
+        // In local only: prefer http:// URL generation (Docker without SSL). Do not
+        // force 'http' in production: behind TLS the request is HTTPS and asset()
+        // must stay https to avoid mixed-content (fonts, CSS) blocking.
+        if (app()->environment('local', 'testing') && ! config('app.force_https', false)) {
             URL::forceScheme('http');
         }
     }

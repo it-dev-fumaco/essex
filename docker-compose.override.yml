@@ -3,8 +3,7 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local}}
-      - ASSET_URL=${ASSET_URL:-${ESSEX_ASSET_URL:-http://essex.local}}
+      - APP_URL=${APP_URL:-${ESSEX_APP_URL:-http://essex.local:8080}}
     volumes:
       # Dev: mount local code (writable for Laravel); nginx uses :ro via main compose
       - ./:/var/www/html
