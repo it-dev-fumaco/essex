@@ -63,7 +63,10 @@ return [
     | https:// URLs for assets. Set to false for local/Docker without SSL.
     |
     */
-    'force_https' => filter_var(env('HTTPS', false), FILTER_VALIDATE_BOOLEAN),
+    'force_https' => filter_var(
+        env('FORCE_HTTPS', env('HTTPS', false)),
+        FILTER_VALIDATE_BOOLEAN
+    ),
 
     /*
     |--------------------------------------------------------------------------

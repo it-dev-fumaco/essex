@@ -10,9 +10,12 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * '*' trusts forwarded headers (X-Forwarded-Proto, etc.) from any address so PHP sees
+     * HTTPS behind nginx / a load balancer. Tighten to your proxy CIDRs if PHP is on the public internet.
+     *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.

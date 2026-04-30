@@ -17,6 +17,12 @@ class ForceHttps
      */
     public function handle(Request $request, Closure $next)
     {
+        if ($request->secure()) {
+            $root = $request->getScheme().'://'.$request->getHttpHost();
+            URL::forceRootUrl($root);
+            URL::forceScheme('https');
+        }
+
         if (! config('app.force_https', false)) {
             return $next($request);
         }
