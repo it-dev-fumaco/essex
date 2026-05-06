@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -68,13 +69,61 @@ class Handler extends ExceptionHandler
 
         switch ($guard) {
             case 'admin':
-                $login = 'admin.login';
+                $loginRoute = 'admin.login';
                 break;
             default:
-                $login = 'portal';
+                $loginRoute = 'portal';
                 break;
         }
 
-        return redirect()->guest(route($login));
+        return $this->redirectGuestSafely($request, route($loginRoute));
+    }
+
+    /**
+     * Like redirect()->guest() but never feeds a broken Referer through UrlGenerator::to()
+     * (which can otherwise produce invalid locations such as "http://host/http:").
+     *
+     * @param  \Illuminate\Http\Request  $request
+     */
+    protected function redirectGuestSafely($request, string $loginUrl)
+    {
+        $request->session()->forget('url.intended');
+
+        if (($intended = $this->trustedIntendedUrl($request)) !== null) {
+            $request->session()->put('url.intended', $intended);
+        }
+
+        return redirect()->to($loginUrl);
+    }
+
+    protected function trustedIntendedUrl(HttpRequest $request): ?string
+    {
+        if ($request->isMethod('GET') && $request->route() && ! $request->expectsJson()) {
+            return $request->fullUrl();
+        }
+
+        $referer = $request->headers->get('referer');
+        if (is_string($referer) && $referer !== '' && $this->isSameApplicationHost($request, $referer)) {
+            return $referer;
+        }
+
+        $sessionPrevious = $request->session()->previousUrl();
+        if (is_string($sessionPrevious) && $sessionPrevious !== '' && $this->isSameApplicationHost($request, $sessionPrevious)) {
+            return $sessionPrevious;
+        }
+
+        return null;
+    }
+
+    protected function isSameApplicationHost(HttpRequest $request, string $candidateUrl): bool
+    {
+        if (filter_var($candidateUrl, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $appHost = strtolower((string) parse_url((string) $request->root(), PHP_URL_HOST) ?: '');
+        $refHost = strtolower((string) parse_url($candidateUrl, PHP_URL_HOST) ?: '');
+
+        return $appHost !== '' && $refHost !== '' && $appHost === $refHost;
     }
 }

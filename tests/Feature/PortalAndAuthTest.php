@@ -37,12 +37,7 @@ class PortalAndAuthTest extends TestCase
     public function test_home_requires_authentication(): void
     {
         $response = $this->get(route('home'));
-        $response->assertRedirect();
-        $location = $response->headers->get('Location') ?? '';
-        $this->assertTrue(
-            strpos($location, 'login') !== false || strpos($location, 'portal') !== false,
-            'Should redirect to login or portal'
-        );
+        $response->assertRedirect(route('portal'));
     }
 
     /**

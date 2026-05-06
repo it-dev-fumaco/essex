@@ -132,9 +132,12 @@ class EmployeeProfilesController extends Controller
     {
         $result = $this->employeeProfileService->changePassword($request);
         if ($result['success'] && $result['logout']) {
-            Auth::logout();
+            Auth::guard('web')->logout();
 
-            return redirect('/');
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return $this->redirectToApplicationPath($request);
         }
 
         return redirect()->back();

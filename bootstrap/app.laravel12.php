@@ -50,9 +50,35 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
             $guard = \Illuminate\Support\Arr::get($e->guards(), 0);
-            $login = $guard === 'admin' ? 'admin.login' : 'portal';
+            $loginRoute = $guard === 'admin' ? 'admin.login' : 'portal';
+            $loginUrl = route($loginRoute);
 
-            return redirect()->guest(route($login));
+            $request->session()->forget('url.intended');
+            $intended = null;
+            if ($request->isMethod('GET') && $request->route() && ! $request->expectsJson()) {
+                $intended = $request->fullUrl();
+            } elseif ($referer = $request->headers->get('referer')) {
+                if (is_string($referer) && $referer !== '' && filter_var($referer, FILTER_VALIDATE_URL)) {
+                    $appHost = strtolower((string) parse_url((string) $request->root(), PHP_URL_HOST) ?: '');
+                    $refHost = strtolower((string) parse_url($referer, PHP_URL_HOST) ?: '');
+                    if ($appHost !== '' && $refHost !== '' && $appHost === $refHost) {
+                        $intended = $referer;
+                    }
+                }
+            }
+            $sessionPrev = $request->session()->previousUrl();
+            if ($intended === null && is_string($sessionPrev) && $sessionPrev !== '' && filter_var($sessionPrev, FILTER_VALIDATE_URL)) {
+                $appHost = strtolower((string) parse_url((string) $request->root(), PHP_URL_HOST) ?: '');
+                $refHost = strtolower((string) parse_url($sessionPrev, PHP_URL_HOST) ?: '');
+                if ($appHost !== '' && $refHost !== '' && $appHost === $refHost) {
+                    $intended = $sessionPrev;
+                }
+            }
+            if ($intended !== null) {
+                $request->session()->put('url.intended', $intended);
+            }
+
+            return redirect()->to($loginUrl);
         });
     })
     ->create();
