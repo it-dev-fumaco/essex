@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminLoginRequest;
 use Auth;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class AdminLoginController extends Controller
 {
@@ -28,10 +30,13 @@ class AdminLoginController extends Controller
         return redirect()->back()->withInput($request->only('email', 'remember'));
     }
 
-    public function adminLogout()
+    public function adminLogout(Request $request): RedirectResponse
     {
         Auth::guard('admin')->logout();
 
-        return redirect('/');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $this->redirectToApplicationPath($request, '/admin/login');
     }
 }

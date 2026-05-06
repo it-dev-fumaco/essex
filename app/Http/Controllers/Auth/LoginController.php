@@ -8,6 +8,8 @@ use App\Contracts\Services\AuthServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Services\PostLoginCommandRunner;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -22,11 +24,14 @@ class LoginController extends Controller
         $this->middleware('guest', ['except' => ['logout', 'userLogout']]);
     }
 
-    public function userLogout(): \Illuminate\Http\RedirectResponse
+    public function userLogout(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
-        return redirect('/');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $this->redirectToApplicationPath($request);
     }
 
     public function showLoginForm(): \Illuminate\View\View

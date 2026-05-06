@@ -11,6 +11,7 @@ use Auth;
 use Carbon\Carbon;
 use DateTime;
 use DB;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -78,11 +79,14 @@ class KioskController extends Controller
         }
     }
 
-    public function kioskLogout()
+    public function kioskLogout(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
-        return redirect('/kiosk/login');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $this->redirectToApplicationPath($request, '/kiosk/login');
     }
 
     public function leaveCalendar()
