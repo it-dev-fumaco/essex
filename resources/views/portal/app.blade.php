@@ -459,8 +459,9 @@ $(document).ready(function(){
 
     $(document).on('click', '#login-tabs .nav-link', function (e){
         e.preventDefault();
-        $('.nav-link').removeClass('active');
-        $('.tab-pane').removeClass('active');
+        var $modal = $('#loginModal');
+        $modal.find('#login-tabs .nav-link').removeClass('active');
+        $modal.find('.tab-pane').removeClass('active');
 
         $($(this).data('target')).addClass('active');
         $(this).addClass('active');
