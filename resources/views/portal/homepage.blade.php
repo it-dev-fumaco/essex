@@ -380,7 +380,7 @@
                             <p>Date {{ ($data['status'] == 'APPROVED' ? 'Approved: ' : 'Disapproved: ').$data['approved_date'] }}</p>
                         @endif
                         <br>
-                        <button class="btn btn-warning close-modal" style="border-radius: 25px;" data-modal="#noticeModal">OK</button>
+                        <button type="button" class="btn btn-warning close-modal" style="border-radius: 25px;" data-bs-dismiss="modal" data-modal="#noticeModal">OK</button>
                     </div>
                 </div>
             </div>
@@ -442,8 +442,25 @@
 
     <script>
 (function ($) {
-        function modal_ctrl(modal, action) {
-            $(modal).modal(action);
+        function modal_ctrl(selector, action) {
+            var el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+            if (! el) {
+                return;
+            }
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var instance = bootstrap.Modal.getOrCreateInstance(el);
+
+                if (action === 'show') {
+                    instance.show();
+                } else if (action === 'hide') {
+                    instance.hide();
+                }
+
+                return;
+            }
+            if ($.fn.modal) {
+                $(el).modal(action);
+            }
         }
         $(document).ready(function () {
             @if (session()->has('notice_data'))
@@ -451,7 +468,10 @@
             @endif
 
             $(document).on('click', '.close-modal', function ($q) {
-                modal_ctrl($(this).data('modal'), 'hide')
+                var sel = $(this).data('modal');
+                if (sel) {
+                    modal_ctrl(sel, 'hide');
+                }
             })
         });
 
@@ -464,13 +484,13 @@
             $('#editPostModal .original_post_content').val($(this).data('content'));
             CKEDITOR.instances['post_content'].setData($(this).data('content'));
 
-            $('#editPostModal').modal('show');
+            modal_ctrl('#editPostModal', 'show');
         });
     $(document).on('click', '#deletePostBtn', function(event){
         event.preventDefault();
         $('#deletePostModal .post_id').val($(this).data('id'));
         $('#deletePostModal .post_title').text($(this).data('title'));
-        $('#deletePostModal').modal('show');
+        modal_ctrl('#deletePostModal', 'show');
     });
 
         CKEDITOR.config.height = 450;

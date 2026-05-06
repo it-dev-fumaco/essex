@@ -601,7 +601,7 @@ class AbsentNoticesController extends Controller
                 $leave_id = $notice_slip->leave_type_id;
                 $user_id = $notice_slip->user_id;
 
-                $status = isset($request->approved) && $request->approved ? 'APPROVED' : 'DISAPPROVED';
+                $status = $request->boolean('approved') ? 'APPROVED' : 'DISAPPROVED';
                 $approved_by = $approver->user_id;
                 $remarks = null;
             } else {

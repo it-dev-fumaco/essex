@@ -1,8 +1,25 @@
 @php
-    $params = '?update_from_mail=1';
-    $params .= '&notice_id='.$data['slip_id'];
-    $params .= '&approver_id='.$data['approver'];
-    $params .= '&token='.$data['token'];
+    $baseUrl = rtrim(config('app.notice_slip_base_url') ?? config('app.url'), '/');
+    $mailQuery = [
+        'update_from_mail' => '1',
+        'notice_id' => $data['slip_id'],
+        'approver_id' => $data['approver'],
+        'token' => $data['token'],
+    ];
+    $approveQuery = [
+        'update_from_mail' => '1',
+        'approved' => '1',
+        'notice_id' => $data['slip_id'],
+        'approver_id' => $data['approver'],
+        'token' => $data['token'],
+    ];
+    $statusPath = $baseUrl.'/notice_slip/updateStatus';
+    $disapproveUrl = $statusPath.'?'.http_build_query($mailQuery, '', '&', PHP_QUERY_RFC3986);
+    $approveUrl = $statusPath.'?'.http_build_query($approveQuery, '', '&', PHP_QUERY_RFC3986);
+    $portalHints = config('app.portal_public_urls');
+    if ($portalHints === []) {
+        $portalHints = [rtrim((string) config('app.url'), '/')];
+    }
 @endphp
 <div class="col-md-12">
     <div class="row">
@@ -19,14 +36,11 @@
             <p>Reason: <b> {{ $data['reason'] }}</b></p>
         </div>
         <br>
-        @php
-            $baseUrl = rtrim(config('app.notice_slip_base_url') ?? config('app.url'), '/');
-        @endphp
-        <a href="{{ $baseUrl }}/notice_slip/updateStatus{{ $params }}&approved=1" class="btn btn-success">Approve</a>
-        <a href="{{ $baseUrl }}/notice_slip/updateStatus{{ $params }}" class="btn btn-danger">Disapprove</a>
+        <a href="{{ $approveUrl }}" class="btn btn-success">Approve</a>
+        <a href="{{ $disapproveUrl }}" class="btn btn-danger">Disapprove</a>
         <br>
         <hr>
-        <p>Or log in to https://essex.fumaco.com to Approve or Cancel Request</p><br><b>Fumaco Inc / Absent Notice Slip {{ $data['year'] }} </b>
+        <p>Or log in to @foreach ($portalHints as $idx => $portalUrl)@if ($idx > 0) or @endif<a href="{{ $portalUrl }}">{{ $portalUrl }}</a>@endforeach to Approve or Cancel Request.</p><br><b>Fumaco Inc / Absent Notice Slip {{ $data['year'] }} </b>
         <br></br>
         <small>Auto Generated E-mail from Essex - NO REPLY </small>
         </div>
