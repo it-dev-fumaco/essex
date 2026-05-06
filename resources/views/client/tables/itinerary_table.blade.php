@@ -38,7 +38,7 @@
             @endswitch
          </td>
          <td class="text-center align-middle" style="width: 50px;">
-            <a href="#" data-idnum="{{ $row->parent }}" data-toggle="modal" data-target="#view-list-{{ $row->parent }}"  id=viewItinerary class="viewItinerary">
+            <a href="#" data-idnum="{{ $row->parent }}" class="viewItinerary text-decoration-none" role="button" aria-label="View itinerary details">
                <i class="fa fa-search" style="font-size: 18pt; color: #27AE60;"></i>
             </a>
             @include('client.modals.itinerary_modal')
