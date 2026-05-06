@@ -82,6 +82,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Portal URLs (e.g. absent-notice email footer)
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated public origins for "log in to …" copy in emails. When
+    | empty, only APP_URL is shown. Approve/Disapprove links use NOTICE_SLIP_BASE_URL
+    | or APP_URL — use one canonical URL there even if the portal is reachable on several hosts.
+    |
+    */
+    'portal_public_urls' => array_values(array_filter(array_map(
+        static fn (string $u): string => rtrim(trim($u), '/'),
+        explode(',', (string) env('PORTAL_PUBLIC_URLS', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

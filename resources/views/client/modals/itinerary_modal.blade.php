@@ -1,9 +1,9 @@
-<div class="modal fade" id="view-list-{{ $row->parent }}" style="text-align: left;">
+<div class="modal fade" id="view-list-{{ $row->parent }}" tabindex="-1" style="text-align: left;" aria-labelledby="itinerary-modal-title-{{ $row->parent }}" aria-hidden="true">
   <div class="modal-dialog">
       <div class="modal-content">
          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Itinerary Details</h4>
+            <h4 class="modal-title" id="itinerary-modal-title-{{ $row->parent }}">Itinerary Details</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          </div>
          <div class="modal-body">
             <form action="#" enctype="multipart/form-data">
@@ -71,7 +71,7 @@
                   </div>   
                </div>
                <div class="modal-footer">                  
-                  <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times"></i> Close</button>
                </div>
             </form>
          </div>

@@ -1431,16 +1431,26 @@
             $(document).on('click', '.viewItinerary', function(e) {
                 e.preventDefault();
                 var id = $(this).data('idnum');
-                data = {
-                    id: id
-                }
+                var targetSel = '#view-list-' + id;
+                var $modalRoot = $(targetSel);
 
                 $.ajax({
                     url: "/itinerary/fetch/companion",
                     type: 'get',
-                    data: data,
-                    success: function(data) {
-                        $('.companiondiv').html(data);
+                    data: { id: id },
+                    success: function(html) {
+                        $modalRoot.find('.companiondiv').first().html(html);
+                        var modalEl = document.querySelector(targetSel);
+                        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                        }
+                    },
+                    error: function() {
+                        $modalRoot.find('.companiondiv').first().html('<label class="text-muted">Companion list could not be loaded.</label>');
+                        var modalEl = document.querySelector(targetSel);
+                        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                        }
                     }
                 });
             });
