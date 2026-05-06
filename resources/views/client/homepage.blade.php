@@ -290,7 +290,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         @endif
 
                         <div class="inner-box featured">
@@ -1265,9 +1264,9 @@
                 el.text(month + ' ' + day + ', ' + year);
             }
 
-			$("#profile-tabs li a").click(function(e){
+			$('#profile-tabs').on('click', 'a.nav-link[href^="#"]', function (e) {
 				e.preventDefault();
-				$(this).tab("show");
+				$(this).tab('show');
 			});
 
             $('#view-my-leaves-tab').click(function (e) {
