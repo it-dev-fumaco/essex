@@ -1083,7 +1083,10 @@ class PortalController extends Controller
                 return response()->json(['success' => 0, 'message' => 'Email log not found.']);
             }
 
-            $data = json_decode($log->template_data, true);
+            $data = json_decode($log->template_data, true) ?: [];
+            if ($log->type == 'Absent Notice Slip' && is_array($data)) {
+                $data['mail_link_base'] = rtrim(request()->root(), '/');
+            }
 
             $success = 0;
             if ($log->recipient) {

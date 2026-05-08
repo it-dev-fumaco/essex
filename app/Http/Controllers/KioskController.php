@@ -206,6 +206,8 @@ class KioskController extends Controller
             'from' => Carbon::parse(($viewdetails?->date_from ?? $request->date_from).' '.($viewdetails?->time_from ?? $request->time_from))->format('M. d, Y h:i A'),
             'to' => Carbon::parse(($viewdetails?->date_to ?? $request->date_to).' '.($viewdetails?->time_to ?? $request->time_to))->format('M. d, Y h:i A'),
             'department' => $viewdetails?->department ?? '',
+            // Queued mail renders without HTTP context; preserve the origin used to file the notice.
+            'mail_link_base' => rtrim($request->root(), '/'),
         ];
 
         $leave_approver = DB::table('department_approvers')

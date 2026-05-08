@@ -282,6 +282,7 @@ class AbsentNoticesController extends Controller
                 'from' => Carbon::parse($viewdetails->date_from.' '.$viewdetails->time_from)->format('M. d, Y h:i A'),
                 'to' => Carbon::parse($viewdetails->date_to.' '.$viewdetails->time_to)->format('M. d, Y h:i A'),
                 'department' => $viewdetails->department,
+                'mail_link_base' => rtrim($request->root(), '/'),
             ];
 
             $notificationResult = $this->sendApprovalNotificationToManagers($notice_slip, $data);
@@ -405,6 +406,7 @@ class AbsentNoticesController extends Controller
             'from' => Carbon::parse($viewDetails->date_from.' '.$viewDetails->time_from)->format('M. d, Y h:i A'),
             'to' => Carbon::parse($viewDetails->date_to.' '.$viewDetails->time_to)->format('M. d, Y h:i A'),
             'department' => $viewDetails->department,
+            'mail_link_base' => rtrim($request->root(), '/'),
         ];
 
         try {
