@@ -74,8 +74,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | Base URL used in notice slip approval emails (Approve/Disapprove links).
+    | Must be a single origin (not comma-separated). Leave null to use APP_URL.
     | Set to an internal URL (e.g. https://10.0.0.5) if emails must open on
-    | the internal network. Leave null to use APP_URL.
+    | the internal network.
     |
     */
     'notice_slip_base_url' => env('NOTICE_SLIP_BASE_URL', null),

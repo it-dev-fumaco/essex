@@ -1,5 +1,34 @@
 @php
-    $baseUrl = rtrim(config('app.notice_slip_base_url') ?? config('app.url'), '/');
+    // Approve/Disapprove must be exactly one origin. If APP_URL or NOTICE_SLIP_BASE_URL
+    // was set to a comma-separated list (same as PORTAL_PUBLIC_URLS), take the first entry only.
+    $firstOrigin = static function (?string $raw): string {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return '';
+        }
+        foreach (preg_split('/\s*,\s*/', $raw) as $part) {
+            $part = rtrim(trim($part), '/');
+            if ($part !== '') {
+                return $part;
+            }
+        }
+
+        return rtrim($raw, '/');
+    };
+    // Prefer explicit NOTICE_SLIP_BASE_URL; otherwise the host where the notice was filed
+    // ($data['mail_link_base'], set for queued mail), then current request (sync send), then APP_URL.
+    $explicitBase = $firstOrigin(config('app.notice_slip_base_url') ?? '');
+    if ($explicitBase !== '') {
+        $baseUrl = $explicitBase;
+    } else {
+        $baseUrl = $firstOrigin($data['mail_link_base'] ?? '');
+        if ($baseUrl === '' && ! app()->runningInConsole()) {
+            $baseUrl = $firstOrigin(request()->root());
+        }
+        if ($baseUrl === '') {
+            $baseUrl = $firstOrigin((string) config('app.url'));
+        }
+    }
     $mailQuery = [
         'update_from_mail' => '1',
         'notice_id' => $data['slip_id'],
@@ -18,7 +47,13 @@
     $approveUrl = $statusPath.'?'.http_build_query($approveQuery, '', '&', PHP_QUERY_RFC3986);
     $portalHints = config('app.portal_public_urls');
     if ($portalHints === []) {
-        $portalHints = [rtrim((string) config('app.url'), '/')];
+        $portalHints = array_values(array_filter(array_map(
+            static fn (string $u): string => rtrim(trim($u), '/'),
+            preg_split('/\s*,\s*/', (string) config('app.url'))
+        ), static fn (string $u): bool => $u !== ''));
+    }
+    if ($portalHints === []) {
+        $portalHints = [$baseUrl !== '' ? $baseUrl : rtrim((string) config('app.url'), '/')];
     }
 @endphp
 <div class="col-md-12">
