@@ -48,6 +48,7 @@
     ];
 @endphp
     @include('client.modals.notice_slip_modal')
+    @include('client.modals.itinerary_notice_modal')
     @include('client.modals.gatepass_modal')
     {{-- @include('client.modals.attendance_modal') --}}
     @include('client.modals.evaluation_modal')
@@ -1273,6 +1274,8 @@
                 e.preventDefault();
                 $('#profile-tabs a[href="#tab-my-leaves"]').tab('show');
             });
+
+
 			
             @if (session()->has('success'))
                 $.bootstrapGrowl(

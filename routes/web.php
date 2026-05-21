@@ -210,6 +210,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/gatepass/updateStatus', [GatepassesController::class, 'updateStatus']);
     Route::get('/forApproval', [HomeController::class, 'showForApproval']);
 
+    // Itinerary (portal)
+    Route::get('/itinerary/fetch', [ItineraryController::class, 'fetchItineraries']);
+    Route::get('/itinerary/fetch/companion', [ItineraryController::class, 'fetchItineraries_companion']);
+    Route::post('/itinerary/create', [ItineraryController::class, 'store']);
+    Route::get('/itinerary/destinations/{doctype}', [ItineraryController::class, 'destinations']);
+    Route::get('/itinerary/employees', [ItineraryController::class, 'employees']);
+
     Route::get('/getShiftSchedules', [ShiftsController::class, 'getShiftSchedules']);
     Route::post('/addShiftSchedule', [ShiftsController::class, 'addShiftSchedule']);
     Route::post('/editShiftSchedule', [ShiftsController::class, 'editShiftSchedule']);
@@ -861,10 +868,6 @@ Route::post('/kiosk/itinerary/cancel/{id}', [KioskController::class, 'cancelItin
 Route::get('/kiosk/itinerary/history', [KioskController::class, 'itineraryHistory']);
 Route::get('/kiosk/notice/get_Itinerary_table', [KioskController::class, 'get_itineraryHistory']);
 Route::get('/kiosk/itinerary/result_table/{id}', [KioskController::class, 'itineraryResult_table']);
-
-// ItineraryEssex
-Route::get('/itinerary/fetch', [ItineraryController::class, 'fetchItineraries']);
-Route::get('/itinerary/fetch/companion', [ItineraryController::class, 'fetchItineraries_companion']);
 
 // AJAX
 Route::get('/kiosk/attendance_logs/{employee}', [KioskController::class, 'biometricLogs']);

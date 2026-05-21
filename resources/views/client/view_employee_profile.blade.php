@@ -15,31 +15,13 @@
 	</div>
 	<div class="col-md-8" style="padding: 2% 1% 1% 1%;">
 		<div class="profile-photo-wrapper" style="float: left; padding: 0.5% 0.5% 0.5% 2%;">
-			@php
-				use Illuminate\Support\Facades\Storage;
-				use Illuminate\Support\Str;
-
-				$avatarUrl = asset('storage/img/user.png');
-				try {
-					$disk = Storage::disk('upcloud');
-					/** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-					$key = 'employees/profile/'.(string) $employee_profile->user_id.'.jpg';
-					if ($disk->exists($key)) {
-						$v = optional($employee_profile->updated_at)->timestamp ?? time();
-						$avatarUrl = $disk->url($key).'?v='.$v;
-					}
-				} catch (\Throwable $e) {
-					// keep fallback
-				}
-			@endphp
-
 			<img
 				id="employee-profile-photo"
-				src="{{ $avatarUrl }}"
+				src="{{ $employee_avatar_url ?? asset('storage/img/user.png') }}"
 				width="80"
 				height="80"
 				class="employee-profile-photo-img"
-				data-current-src="{{ $avatarUrl }}"
+				data-current-src="{{ $employee_avatar_url ?? asset('storage/img/user.png') }}"
 			>
 
 			<div class="profile-photo-overlay" aria-hidden="true"></div>

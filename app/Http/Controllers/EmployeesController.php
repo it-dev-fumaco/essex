@@ -7,15 +7,16 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\ItemAccountability;
 use App\Models\User;
+use App\Services\EmployeeAvatarUrlResolver;
 use App\Traits\EmailsTrait;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -24,6 +25,10 @@ use Intervention\Image\Facades\Image;
 class EmployeesController extends Controller
 {
     use EmailsTrait;
+
+    public function __construct(
+        private readonly EmployeeAvatarUrlResolver $employeeAvatarUrlResolver
+    ) {}
 
     private function triggerWelcomeEmail(User $employee): void
     {
@@ -926,6 +931,21 @@ class EmployeesController extends Controller
             'companies' => $companies,
             'regular_employees' => $regular_employees,
         ];
+
+        $bust = null;
+        if ($employee_profile && ! empty($employee_profile->updated_at)) {
+            try {
+                $bust = Carbon::parse((string) $employee_profile->updated_at)->timestamp;
+            } catch (\Throwable) {
+                $bust = null;
+            }
+        }
+        $data['employee_avatar_url'] = $this->employeeAvatarUrlResolver->resolve(
+            $employee_profile?->image ?? null,
+            (string) ($employee_profile->user_id ?? $user_id),
+            false,
+            $bust
+        );
 
         return view('client.modules.human_resource.employees.profile')->with($data);
     }

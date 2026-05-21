@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ItinerarySubmissionService;
 use Auth;
 use DB;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ItineraryController extends Controller
 {
+    public function __construct(
+        private readonly ItinerarySubmissionService $itinerarySubmissionService
+    ) {}
+
     public function fetchItineraries()
     {
         $list = DB::connection('mysql_erp')
@@ -30,5 +36,22 @@ class ItineraryController extends Controller
             ->where('parent', $request->id)->get();
 
         return view('client.tables.itinerary_companion', compact('itr_companion'));
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $result = $this->itinerarySubmissionService->submit($request);
+
+        return response()->json($result);
+    }
+
+    public function destinations(string $doctype): JsonResponse
+    {
+        return response()->json($this->itinerarySubmissionService->getDocList($doctype));
+    }
+
+    public function employees(): JsonResponse
+    {
+        return response()->json($this->itinerarySubmissionService->getEmployees());
     }
 }
