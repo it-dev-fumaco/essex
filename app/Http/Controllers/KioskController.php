@@ -6,6 +6,7 @@ use App\Http\Requests\KioskLoginRequest;
 use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
 use App\Models\Gatepass;
+use App\Services\ItinerarySubmissionService;
 use App\Traits\AttendanceTrait;
 use Auth;
 use Carbon\Carbon;
@@ -779,88 +780,15 @@ class KioskController extends Controller
         return $list;
     }
 
-    public function saveItinerary(Request $request)
+    public function saveItinerary(Request $request, ItinerarySubmissionService $itinerarySubmissionService)
     {
-        $todays_date = Carbon::now()->format('Y-m-d H:i:s');
-        $list = DB::connection('mysql_erp')->table('tabItinerary')->where('name', 'like', '%ITK%')
-            ->select(DB::raw('MAX(CAST(SUBSTRING(name, 4, length(name)-3) AS UNSIGNED)) as name'))
-            ->first();
+        $result = $itinerarySubmissionService->submit($request);
 
-        $last_id = $list->name ? $list->name : 0;
-        $new_id = 'ITK'.str_pad($last_id + 1, 4, '0', STR_PAD_LEFT);
-
-        $itk = [
-            'name' => $new_id,
-            'creation' => $todays_date,
-            'modified' => $todays_date,
-            'modified_by' => Auth::user()->employee_name,
-            'owner' => Auth::user()->employee_name,
-            'docstatus' => 0,
-            'workflow_state' => 'For Approval',
-            'transaction_date' => date('Y-m-d'),
-        ];
-
-        $itk_child = [];
-        if ($request->from) {
-            DB::connection('mysql_erp')->table('tabItinerary')->insert($itk);
-            foreach ($request->from as $i => $row) {
-                $customer = ($request->from[$i] == 'Customer') ? $request->destination[$i] : null;
-                $lead = ($request->from[$i] == 'Lead') ? $request->destination[$i] : null;
-                $supplier = ($request->from[$i] == 'Supplier') ? $request->destination[$i] : null;
-                $others = ($request->from[$i] == 'Others') ? $request->destination[$i] : null;
-
-                $itinerary_date = DateTime::createFromFormat('m-d-Y', $request->itinerary_date[$i])->format('Y-m-d');
-                $itk_child[] = [
-                    'name' => uniqid(date('mdY')),
-                    'creation' => $todays_date,
-                    'modified' => $todays_date,
-                    'modified_by' => Auth::user()->employee_name,
-                    'owner' => Auth::user()->employee_name,
-                    'docstatus' => 0,
-                    'parent' => $new_id, //
-                    'parentfield' => 'project',
-                    'parenttype' => 'Itinerary',
-                    'idx' => $i + 1,
-                    'project' => $request->project[$i],
-                    'customer' => $customer,
-                    'itinerary_date' => $itinerary_date,
-                    'purpose' => $request->purpose[$i],
-                    // 'date' => $itinerary_date,
-                    'time' => $request->itinerary_time[$i],
-                    'from' => $request->from[$i],
-                    'lead' => $lead,
-                    'supplier' => $supplier,
-                    'destination' => $others,
-                    'itinerary_location' => $request->destination[$i],
-                ];
-            }
-
-            DB::connection('mysql_erp')->table('tabItinerary Tab')->insert($itk_child);
+        if (! $result['success'] || ! $result['itinerary_id']) {
+            return redirect()->back()->with('message', $result['message']);
         }
 
-        $companion = [];
-        if ($request->companion_id) {
-            foreach ($request->companion_id as $i => $row) {
-                $companion[] = [
-                    'name' => uniqid(date('mdY')),
-                    'creation' => $todays_date,
-                    'modified' => $todays_date,
-                    'modified_by' => Auth::user()->employee_name,
-                    'owner' => Auth::user()->email,
-                    'docstatus' => 0,
-                    'parent' => $new_id,
-                    'parentfield' => 'companion',
-                    'parenttype' => 'Itinerary',
-                    'idx' => $i + 1,
-                    'companion' => $request->companion_id[$i],
-                    'employee_name' => $request->companion_name[$i],
-                ];
-            }
-
-            DB::connection('mysql_erp')->table('tabCompanion Table')->insert($companion);
-        }
-
-        return redirect('/kiosk/itinerary/result/'.$new_id)->with(['message' => 'Saved.']);
+        return redirect('/kiosk/itinerary/result/'.$result['itinerary_id'])->with(['message' => 'Saved.']);
     }
 
     public function cancelItinerary($id)

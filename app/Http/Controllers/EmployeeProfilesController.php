@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\EmployeeAvatarUrlResolver;
 use App\Services\EmployeeProfileService;
 use App\Traits\EmailsTrait;
 use Auth;
@@ -19,7 +20,8 @@ class EmployeeProfilesController extends Controller
     use EmailsTrait;
 
     public function __construct(
-        private readonly EmployeeProfileService $employeeProfileService
+        private readonly EmployeeProfileService $employeeProfileService,
+        private readonly EmployeeAvatarUrlResolver $employeeAvatarUrlResolver
     ) {}
 
     public function fetchProfiles(Request $request)
@@ -34,6 +36,23 @@ class EmployeeProfilesController extends Controller
     public function viewProfile($user_id)
     {
         $data = $this->employeeProfileService->getViewProfileData($user_id);
+
+        $profile = $data['employee_profile'] ?? null;
+        $bust = null;
+        if ($profile && ! empty($profile->updated_at)) {
+            try {
+                $bust = Carbon::parse((string) $profile->updated_at)->timestamp;
+            } catch (\Throwable) {
+                $bust = null;
+            }
+        }
+        $uid = $profile ? (string) $profile->user_id : (string) $user_id;
+        $data['employee_avatar_url'] = $this->employeeAvatarUrlResolver->resolve(
+            $profile?->image ?? null,
+            $uid,
+            false,
+            $bust
+        );
 
         return view('client.view_employee_profile')->with($data);
     }

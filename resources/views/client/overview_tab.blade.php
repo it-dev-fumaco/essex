@@ -1,22 +1,28 @@
 <div class="col-12">
-    <div class="d-flex flex-row pt-3">
-        <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2">
+    <div class="d-flex flex-row flex-wrap pt-3">
+        <div class="p-1 p-xl-2 text-center col-6 col-md-3 d-grid gap-2">
             <button type="button" class="data-entry-btn btn btn-secondary btn-sm px-xl-3 py-xl-2 w-100 h-100" data-bs-toggle="modal" data-bs-target="#absentNoticeModal" id="notice-modal">
                 <i class="data-entry-icon fas fa-calendar-check d-block m-xl-2"></i>
                 Absent Notice
             </button>
         </div>
-        <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2">
+        <div class="p-1 p-xl-2 text-center col-6 col-md-3 d-grid gap-2">
+            <button type="button" class="data-entry-btn btn btn-warning btn-sm px-xl-3 py-xl-2 w-100 h-100" data-bs-toggle="modal" data-bs-target="#itineraryNoticeModal" id="itinerary-notice-modal">
+                <i class="data-entry-icon fas fa-route d-block m-xl-2"></i>
+                Itinerary Notice
+            </button>
+        </div>
+        <div class="p-1 p-xl-2 text-center col-6 col-md-3 d-grid gap-2">
             <button class="data-entry-btn btn btn-success btn-sm w-100 h-100" data-bs-toggle="modal" data-bs-target="#gatepassModal">
                 <i class="data-entry-icon fas fa-clipboard-list d-block m-xl-2"></i>&nbsp;Gatepass
             </button>
         </div>
-        <div class="p-1 p-xl-2 text-center col-4 d-grid gap-2" data-bs-toggle="modal" data-bs-target="#evaluationModal" id="evaluation-modal">
+        <div class="p-1 p-xl-2 text-center col-6 col-md-3 d-grid gap-2" data-bs-toggle="modal" data-bs-target="#evaluationModal" id="evaluation-modal">
             <button type="button" class="data-entry-btn btn btn-info btn-sm px-3 py-2 w-100 h-100">
                 <i class="data-entry-icon fas fa-chart-bar d-block m-xl-2"></i>
                 KPI Data Entry
             </button>
-        </div>       
+        </div>
     </div>
 
     <div class="card mb-3">
