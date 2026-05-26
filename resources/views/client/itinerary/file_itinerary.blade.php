@@ -1,2 +1,1 @@
-{{-- Legacy include: itinerary filing is shown via itinerary_notice_modal on the homepage. --}}
-@include('client.itinerary._form')
+{{-- Use route GET /itinerary/file (client.itinerary.file) — modal flow removed. --}}

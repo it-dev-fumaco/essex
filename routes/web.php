@@ -211,6 +211,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/forApproval', [HomeController::class, 'showForApproval']);
 
     // Itinerary (portal)
+    Route::get('/itinerary/file', [ItineraryController::class, 'fileForm']);
     Route::get('/itinerary/fetch', [ItineraryController::class, 'fetchItineraries']);
     Route::get('/itinerary/fetch/companion', [ItineraryController::class, 'fetchItineraries_companion']);
     Route::post('/itinerary/create', [ItineraryController::class, 'store']);

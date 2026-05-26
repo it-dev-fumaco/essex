@@ -1,5 +1,5 @@
 <div class="modal fade" id="itineraryNoticeModal" tabindex="-1" aria-labelledby="itineraryNoticeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" style="min-width: 75%;">
+    <div class="modal-dialog modal-lg" style="min-width: 60%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="itineraryNoticeModalLabel">Itinerary Notice</h5>

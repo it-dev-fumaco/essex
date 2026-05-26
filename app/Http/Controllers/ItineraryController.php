@@ -38,6 +38,11 @@ class ItineraryController extends Controller
         return view('client.tables.itinerary_companion', compact('itr_companion'));
     }
 
+    public function fileForm()
+    {
+        return view('client.itinerary.file');
+    }
+
     public function store(Request $request): JsonResponse
     {
         $result = $this->itinerarySubmissionService->submit($request);
