@@ -1,33 +1,4 @@
-@include('client.itinerary.modals.add_itinerary')
-@include('client.itinerary.modals.select_destination')
-@include('client.itinerary.modals.select_project')
-@include('client.itinerary.modals.select_companion')
-@include('client.itinerary.modals.confirm_submission')
-@include('client.itinerary.modals.validation_error')
-
-<div class="modal fade" id="portalItineraryAddRowAlert" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Warning</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-0">Please fill in all fields.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    .portal-itinerary-scroll {
-        position: relative;
-        height: 320px;
-        overflow: auto;
-    }
     #itineraryNoticeModal .modal-body {
         max-height: 75vh;
         overflow-y: auto;
@@ -42,53 +13,122 @@
         create: '/itinerary/create'
     };
 
+    var portalItineraryInitialized = false;
+
+    function portalEscapeHtml(text) {
+        return $('<div>').text(text || '').html();
+    }
+
+    function portalShowAlert(message) {
+        var $alert = $('#portal-itinerary-alert');
+        $alert.text(message).removeClass('d-none');
+        var modalBody = document.querySelector('#itineraryNoticeModal .modal-body');
+        if (modalBody) {
+            modalBody.scrollTop = modalBody.scrollHeight;
+        }
+    }
+
+    function portalHideAlert() {
+        $('#portal-itinerary-alert').addClass('d-none').text('');
+    }
+
     function portalAutoRowNoItr() {
         $('#portal-itinerary-table tbody tr').each(function (idx) {
             $(this).children('th:eq(0)').html(idx + 1);
         });
+        var hasRows = $('#portal-itinerary-table tbody tr').length > 0;
+        $('#portal-itinerary-empty-hint').toggleClass('d-none', hasRows);
     }
 
-    function portalAutoRowNoComp() {
-        $('#portal-companion-table tbody tr').each(function (idx) {
-            $(this).children('th:eq(0)').html(idx + 1);
+    function portalSyncCompanionHidden() {
+        var $hidden = $('#portal-companion-hidden');
+        $hidden.empty();
+        $('#portal-companion-select option:selected').each(function () {
+            var id = $(this).val();
+            var name = $(this).text();
+            $hidden.append('<input type="hidden" name="companion_id[]" value="' + portalEscapeHtml(id) + '">');
+            $hidden.append('<input type="hidden" name="companion_name[]" value="' + portalEscapeHtml(name) + '">');
         });
     }
 
-    function portalSetDestinationList(doctype) {
-        $('#portal-destination-list').empty();
+    function portalGetDestinationValue() {
+        var from = $('#portal-from-select').val();
+        if (from === 'Others') {
+            return $('#portal-destination-text').val().trim();
+        }
+        return $('#portal-destination-select').val();
+    }
+
+    function portalClearEntryFields() {
+        $('#portal-from-select').val('');
+        $('#portal-destination-select').val('').addClass('d-none');
+        $('#portal-destination-text').val('').addClass('d-none');
+        $('#portal-itinerary-date').val('');
+        $('#portal-itinerary-time').val('');
+        $('#portal-project').val('');
+        $('#portal-purpose').val('');
+    }
+
+    function portalResetItineraryForm() {
+        $('#portal-itinerary-table tbody').empty();
+        $('#portal-companion-select').val([]);
+        $('#portal-companion-hidden').empty();
+        portalClearEntryFields();
+        portalHideAlert();
+        portalAutoRowNoItr();
+    }
+
+    function portalUpdateDestinationField(from) {
+        var $select = $('#portal-destination-select');
+        var $text = $('#portal-destination-text');
+        $select.empty().append('<option value="">--</option>');
+        $select.addClass('d-none');
+        $text.addClass('d-none').val('');
+
+        if (!from) {
+            return;
+        }
+
+        if (from === 'Others') {
+            $text.removeClass('d-none');
+            return;
+        }
+
+        $select.removeClass('d-none');
         $.ajax({
-            url: portalItineraryEndpoints.destinations + doctype,
+            url: portalItineraryEndpoints.destinations + from,
             method: 'GET',
             success: function (response) {
-                var des_sel = '';
                 $.each(response, function (i, v) {
-                    des_sel += '<tr class="portal-selected-destination" data-id="' + v + '"><td>' + v + '</td></tr>';
+                    $select.append($('<option>', { value: v, text: v }));
                 });
-                $('#portal-destination-list').append(des_sel);
             }
         });
     }
 
     function portalInitItineraryForm() {
-        if ($('#portal-itinerary-date').data('datepicker')) {
+        if (portalItineraryInitialized) {
             return;
         }
+        portalItineraryInitialized = true;
 
-        $('#portal-itinerary-date').datepicker({
-            format: 'mm-dd-yyyy',
-            autoclose: true,
-            todayHighlight: true
-        });
+        if (!$('#portal-itinerary-date').data('datepicker')) {
+            $('#portal-itinerary-date').datepicker({
+                format: 'mm-dd-yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
+        }
 
         $.ajax({
             url: portalItineraryEndpoints.destinations + 'Project',
             method: 'GET',
             success: function (response) {
-                var proj_opt = '';
+                var $project = $('#portal-project');
+                $project.find('option:not(:first)').remove();
                 $.each(response, function (i, v) {
-                    proj_opt += '<tr class="portal-selected-project" data-id="' + v + '"><td>' + v + '</td></tr>';
+                    $project.append($('<option>', { value: v, text: v }));
                 });
-                $('#portal-project-list').append(proj_opt);
             }
         });
 
@@ -96,24 +136,13 @@
             url: portalItineraryEndpoints.employees,
             method: 'GET',
             success: function (response) {
-                var com_opt = '';
-                $.each(response, function (i, v) {
-                    com_opt += '<tr class="portal-selected-companion" data-id="' + v + '" data-name="' + i + '"><td>' + i + '</td></tr>';
+                var $companion = $('#portal-companion-select');
+                $companion.empty();
+                $.each(response, function (name, id) {
+                    $companion.append($('<option>', { value: id, text: name }));
                 });
-                $('#portal-companion-list').append(com_opt);
             }
         });
-    }
-
-    function portalResetItineraryForm() {
-        $('#portal-itinerary-table tbody').empty();
-        $('#portal-companion-table tbody').empty();
-        $('#portal-from-select').val('');
-        $('#portal-destination').val('');
-        $('#portal-itinerary-date').val('');
-        $('#portal-itinerary-time').val('');
-        $('#portal-project').val('');
-        $('#portal-purpose').val('');
     }
 
     var itineraryNoticeModalEl = document.getElementById('itineraryNoticeModal');
@@ -127,151 +156,73 @@
     }
 
     $(document).ready(function () {
-        $('#portal-validate-itinerary').on('click', function () {
-            var rowCount = $('#portal-itinerary-table tbody tr').length;
-            if (rowCount <= 0) {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('portalValidationModal')).show();
-            } else {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('portalConfirmSubmission')).show();
-            }
+        $(document).on('change', '#portal-from-select', function () {
+            portalUpdateDestinationField($(this).val());
         });
 
-        $('#portalModalAddItinerary .portal-add-row').on('click', function (e) {
-            e.preventDefault();
+        $(document).on('change', '#portal-companion-select', portalSyncCompanionHidden);
+
+        $('#portal-add-itinerary-row').on('click', function () {
+            portalHideAlert();
             var from = $('#portal-from-select').val();
-            var destination = $('#portal-destination').val();
+            var destination = portalGetDestinationValue();
             var itinerary_date = $('#portal-itinerary-date').val();
             var itinerary_time = $('#portal-itinerary-time').val();
             var project = $('#portal-project').val();
             var purpose = $('#portal-purpose').val();
 
-            if (from !== '' && destination !== '' && itinerary_date !== '' && itinerary_time !== '' && project !== '' && purpose !== '') {
-                var row = '<tr>' +
-                    '<th scope="row"></th>' +
-                    '<td><input type="hidden" name="from[]" value="' + from + '">' +
-                    '<input type="hidden" name="destination[]" value="' + $('<div>').text(destination).html() + '">' +
-                    '<input type="hidden" name="itinerary_date[]" value="' + itinerary_date + '">' +
-                    '<input type="hidden" name="itinerary_time[]" value="' + itinerary_time + '">' +
-                    '<input type="hidden" name="project[]" value="' + $('<div>').text(project).html() + '">' +
-                    '<input type="hidden" name="purpose[]" value="' + $('<div>').text(purpose).html() + '">' +
-                    destination + '</td>' +
-                    '<td>' + itinerary_date + '</td>' +
-                    '<td>' + itinerary_time + '</td>' +
-                    '<td>' + purpose + '</td>' +
-                    '<td><button type="button" class="portal-delete-row btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td></tr>';
-                $('#portal-itinerary-table tbody').append(row);
-                portalAutoRowNoItr();
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalAddItinerary')).hide();
-                $('#portal-from-select').val('');
-                $('#portal-destination').val('');
-                $('#portal-itinerary-date').val('');
-                $('#portal-itinerary-time').val('');
-                $('#portal-project').val('');
-                $('#portal-purpose').val('');
-            } else {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('portalItineraryAddRowAlert')).show();
-            }
-        });
-
-        $(document).on('click', '#portal-itinerary-table .portal-delete-row, #portal-companion-table .portal-delete-row', function () {
-            $(this).closest('tr').remove();
-            portalAutoRowNoItr();
-            portalAutoRowNoComp();
-        });
-
-        $(document).on('change', '#portal-from-select', function () {
-            var d = $(this).val();
-            $('#portalModalAddItinerary .portal-destination-name').val('');
-            if (d !== 'Others') {
-                portalSetDestinationList(d);
-                $('#portal-destination').prop('readonly', true);
-            } else {
-                $('#portal-destination-list').empty();
-                var des_sel =
-                    '<tr class="portal-selected-destination" data-id="Fil-United Plant 1"><td>Fil-United Plant 1</td></tr>' +
-                    '<tr class="portal-selected-destination" data-id="FUMACO Plant 2"><td>FUMACO Plant 2</td></tr>' +
-                    '<tr class="portal-selected-destination" data-id="FUMACO Showroom"><td>FUMACO Showroom</td></tr>' +
-                    '<tr class="portal-selected-destination" data-id="Metrobank"><td>Metrobank</td></tr>';
-                $('#portal-destination').prop('readonly', false);
-                $('#portal-destination-list').append(des_sel);
-            }
-        });
-
-        $('#portal-search-destination').on('keyup', function () {
-            var value = $(this).val().toLowerCase();
-            $('#portal-destination-list tr').filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-            });
-        });
-
-        $('#portal-search-project').on('keyup', function () {
-            var value = $(this).val().toLowerCase();
-            $('#portal-project-list tr').filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-            });
-        });
-
-        $('#portal-search-companion').on('keyup', function () {
-            var value = $(this).val().toLowerCase();
-            $('#portal-companion-list tr').filter(function () {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-            });
-        });
-
-        $(document).on('click', '.portal-selected-project', function () {
-            $('#portalModalAddItinerary .portal-project-name').val($(this).data('id'));
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalSelectProject')).hide();
-        });
-
-        $(document).on('click', '.portal-selected-companion', function () {
-            var emp_id = $(this).data('id');
-            var emp_name = $(this).data('name');
-            var sel = '<tr><th scope="row"></th>' +
-                '<td><input type="hidden" name="companion_id[]" value="' + emp_id + '">' +
-                '<input type="hidden" name="companion_name[]" value="' + emp_name + '">' + emp_name + '</td>' +
-                '<td><button type="button" class="portal-delete-row btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td></tr>';
-            $('#portal-companion-table tbody').append(sel);
-            portalAutoRowNoComp();
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalSelectCompanion')).hide();
-        });
-
-        $(document).on('click', '.portal-selected-destination', function () {
-            $('#portalModalAddItinerary .portal-destination-name').val($(this).data('id'));
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalSelectDestination')).hide();
-        });
-
-        $(document).on('click', '#portalModalAddItinerary .portal-project-name', function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalSelectProject')).show();
-        });
-
-        $(document).on('click', '#portalModalAddItinerary .portal-destination-name', function () {
-            var from = $('#portal-from-select').val();
-            if (from !== 'Others') {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('portalModalSelectDestination')).show();
-            }
-        });
-
-        $(document).on('show.bs.modal', '.modal', function () {
-            if (!document.getElementById('itineraryNoticeModal')) {
+            if (!from || !destination || !itinerary_date || !itinerary_time || !project || !purpose) {
+                portalShowAlert('Please fill in all required fields before adding to the list.');
                 return;
             }
-            var zIndex = 1050 + (10 * $('.modal.show').length);
-            $(this).css('z-index', zIndex);
-            setTimeout(function () {
-                $('.modal-backdrop').not('.modal-stack').last().css('z-index', zIndex - 1).addClass('modal-stack');
-            }, 0);
+
+            var row = '<tr>' +
+                '<th scope="row"></th>' +
+                '<td><input type="hidden" name="from[]" value="' + portalEscapeHtml(from) + '">' +
+                '<input type="hidden" name="destination[]" value="' + portalEscapeHtml(destination) + '">' +
+                '<input type="hidden" name="itinerary_date[]" value="' + portalEscapeHtml(itinerary_date) + '">' +
+                '<input type="hidden" name="itinerary_time[]" value="' + portalEscapeHtml(itinerary_time) + '">' +
+                '<input type="hidden" name="project[]" value="' + portalEscapeHtml(project) + '">' +
+                '<input type="hidden" name="purpose[]" value="' + portalEscapeHtml(purpose) + '">' +
+                portalEscapeHtml(destination) + '</td>' +
+                '<td>' + portalEscapeHtml(itinerary_date) + '</td>' +
+                '<td>' + portalEscapeHtml(itinerary_time) + '</td>' +
+                '<td>' + portalEscapeHtml(purpose) + '</td>' +
+                '<td><button type="button" class="portal-delete-row btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></td></tr>';
+
+            $('#portal-itinerary-table tbody').append(row);
+            portalAutoRowNoItr();
+            portalClearEntryFields();
         });
 
-        $('#portal-confirm-itinerary-submit').on('click', function () {
-            var $btn = $(this);
+        $(document).on('click', '#portal-itinerary-table .portal-delete-row', function () {
+            $(this).closest('tr').remove();
+            portalAutoRowNoItr();
+        });
+
+        $('#portal-file-itinerary-form').on('submit', function (e) {
+            e.preventDefault();
+            portalHideAlert();
+            portalSyncCompanionHidden();
+
+            if ($('#portal-itinerary-table tbody tr').length <= 0) {
+                portalShowAlert('Please add at least one itinerary stop.');
+                return;
+            }
+
+            if (!confirm('Submit itinerary slip for approval?')) {
+                return;
+            }
+
+            var $btn = $('#portal-submit-itinerary');
             $btn.prop('disabled', true);
+
             $.ajax({
                 url: portalItineraryEndpoints.create,
                 type: 'POST',
-                data: $('#portal-file-itinerary-form').serialize(),
+                data: $(this).serialize(),
                 success: function (data) {
                     $btn.prop('disabled', false);
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('portalConfirmSubmission')).hide();
                     if (data.success) {
                         if (typeof loadItinerary === 'function') {
                             loadItinerary();
@@ -280,15 +231,13 @@
                             showNotification('fa fa-check-circle-o', data.message, 'success', 'Itinerary submitted');
                         }
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('itineraryNoticeModal')).hide();
-                    } else if (typeof showNotification === 'function') {
-                        showNotification('fa fa-ban', data.message, 'danger', 'Itinerary');
+                    } else {
+                        portalShowAlert(data.message || 'Unable to submit itinerary.');
                     }
                 },
                 error: function () {
                     $btn.prop('disabled', false);
-                    if (typeof showNotification === 'function') {
-                        showNotification('fa fa-ban', 'An error occurred. Please try again.', 'danger', 'Itinerary');
-                    }
+                    portalShowAlert('An error occurred. Please try again.');
                 }
             });
         });

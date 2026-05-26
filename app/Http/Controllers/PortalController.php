@@ -166,6 +166,7 @@ class PortalController extends Controller
                 ->where('users.user_type', 'Employee')
                 ->join('designation', 'designation.des_id', '=', 'users.designation_id')
                 ->join('departments', 'departments.department_id', '=', 'users.department_id')
+                ->leftJoin('users as manager', 'manager.user_id', '=', 'users.reporting_to')
                 ->where('users.status', 'Active')
                 ->whereIn('users.employment_status', ['Regular', 'Probationary'])
                 ->where(function ($q) {
@@ -216,10 +217,19 @@ class PortalController extends Controller
                     'users.telephone',
                     'users.email',
                     'users.updated_at',
+                    'users.reporting_to',
                     'departments.department',
                     'departments.order_no',
-                    'designation.designation'
+                    'designation.designation',
+                    'manager.employee_name as reports_to_name'
                 )
+                ->selectSub(function ($sub) {
+                    $sub->from('users as dr')
+                        ->selectRaw('count(*)')
+                        ->whereColumn('dr.reporting_to', 'users.user_id')
+                        ->where('dr.user_type', 'Employee')
+                        ->where('dr.status', 'Active');
+                }, 'direct_reports_count')
                 ->orderByRaw('departments.order_no IS NULL, departments.order_no ASC')
                 ->orderBy('departments.department')
                 ->orderBy('users.employee_name')
@@ -267,6 +277,7 @@ class PortalController extends Controller
         $employee = DB::table('users')
             ->leftJoin('designation', 'designation.des_id', '=', 'users.designation_id')
             ->leftJoin('departments', 'departments.department_id', '=', 'users.department_id')
+            ->leftJoin('users as manager', 'manager.user_id', '=', 'users.reporting_to')
             ->where('users.user_id', $user_id)
             ->select([
                 'users.user_id',
@@ -280,8 +291,12 @@ class PortalController extends Controller
                 'users.joining_date',
                 'users.image',
                 'users.updated_at',
+                'users.reporting_to',
                 'designation.designation',
                 'departments.department',
+                'manager.user_id as reports_to_user_id',
+                'manager.employee_name as reports_to_name',
+                'manager.designation_name as reports_to_job_title',
             ])
             ->first();
 
@@ -360,6 +375,26 @@ class PortalController extends Controller
 
         $contact = $employee->telephone ?: ($employee->contact_no ?: null);
 
+        $directReportsBase = DB::table('users')
+            ->where('users.user_type', 'Employee')
+            ->where('users.status', 'Active')
+            ->where('users.reporting_to', (string) $employee->user_id);
+
+        $directReportsCount = (int) $directReportsBase->count('users.user_id');
+
+        $directReports = DB::table('users')
+            ->leftJoin('designation', 'designation.des_id', '=', 'users.designation_id')
+            ->where('users.user_type', 'Employee')
+            ->where('users.status', 'Active')
+            ->where('users.reporting_to', (string) $employee->user_id)
+            ->orderBy('users.employee_name')
+            ->limit(25)
+            ->get([
+                'users.user_id',
+                'users.employee_name',
+                'designation.designation as job_title',
+            ]);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -372,6 +407,17 @@ class PortalController extends Controller
                 'employment_status' => $employee->employment_status,
                 'tenure' => $tenureText,
                 'avatar_url' => $avatarUrl,
+                'reports_to' => [
+                    'user_id' => $employee->reports_to_user_id,
+                    'full_name' => $employee->reports_to_name,
+                    'job_title' => $employee->reports_to_job_title,
+                ],
+                'direct_reports' => $directReports->map(fn ($r) => [
+                    'user_id' => $r->user_id,
+                    'full_name' => $r->employee_name,
+                    'job_title' => $r->job_title,
+                ])->values(),
+                'direct_reports_count' => $directReportsCount,
             ],
         ]);
     }

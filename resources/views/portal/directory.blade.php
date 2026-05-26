@@ -70,8 +70,8 @@
 	}
 
 	.directory-card__avatar {
-		width: 74px;
-		height: 74px;
+		width: 85px;
+		height: 85px;
 		border-radius: 10px;
 		border: 1px solid #d0dae8;
 		background: #f6f8fb center/cover no-repeat;
@@ -166,8 +166,8 @@
 	}
 
 	.employee-profile-avatar {
-		width: 108px;
-		height: 108px;
+		width: 120px;
+		height: 120px;
 		border: 1px solid #e2e8f0;
 		border-radius: 12px;
 		background: #f8fafc center/cover no-repeat;
@@ -265,6 +265,26 @@
 		font-weight: 600;
 		color: #1e293b;
 		line-height: 1.45;
+	}
+
+	.employee-profile-value--muted {
+		color: #64748b;
+		font-weight: 600;
+	}
+
+	.employee-profile-reports-list {
+		margin: 8px 0 0 0;
+		padding: 0 0 0 24px;
+		color: #1e293b;
+	}
+
+	.employee-profile-reports-list li {
+		margin: 6px 0;
+	}
+
+	.employee-profile-reports-list small {
+		color: #64748b;
+		font-weight: 600;
 	}
 
 	.employee-profile-contact-line i,
@@ -460,6 +480,19 @@
 									<span class="employee-profile-tenure-label">Tenure</span>
 									<span id="employeeProfileTenure" class="employee-profile-value employee-profile-tenure-value"></span>
 								</div>
+								<div class="employee-profile-emp-line">
+									<i class="fas fa-sitemap" aria-hidden="true"></i>
+									<span class="employee-profile-tenure-label">Reports To</span>
+									<span id="employeeProfileReportsTo" class="employee-profile-value"></span>
+								</div>
+								<div class="employee-profile-emp-line" style="flex-direction: column; align-items: flex-start;">
+									<div class="d-flex" style="gap: 10px; align-items: flex-start;">
+										<i class="fas fa-users" aria-hidden="true"></i>
+										<span class="employee-profile-tenure-label">Direct Reports</span>
+										<span id="employeeProfileDirectReportsCount" class="employee-profile-value employee-profile-value--muted"></span>
+									</div>
+									<ul id="employeeProfileDirectReportsList" class="employee-profile-reports-list d-none"></ul>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -504,6 +537,9 @@
 			var phone = data.contact || 'N/A';
 			var status = data.employment_status || 'N/A';
 			var tenure = data.tenure || 'N/A';
+			var reportsTo = (data.reports_to && data.reports_to.full_name) ? data.reports_to.full_name : 'N/A';
+			var directReports = Array.isArray(data.direct_reports) ? data.direct_reports : [];
+			var directReportsCount = (typeof data.direct_reports_count === 'number') ? data.direct_reports_count : directReports.length;
 
 			$('#employeeProfileLoading').addClass('d-none');
 			$('#employeeProfileError').addClass('d-none').text('');
@@ -523,6 +559,27 @@
 			$('#employeeProfileEmploymentStatus').text(status);
 			$('#employeeProfileEmploymentStatusText').text(status);
 			$('#employeeProfileTenure').text(tenure);
+			$('#employeeProfileReportsTo').text(reportsTo);
+			$('#employeeProfileDirectReportsCount').text(directReportsCount ? (directReportsCount + ' total') : '0');
+
+			var listEl = $('#employeeProfileDirectReportsList');
+			listEl.empty();
+			if (directReports.length > 0) {
+				directReports.slice(0, 8).forEach(function (r) {
+					var name = (r && r.full_name) ? r.full_name : 'N/A';
+					var title = (r && r.job_title) ? r.job_title : null;
+					var li = $('<li />');
+					li.text(name);
+					if (title) {
+						li.append($('<br />'));
+						li.append($('<small />').text(title));
+					}
+					listEl.append(li);
+				});
+				listEl.removeClass('d-none');
+			} else {
+				listEl.addClass('d-none');
+			}
 
 			var normalizedStatus = (status || '').toString().toLowerCase();
 			var statusPill = $('#employeeProfileStatusPill');
