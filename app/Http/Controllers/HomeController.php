@@ -6,6 +6,7 @@ use App\Models\CalendarEvent;
 use App\Models\ExaminationResult;
 use App\Models\Examinee;
 use App\Models\User;
+use App\Services\EmployeeAvatarUrlResolver;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
@@ -16,13 +17,9 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly EmployeeAvatarUrlResolver $employeeAvatarUrlResolver,
+    ) {
         $this->middleware('auth');
     }
 
@@ -87,8 +84,15 @@ class HomeController extends Controller
             ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
             ->join('designation', 'users.designation_id', '=', 'designation.des_id')
             ->where('department_approvers.department_id', '=', Auth::user()->department_id)
-            ->select('users.employee_name', 'designation.designation', 'department_approvers.employee_id', 'users.image')
-            ->get();
+            ->select(
+                'users.employee_name',
+                'designation.designation',
+                'department_approvers.employee_id',
+                'users.image',
+                'users.updated_at'
+            )
+            ->get()
+            ->map(fn ($approver) => $this->withAvatarUrl($approver, (string) $approver->employee_id));
 
         $awaiting_notices = DB::table('notice_slip')
             ->join('department_approvers', 'department_approvers.department_id', '=', 'notice_slip.dept_id')
@@ -175,15 +179,23 @@ class HomeController extends Controller
             $holiday_reminder = ! $special_holidays ? 1 : 0;
         }
 
-        $reports_to = DB::table('users')->join('designation', 'users.designation_id', 'designation.des_id')->where('user_id', Auth::user()->reporting_to)->first();
+        $reports_to = DB::table('users')
+            ->join('designation', 'users.designation_id', 'designation.des_id')
+            ->where('user_id', Auth::user()->reporting_to)
+            ->select('users.user_id', 'users.employee_name', 'users.image', 'users.updated_at', 'designation.designation')
+            ->first();
+        if ($reports_to) {
+            $reports_to = $this->withAvatarUrl($reports_to, (string) $reports_to->user_id);
+        }
 
         $direct_reports = DB::table('users')
             ->join('designation', 'users.designation_id', '=', 'designation.des_id')
             ->where('users.reporting_to', Auth::user()->user_id)
             ->where('users.user_type', 'Employee')
-            ->select('users.user_id', 'users.employee_name', 'users.image', 'designation.designation')
+            ->select('users.user_id', 'users.employee_name', 'users.image', 'users.updated_at', 'designation.designation')
             ->orderBy('users.employee_name')
-            ->get();
+            ->get()
+            ->map(fn ($directReport) => $this->withAvatarUrl($directReport, (string) $directReport->user_id));
 
         // Portal clock in/out — disabled temporarily (see routes + client/homepage)
         // $clockData = $this->getPortalClockStatus(Auth::user()->user_id);
@@ -192,8 +204,41 @@ class HomeController extends Controller
         $clock_status = 'none';
         $clocked_in_at = null;
 
-        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability', 'getholiday', 'departmentHeads', 'department_heads', 'depart', 'kpi_schedules', 'holiday_reminder', 'reports_to', 'direct_reports', 'clock_status', 'clocked_in_at'));
+        $user = Auth::user();
+        $employee_avatar_url = $this->employeeAvatarUrlResolver->resolve(
+            $user->image ?? null,
+            (string) $user->user_id,
+            false,
+            $this->avatarCacheBuster($user->updated_at ?? null)
+        );
 
+        return view('client.homepage', compact('branch_list', 'all_departments', 'employee_shifts', 'department_list', 'handledDepts', 'employees', 'absent_type_list', 'designation', 'department', 'regular_shift', 'employees_per_dept', 'leave_types', 'approvers', 'out_of_office_today', 'absence_types', 'on_leave_today', 'awaiting_approval', 'pending_notices', 'pending_notices_count', 'pending_gatepasses', 'pending_gatepasses_count', 'pending_requests', 'clientexams', 'employee_profiles', 'userDept', 'emp_item_accountability', 'getholiday', 'departmentHeads', 'department_heads', 'depart', 'kpi_schedules', 'holiday_reminder', 'reports_to', 'direct_reports', 'clock_status', 'clocked_in_at', 'employee_avatar_url'));
+
+    }
+
+    private function avatarCacheBuster(mixed $updatedAt): ?int
+    {
+        if (empty($updatedAt)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse((string) $updatedAt)->timestamp;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function withAvatarUrl(object $row, string $userId): object
+    {
+        $row->avatar_url = $this->employeeAvatarUrlResolver->resolve(
+            $row->image ?? null,
+            $userId,
+            false,
+            $this->avatarCacheBuster($row->updated_at ?? null)
+        );
+
+        return $row;
     }
 
     /**
