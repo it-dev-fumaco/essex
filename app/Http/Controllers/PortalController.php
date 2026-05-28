@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Image;
+use App\Models\Document;
 
 class PortalController extends Controller
 {
@@ -650,6 +651,59 @@ class PortalController extends Controller
         $updates = DB::table('posts')->where('category', 'updates')->orderBy('created_at', 'desc')->get();
 
         return view('portal.updates', compact('updates'));
+    }
+
+    public function showDocuments()
+    {
+        $documents = Document::query()
+            ->with(['uploadedByAdmin', 'media'])
+            ->latest()
+            ->paginate(24);
+
+        $departmentIds = $this->getPoliciesByDept(null)->pluck('department_id')->unique()->values();
+
+        $departments = DB::table('departments')
+            ->whereIn('department_id', $departmentIds)
+            ->orderBy('department')
+            ->get();
+
+        $policiesByDept = [];
+        foreach ($departments as $department) {
+            $policiesByDept[] = [
+                'policies' => $this->getPoliciesByDept($department->department_id),
+                'department' => $department->department,
+            ];
+        }
+
+        $policiesAllDept = $this->getPoliciesByDept(0);
+
+        return view('portal.documents', compact('documents', 'policiesByDept', 'policiesAllDept'));
+    }
+
+    public static function policyFileUrl(object $policy): ?string
+    {
+        if (empty($policy->file_attachment)) {
+            return null;
+        }
+
+        return Storage::disk('upcloud')->url('uploads/files/'.$policy->file_attachment);
+    }
+
+    public function downloadDocument(Document $document)
+    {
+        $media = $document->getFirstMedia('file');
+
+        abort_unless($media, 404);
+
+        if (method_exists($media, 'getTemporaryUrl')) {
+            try {
+                return redirect()->away($media->getTemporaryUrl(now()->addMinutes(30)));
+            } catch (\Throwable) {
+                // Fall through to public URL.
+            }
+        }
+
+        return redirect()->away($media->getUrl());
     }
 
     // G A L L E R Y

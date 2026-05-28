@@ -290,26 +290,22 @@ button.switch-month:hover {
                 <div class="row" style="padding: 3px;">
                   <div style="float: left; margin-right: 5px;">
                       @php
-                     use Illuminate\Support\Facades\Storage;
-                     use Illuminate\Support\Str;
-
-                     $imgValue = Auth::user()->image ? (string) Auth::user()->image : '/storage/img/user.png';
-                     $img = null;
-                     if (Str::startsWith($imgValue, ['http://', 'https://'])) {
-                       $img = $imgValue;
-                     } elseif (Str::startsWith($imgValue, ['/storage/', 'storage/'])) {
-                       $img = asset(ltrim($imgValue, '/'));
-                     } else {
+                     $navAvatarBust = null;
+                     if (! empty(Auth::user()->updated_at)) {
                        try {
-                         $disk = Storage::disk('upcloud');
-                         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-                         $img = $disk->url(ltrim($imgValue, '/'));
+                         $navAvatarBust = \Carbon\Carbon::parse((string) Auth::user()->updated_at)->timestamp;
                        } catch (\Throwable $e) {
-                         $img = asset('storage/img/user.png');
+                         $navAvatarBust = null;
                        }
                      }
+                     $img = app(\App\Services\EmployeeAvatarUrlResolver::class)->resolve(
+                       Auth::user()->image ?? null,
+                       (string) Auth::user()->user_id,
+                       false,
+                       $navAvatarBust
+                     );
                      @endphp
-                    <img src="{{ $img }}" width="60" height="60" class="user-image">
+                    <img src="{{ $img }}" width="60" height="60" class="user-image" alt="">
                   </div>
                   <div style="float: right; margin-top: 8px;">
                     <span style="display: block;">

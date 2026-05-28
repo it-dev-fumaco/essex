@@ -88,29 +88,11 @@
                 <div class="card card-primary card-outline mb-3">
                     <div class="card-body box-profile p-2">
                         <div class="text-center">
-                            @php
-                                use Illuminate\Support\Facades\Storage;
-                                use Illuminate\Support\Str;
-
-                                $avatarUrl = asset('storage/img/user.png');
-                                try {
-                                    $disk = Storage::disk('upcloud');
-                                    /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-                                    $key = 'employees/profile/'.(string) Auth::user()->user_id.'.jpg';
-                                    if ($disk->exists($key)) {
-                                        $v = optional(Auth::user()->updated_at)->timestamp ?? time();
-                                        $avatarUrl = $disk->url($key).'?v='.$v;
-                                    }
-                                } catch (\Throwable $e) {
-                                    // keep fallback
-                                }
-                            @endphp
-
                             <div class="profile-photo-wrapper-home">
                                 <img
                                     id="homeProfilePhotoImg"
                                     data-user-id="{{ Auth::user()->user_id }}"
-                                    src="{{ $avatarUrl }}"
+                                    src="{{ $employee_avatar_url ?? asset('storage/img/user.png') }}"
                                     alt="User profile picture"
                                     width="170"
                                     height="170"
@@ -183,10 +165,7 @@
                                         <tr>
                                             @if ($approver->employee_id != Auth::user()->user_id)
                                             <td>
-                                                @php
-                                                    $img = $approver->image ? $approver->image : '/storage/img/user.png';
-                                                @endphp
-                                                <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                                <img src="{{ $approver->avatar_url ?? asset('storage/img/user.png') }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;" alt="">
                                                 <span class="approver-name d-block">{{ $approver->employee_name }}</span>
                                                 <small class="d-block fst-italic text-muted">{{ $approver->designation }}</small>
                                             </td>
@@ -205,11 +184,8 @@
                             <div class="card-body p-2">
                                 <h3 class="widget-title mb-2" style="font-size: 12px !important;">Reporting to</h3>
                                 <div class="d-flex align-items-center px-2">
-                                    @php
-                                        $img = $reports_to ? $reports_to->image : '/storage/img/user.png';
-                                    @endphp
                                     @if ($reports_to)
-                                    <img src="{{ $img }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;">
+                                    <img src="{{ $reports_to->avatar_url ?? asset('storage/img/user.png') }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;" alt="">
                                     <div class="p-2">
                                         <span class="approver-name d-block">{{ $reports_to->employee_name }}</span>
                                         <small class="d-block fst-italic text-muted">{{ $reports_to->designation }}</small>
@@ -231,10 +207,7 @@
                                         @foreach ($direct_reports as $direct_report)
                                             <tr>
                                                 <td>
-                                                    @php
-                                                        $drImg = $direct_report->image ? $direct_report->image : '/storage/img/user.png';
-                                                    @endphp
-                                                    <img src="{{ $drImg }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;" alt="">
+                                                    <img src="{{ $direct_report->avatar_url ?? asset('storage/img/user.png') }}" width="50" height="50" class="rounded-circle img-thumbnail" style="float: left; margin-right: 10px;" alt="">
                                                     <span class="approver-name d-block">{{ $direct_report->employee_name }}</span>
                                                     <small class="d-block fst-italic text-muted">{{ $direct_report->designation }}</small>
                                                 </td>

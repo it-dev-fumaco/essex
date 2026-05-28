@@ -38,14 +38,8 @@
                             <li><a class="dropdown-item" href="{{ url('/services/system') }}">System</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="icon-briefcase"></i> Policy
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url('/policies') }}">Operational Policies</a></li>
-                            <li><a class="dropdown-item" href="{{ url('/itguidelines') }}">IT Guidelines and Policy</a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('documents*') ? 'active' : '' }}" href="{{ route('portal.documents') }}"><i class="icon-briefcase"></i> Documents</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('services/directory*') ? 'active' : '' }}" href="{{ url('/services/directory') }}"><i class="icon-briefcase"></i> Employee Directory</a>

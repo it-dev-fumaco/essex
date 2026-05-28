@@ -45,6 +45,18 @@ final class EmployeeAvatarUrlResolver
                 if ($isLocalHost && Str::startsWith($imagePath, ['/storage/', 'storage/'])) {
                     $image = ltrim($imagePath, '/');
                 } else {
+                    $id = $userId ? trim((string) $userId) : null;
+                    if ($id !== null && $id !== '') {
+                        $upcloudProfile = $this->resolveFromCandidates(
+                            $this->buildCandidateKeys('', '', '', $id),
+                            false,
+                            $default
+                        );
+                        if ($upcloudProfile !== $default) {
+                            return $this->withCacheBuster($upcloudProfile, $cacheBusterTimestamp);
+                        }
+                    }
+
                     return $this->withCacheBuster($image, $cacheBusterTimestamp);
                 }
             } catch (\Throwable) {

@@ -88,6 +88,8 @@ Route::get('/historical_milestones', [PortalController::class, 'showHistoricalMi
 Route::get('/policies', [PortalController::class, 'showMemorandum']);
 Route::get('/updates', [PortalController::class, 'showUpdates']);
 Route::get('/itguidelines', [PortalController::class, 'showitGuidelines']);
+Route::get('/documents', [PortalController::class, 'showDocuments'])->name('portal.documents');
+Route::get('/documents/{document}/download', [PortalController::class, 'downloadDocument'])->name('portal.documents.download');
 
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 
