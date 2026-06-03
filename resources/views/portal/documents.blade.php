@@ -38,6 +38,23 @@
         <div class="col-12 col-xl-10 mx-auto">
             <h1 class="title-2 center" style="margin-top: -40px; border: 0;">Documents</h1>
 
+            @if(!empty($canManageDocuments))
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="pull-right">
+                            <div class="form-group">
+                                <a href="{{ $adminAddDocumentUrl ?? url('/admin/documents/create') }}" class="btn btn-success">
+                                    <i class="fa fa-plus"></i><span>Add Document</span>
+                                </a>
+                                <a href="{{ $adminDocumentsUrl ?? url('/admin/documents') }}" class="btn btn-default">
+                                    Manage Documents
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <h3 class="portal-documents-section-title">IT Guidelines and Policy</h3>
             <div class="row">
                 @include('portal.partials.document_card', [

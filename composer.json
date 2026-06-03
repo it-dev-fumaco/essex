@@ -11,8 +11,6 @@
     "require": {
         "php": "^8.3",
         "aws/aws-sdk-php": "^3.373",
-        "filament/filament": "3.3",
-        "filament/spatie-laravel-media-library-plugin": "3.3",
         "intervention/image": "^2.7",
         "itul/laravelcollective-html": "^6.12",
         "keepsuit/laravel-opentelemetry": "^2.2",
@@ -56,8 +54,7 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi",
-            "@php artisan filament:upgrade"
+            "@php artisan package:discover --ansi"
         ]
     },
     "config": {

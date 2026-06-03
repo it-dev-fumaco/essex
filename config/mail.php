@@ -90,6 +90,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | IT notification recipients
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list (MAIL_RECIPIENT or MAIL_IT_RECIPIENTS). Used for
+    | onboarding, offboarding, resigned employee notices, etc.
+    |
+    */
+
+    'it_recipients' => array_values(array_unique(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('MAIL_IT_RECIPIENTS', env('MAIL_RECIPIENT', 'it@fumaco.com,it-team@fumaco.com')))
+    )))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Sendmail System Path
     |--------------------------------------------------------------------------
     |

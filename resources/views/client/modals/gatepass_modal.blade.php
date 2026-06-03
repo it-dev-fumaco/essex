@@ -96,6 +96,17 @@
                                           <textarea name="remarks" rows="4" cols="28" required></textarea>
                                        </td>
                                     </tr>
+                                    <tr>
+                                       <td class="text-end" style="padding: 1% 5% 1% 1%;">
+                                          <span class="fst-italic">Item Type*</span>
+                                          <select style="width: 220px;" name="item_type" required>
+                                             <option value="">Select item type</option>
+                                             <option value="Returnable">Returnable</option>
+                                             <option value="Unreturnable">Unreturnable</option>
+                                          </select>
+                                       </td>
+                                       <td></td>
+                                    </tr>
                                  </table>
                               </div>
                               <div class="col-sm-12 center" style="margin-top: 2%;">

@@ -181,7 +181,7 @@ class HomeController extends Controller
 
         $reports_to = DB::table('users')
             ->join('designation', 'users.designation_id', 'designation.des_id')
-            ->where('user_id', Auth::user()->reporting_to)
+            ->where('id', Auth::user()->reporting_to)
             ->select('users.user_id', 'users.employee_name', 'users.image', 'users.updated_at', 'designation.designation')
             ->first();
         if ($reports_to) {
@@ -190,7 +190,7 @@ class HomeController extends Controller
 
         $direct_reports = DB::table('users')
             ->join('designation', 'users.designation_id', '=', 'designation.des_id')
-            ->where('users.reporting_to', Auth::user()->user_id)
+            ->where('users.reporting_to', Auth::user()->id)
             ->where('users.user_type', 'Employee')
             ->select('users.user_id', 'users.employee_name', 'users.image', 'users.updated_at', 'designation.designation')
             ->orderBy('users.employee_name')

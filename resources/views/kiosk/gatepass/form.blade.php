@@ -79,6 +79,19 @@
                 <textarea class="form-control" name="purpose" id="purpose"></textarea>
               </div>
             </div>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label class="grey-text font-weight-light">Item Type</label>
+                <div class="custom-control custom-radio mt-2 pl-5">
+                  <input type="radio" class="custom-control-input" id="itemTypeReturnable" name="item_type" value="Returnable" checked>
+                  <label class="custom-control-label" for="itemTypeReturnable">Returnable</label>
+                </div>
+                <div class="custom-control custom-radio mt-3 pl-5">
+                  <input type="radio" class="custom-control-input" id="itemTypeUnreturnable" name="item_type" value="Unreturnable">
+                  <label class="custom-control-label" for="itemTypeUnreturnable">Unreturnable</label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="col-md-6">

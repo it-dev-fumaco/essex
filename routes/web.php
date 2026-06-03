@@ -52,6 +52,7 @@ use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\LeaveTypesController;
+use App\Http\Controllers\AdminDocumentsController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PromotionalEvaluationsController;
 use App\Http\Controllers\PromotionalExamsController;
@@ -330,6 +331,13 @@ Route::middleware('auth')->group(function () {
 
 // A D M I N
 Route::prefix('admin')->middleware('auth:admin')->group(function () {
+    // Documents (native; replaces Filament UI)
+    Route::get('/documents', [AdminDocumentsController::class, 'index'])->name('admin.documents.index');
+    Route::get('/documents/create', [AdminDocumentsController::class, 'create'])->name('admin.documents.create');
+    Route::post('/documents', [AdminDocumentsController::class, 'store'])->name('admin.documents.store');
+    Route::get('/documents/{document}/download', [AdminDocumentsController::class, 'download'])->name('admin.documents.download');
+    Route::delete('/documents/{document}', [AdminDocumentsController::class, 'destroy'])->name('admin.documents.destroy');
+
     // Attendance Adjustments
     Route::get('/getBioAdjustments', [AttendanceController::class, 'getBioAdjustments']);
     // Route::post('/addAdjustment', [AttendanceController::class, 'addAdjustment']);

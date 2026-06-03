@@ -167,7 +167,7 @@ class PortalController extends Controller
                 ->where('users.user_type', 'Employee')
                 ->join('designation', 'designation.des_id', '=', 'users.designation_id')
                 ->join('departments', 'departments.department_id', '=', 'users.department_id')
-                ->leftJoin('users as manager', 'manager.user_id', '=', 'users.reporting_to')
+                ->leftJoin('users as manager', 'manager.id', '=', 'users.reporting_to')
                 ->where('users.status', 'Active')
                 ->whereIn('users.employment_status', ['Regular', 'Probationary'])
                 ->where(function ($q) {
@@ -227,7 +227,7 @@ class PortalController extends Controller
                 ->selectSub(function ($sub) {
                     $sub->from('users as dr')
                         ->selectRaw('count(*)')
-                        ->whereColumn('dr.reporting_to', 'users.user_id')
+                        ->whereColumn('dr.reporting_to', 'users.id')
                         ->where('dr.user_type', 'Employee')
                         ->where('dr.status', 'Active');
                 }, 'direct_reports_count')
@@ -278,9 +278,10 @@ class PortalController extends Controller
         $employee = DB::table('users')
             ->leftJoin('designation', 'designation.des_id', '=', 'users.designation_id')
             ->leftJoin('departments', 'departments.department_id', '=', 'users.department_id')
-            ->leftJoin('users as manager', 'manager.user_id', '=', 'users.reporting_to')
+            ->leftJoin('users as manager', 'manager.id', '=', 'users.reporting_to')
             ->where('users.user_id', $user_id)
             ->select([
+                'users.id',
                 'users.user_id',
                 'users.employee_name',
                 'users.email',
@@ -293,6 +294,7 @@ class PortalController extends Controller
                 'users.image',
                 'users.updated_at',
                 'users.reporting_to',
+                'users.department_id',
                 'designation.designation',
                 'departments.department',
                 'manager.user_id as reports_to_user_id',
@@ -379,7 +381,7 @@ class PortalController extends Controller
         $directReportsBase = DB::table('users')
             ->where('users.user_type', 'Employee')
             ->where('users.status', 'Active')
-            ->where('users.reporting_to', (string) $employee->user_id);
+            ->where('users.reporting_to', (string) $employee->id);
 
         $directReportsCount = (int) $directReportsBase->count('users.user_id');
 
@@ -387,7 +389,7 @@ class PortalController extends Controller
             ->leftJoin('designation', 'designation.des_id', '=', 'users.designation_id')
             ->where('users.user_type', 'Employee')
             ->where('users.status', 'Active')
-            ->where('users.reporting_to', (string) $employee->user_id)
+            ->where('users.reporting_to', (string) $employee->id)
             ->orderBy('users.employee_name')
             ->limit(25)
             ->get([
@@ -660,24 +662,58 @@ class PortalController extends Controller
             ->latest()
             ->paginate(24);
 
-        $departmentIds = $this->getPoliciesByDept(null)->pluck('department_id')->unique()->values();
+        $canManageDocuments = false;
+        if (auth('admin')->check()) {
+            $canManageDocuments = true;
+        } elseif (Auth::check()) {
+            $portalUser = Auth::user();
+            $accessId = $portalUser->user_id ?? null;
+            $email = $portalUser->email ?? null;
 
-        $departments = DB::table('departments')
-            ->whereIn('department_id', $departmentIds)
-            ->orderBy('department')
-            ->get();
-
-        $policiesByDept = [];
-        foreach ($departments as $department) {
-            $policiesByDept[] = [
-                'policies' => $this->getPoliciesByDept($department->department_id),
-                'department' => $department->department,
-            ];
+            $canManageDocuments = DB::table('admins')
+                ->when($accessId !== null && $accessId !== '', fn ($q) => $q->orWhere('access_id', $accessId))
+                ->when($email !== null && $email !== '', fn ($q) => $q->orWhere('email', $email))
+                ->exists();
         }
 
-        $policiesAllDept = $this->getPoliciesByDept(0);
+        // Policies are legacy data. If the table/connection isn't available in a given
+        // environment, still render Uploaded Documents instead of 500'ing the page.
+        $policiesByDept = [];
+        $policiesAllDept = collect();
 
-        return view('portal.documents', compact('documents', 'policiesByDept', 'policiesAllDept'));
+        try {
+            $departmentIds = $this->getPoliciesByDept(null)->pluck('department_id')->unique()->values();
+
+            $departments = DB::table('departments')
+                ->whereIn('department_id', $departmentIds)
+                ->orderBy('department')
+                ->get();
+
+            foreach ($departments as $department) {
+                $policiesByDept[] = [
+                    'policies' => $this->getPoliciesByDept($department->department_id),
+                    'department' => $department->department,
+                ];
+            }
+
+            $policiesAllDept = $this->getPoliciesByDept(0);
+        } catch (\Throwable $e) {
+            Log::warning('Documents page: policy queries failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $adminDocumentsUrl = url('/admin/documents');
+        $adminAddDocumentUrl = url('/admin/documents/create');
+
+        return view('portal.documents', compact(
+            'documents',
+            'policiesByDept',
+            'policiesAllDept',
+            'canManageDocuments',
+            'adminDocumentsUrl',
+            'adminAddDocumentUrl',
+        ));
     }
 
     public static function policyFileUrl(object $policy): ?string
