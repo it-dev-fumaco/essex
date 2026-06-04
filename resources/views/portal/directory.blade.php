@@ -70,8 +70,8 @@
 	}
 
 	.directory-card__avatar {
-		width: 85px;
-		height: 85px;
+		width: 90px;
+		height: 90px;
 		border-radius: 10px;
 		border: 1px solid #d0dae8;
 		background: #f6f8fb center/cover no-repeat;
@@ -166,8 +166,8 @@
 	}
 
 	.employee-profile-avatar {
-		width: 120px;
-		height: 120px;
+		width: 200px;
+		height: 200px;
 		border: 1px solid #e2e8f0;
 		border-radius: 12px;
 		background: #f8fafc center/cover no-repeat;
@@ -261,7 +261,7 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 10px;
-		font-size: 15px;
+		font-size: 12px;
 		font-weight: 600;
 		color: #1e293b;
 		line-height: 1.45;
@@ -285,6 +285,36 @@
 	.employee-profile-reports-list small {
 		color: #64748b;
 		font-weight: 600;
+	}
+
+	.employee-profile-direct-reports-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 10px;
+	}
+
+	.employee-profile-reports-toggle {
+		border: 0;
+		background: none;
+		padding: 0;
+		font-size: 11px;
+		font-weight: 700;
+		color: #2563eb;
+		cursor: pointer;
+		line-height: 1.4;
+	}
+
+	.employee-profile-reports-toggle:hover,
+	.employee-profile-reports-toggle:focus {
+		color: #1d4ed8;
+		text-decoration: underline;
+	}
+
+	.employee-profile-reports-toggle:disabled {
+		color: #94a3b8;
+		cursor: default;
+		text-decoration: none;
 	}
 
 	.employee-profile-contact-line i,
@@ -482,14 +512,17 @@
 								</div>
 								<div class="employee-profile-emp-line">
 									<i class="fas fa-sitemap" aria-hidden="true"></i>
-									<span class="employee-profile-tenure-label">Reports To</span>
-									<span id="employeeProfileReportsTo" class="employee-profile-value"></span>
+									<div class="d-flex flex-column">
+										<span class="employee-profile-tenure-label">Reports To</span>
+										<span id="employeeProfileReportsTo" class="employee-profile-value"></span>
+									</div>
 								</div>
 								<div class="employee-profile-emp-line" style="flex-direction: column; align-items: flex-start;">
-									<div class="d-flex" style="gap: 10px; align-items: flex-start;">
+									<div class="d-flex employee-profile-direct-reports-header" style="gap: 10px; align-items: flex-start;">
 										<i class="fas fa-users" aria-hidden="true"></i>
 										<span class="employee-profile-tenure-label">Direct Reports</span>
 										<span id="employeeProfileDirectReportsCount" class="employee-profile-value employee-profile-value--muted"></span>
+										<button type="button" id="employeeProfileDirectReportsToggle" class="employee-profile-reports-toggle d-none" aria-expanded="false" aria-controls="employeeProfileDirectReportsList">Show</button>
 									</div>
 									<ul id="employeeProfileDirectReportsList" class="employee-profile-reports-list d-none"></ul>
 								</div>
@@ -532,6 +565,18 @@
 			$('#employeeProfileError').removeClass('d-none').text(message || 'Unable to load profile.');
 		}
 
+		function setDirectReportsListVisible(show){
+			var listEl = $('#employeeProfileDirectReportsList');
+			var toggleEl = $('#employeeProfileDirectReportsToggle');
+			if (show) {
+				listEl.removeClass('d-none');
+				toggleEl.attr('aria-expanded', 'true').text('Hide');
+			} else {
+				listEl.addClass('d-none');
+				toggleEl.attr('aria-expanded', 'false').text('Show');
+			}
+		}
+
 		function setProfileContent(data){
 			var email = data.email || 'N/A';
 			var phone = data.contact || 'N/A';
@@ -563,9 +608,10 @@
 			$('#employeeProfileDirectReportsCount').text(directReportsCount ? (directReportsCount + ' total') : '0');
 
 			var listEl = $('#employeeProfileDirectReportsList');
+			var toggleEl = $('#employeeProfileDirectReportsToggle');
 			listEl.empty();
 			if (directReports.length > 0) {
-				directReports.slice(0, 8).forEach(function (r) {
+				directReports.forEach(function (r) {
 					var name = (r && r.full_name) ? r.full_name : 'N/A';
 					var title = (r && r.job_title) ? r.job_title : null;
 					var li = $('<li />');
@@ -576,9 +622,11 @@
 					}
 					listEl.append(li);
 				});
-				listEl.removeClass('d-none');
+				toggleEl.removeClass('d-none');
+				setDirectReportsListVisible(false);
 			} else {
-				listEl.addClass('d-none');
+				toggleEl.addClass('d-none');
+				setDirectReportsListVisible(false);
 			}
 
 			var normalizedStatus = (status || '').toString().toLowerCase();
@@ -639,6 +687,11 @@
 				}
 			});
 		}
+
+		$(document).on('click', '#employeeProfileDirectReportsToggle', function () {
+			var listEl = $('#employeeProfileDirectReportsList');
+			setDirectReportsListVisible(listEl.hasClass('d-none'));
+		});
 
 		$(document).on('click', '.employee-profile-link', function (e) {
 			e.preventDefault();

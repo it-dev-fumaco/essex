@@ -24,7 +24,8 @@ class AdminLoginController extends Controller
     {
 
         if (Auth::guard('admin')->attempt(['access_id' => $request->access_id, 'password' => $request->password], $request->remember)) {
-            return redirect()->intended(route('admin.dashboard'));
+            // Avoid malformed intended URLs like "/http:/admin" from older redirects.
+            return $this->redirectToApplicationPath($request, '/admin');
         }
 
         return redirect()->back()->withInput($request->only('email', 'remember'));

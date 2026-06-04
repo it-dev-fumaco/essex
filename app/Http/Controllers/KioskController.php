@@ -456,6 +456,9 @@ class KioskController extends Controller
         $item->purpose_type = $request->purpose_type;
         $item->tel_no = $request->tel_no;
         $item->item_description = $request->item_description;
+        $item->item_type = in_array($request->item_type, ['Returnable', 'Unreturnable'], true)
+            ? $request->item_type
+            : 'Returnable';
         $item->status = 'FOR APPROVAL';
         $item->created_by = Auth::user()->employee_name;
         $item->save();

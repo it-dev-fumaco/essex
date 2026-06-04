@@ -51,8 +51,9 @@ RUN set -eux; \
 
 WORKDIR /var/www/html
 
-FROM composer:2 AS composer-deps
+FROM php-base AS composer-deps
 WORKDIR /app
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \

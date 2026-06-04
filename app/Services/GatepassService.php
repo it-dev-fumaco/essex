@@ -27,6 +27,10 @@ final class GatepassService
 
     public function storeGatepass(Request $request): string
     {
+        $itemType = in_array($request->item_type, ['Returnable', 'Unreturnable'], true)
+            ? $request->item_type
+            : 'Returnable';
+
         $item = $this->gatepassRepository->create([
             'user_id' => $request->user_id,
             'date_filed' => $request->date_filed,
@@ -38,6 +42,7 @@ final class GatepassService
             'purpose_type' => $request->purpose_type,
             'tel_no' => $request->tel_no,
             'item_description' => $request->item_description,
+            'item_type' => $itemType,
             'remarks' => $request->remarks,
             'status' => 'FOR APPROVAL',
         ]);
@@ -95,7 +100,7 @@ final class GatepassService
         if (! $gatepass) {
             return '';
         }
-        $this->gatepassRepository->update($gatepass, [
+        $attrs = [
             'date_filed' => $request->date_filed,
             'returned_on' => $request->returned_on,
             'company_name' => $request->company_name,
@@ -107,7 +112,11 @@ final class GatepassService
             'item_description' => $request->item_description,
             'remarks' => $request->remarks,
             'last_modified_by' => Auth::user()->employee_name,
-        ]);
+        ];
+        if (in_array($request->item_type, ['Returnable', 'Unreturnable'], true)) {
+            $attrs['item_type'] = $request->item_type;
+        }
+        $this->gatepassRepository->update($gatepass, $attrs);
 
         return 'Gatepass no.<b>'.$gatepass->gatepass_id.'</b> has been updated.';
     }

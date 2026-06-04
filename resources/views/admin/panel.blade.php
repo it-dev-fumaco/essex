@@ -11,6 +11,7 @@
                               <li><a href="/admin/applicants">Applicant List</a></li>
                               <li><a href="/admin/shifts">Shift List</a></li>
                               <li><a href="/admin/admins">Admin List</a></li>
+                              <li><a href="/admin/documents">Documents</a></li>
                            </ul>
                         </div>
                      </div>
