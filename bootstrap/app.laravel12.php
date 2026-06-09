@@ -10,6 +10,7 @@ declare(strict_types=1);
  * App\Http\Controllers namespace and registering middleware aliases.
  */
 
+use App\Support\AbsentNoticeMailApproval;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -55,7 +56,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $request->session()->forget('url.intended');
             $intended = null;
-            if ($request->isMethod('GET') && $request->route() && ! $request->expectsJson()) {
+            if (AbsentNoticeMailApproval::isRequest($request)) {
+                $intended = null;
+            } elseif ($request->isMethod('GET') && $request->route() && ! $request->expectsJson()) {
                 $intended = $request->fullUrl();
             } elseif ($referer = $request->headers->get('referer')) {
                 if (is_string($referer) && $referer !== '' && filter_var($referer, FILTER_VALIDATE_URL)) {
