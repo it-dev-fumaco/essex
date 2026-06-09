@@ -13,6 +13,7 @@
 
 use App\Http\Controllers\AbsentNoticesController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminDocumentsController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ApplicantExaminationsController;
 use App\Http\Controllers\ApplicantExamineesController;
@@ -28,7 +29,6 @@ use App\Http\Controllers\BackgroundCheckController;
 use App\Http\Controllers\BiometricLogsController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CalendarViewController;
-use App\Http\Controllers\PortalCalendarController;
 use App\Http\Controllers\ClientExamsController;
 use App\Http\Controllers\DepartmentHeadListController;
 use App\Http\Controllers\DepartmentsController;
@@ -52,7 +52,7 @@ use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\LeaveTypesController;
-use App\Http\Controllers\AdminDocumentsController;
+use App\Http\Controllers\PortalCalendarController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PromotionalEvaluationsController;
 use App\Http\Controllers\PromotionalExamsController;
@@ -123,7 +123,8 @@ Route::prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/logout', [AdminLoginController::class, 'adminLogout'])->name('admin.logout');
 });
-Route::post('/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
+// Token-based email approval must stay outside auth middleware (GET + POST).
+Route::match(['get', 'post'], '/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
 
 // Public Calendar page (role-aware; shows OOO only when logged in)
 Route::get('/calendar', [PortalCalendarController::class, 'index']);
@@ -1068,12 +1069,10 @@ Route::get('/oem/employee/update_no_answer/{examineeid}', [ClientExamsController
 
 // HR Training
 Route::get('/module/hr/training', [HumanResourcesController::class, 'show_HR_training']);
-Route::get('/module/hr/training_profile/{id}',[HumanResourcesController::class, 'training_profile']);
-Route::post('/module/hr/add_training',[HumanResourcesController::class, 'add_HR_training']);
-Route::post('/module/hr/edit_training',[HumanResourcesController::class, 'edit_HR_training']);
-Route::post('/module/hr/delete_training',[HumanResourcesController::class, 'delete_HR_training']);
-Route::get('/module/hr/training/employee_list',[HumanResourcesController::class, 'Employee_list']);
-Route::get('/module/hr/training/employee_list_edit',[HumanResourcesController::class, 'Employee_list_edit']);
-Route::get('/module/hr/training_details/{id}',[HumanResourcesController::class, 'edit_training_details']);
-
-Route::get('/notice_slip/updateStatus', [AbsentNoticesController::class, 'updateStatus']);
+Route::get('/module/hr/training_profile/{id}', [HumanResourcesController::class, 'training_profile']);
+Route::post('/module/hr/add_training', [HumanResourcesController::class, 'add_HR_training']);
+Route::post('/module/hr/edit_training', [HumanResourcesController::class, 'edit_HR_training']);
+Route::post('/module/hr/delete_training', [HumanResourcesController::class, 'delete_HR_training']);
+Route::get('/module/hr/training/employee_list', [HumanResourcesController::class, 'Employee_list']);
+Route::get('/module/hr/training/employee_list_edit', [HumanResourcesController::class, 'Employee_list_edit']);
+Route::get('/module/hr/training_details/{id}', [HumanResourcesController::class, 'edit_training_details']);

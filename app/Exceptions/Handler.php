@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Support\AbsentNoticeMailApproval;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request as HttpRequest;
@@ -98,6 +99,10 @@ class Handler extends ExceptionHandler
 
     protected function trustedIntendedUrl(HttpRequest $request): ?string
     {
+        if (AbsentNoticeMailApproval::isRequest($request)) {
+            return null;
+        }
+
         if ($request->isMethod('GET') && $request->route() && ! $request->expectsJson()) {
             return $request->fullUrl();
         }

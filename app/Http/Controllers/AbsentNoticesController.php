@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\AbsentNoticeStatusChanged;
 use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
+use App\Support\AbsentNoticeMailApproval;
 use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
@@ -101,18 +102,15 @@ class AbsentNoticesController extends Controller
      */
     private function isAbsentNoticeMailApprovalRequest(Request $request): bool
     {
-        if (! $request->isMethod('get')) {
-            return false;
-        }
+        return AbsentNoticeMailApproval::isRequest($request);
+    }
 
-        if ($request->boolean('update_from_mail')) {
-            return true;
-        }
-
-        // Some clients strip `update_from_mail`; still treat as mail flow when link params are present.
-        return $request->filled('notice_id')
-            && $request->filled('token')
-            && $request->filled('approver_id');
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function mailApprovalResultResponse(array $data): \Illuminate\Http\Response
+    {
+        return response()->view('mail.absent_notice_approval_result', ['data' => $data]);
     }
 
     /**
@@ -552,15 +550,13 @@ class AbsentNoticesController extends Controller
             if (! $notice_slip) {
                 DB::rollBack();
                 if ($this->isAbsentNoticeMailApprovalRequest($request)) {
-                    session()->flash('notice_data', [
+                    return $this->mailApprovalResultResponse([
                         'success' => 0,
                         'status' => 'Not Found',
                         'approved_by' => null,
                         'approved_date' => null,
                         'message' => 'Absent Notice Slip no. <b>'.$notice_id.'</b> not found.',
                     ]);
-
-                    return redirect('/');
                 }
 
                 return response()->json(['message' => 'Absent notice slip was not found.'], 404);
@@ -583,9 +579,7 @@ class AbsentNoticesController extends Controller
                         'message' => $message,
                     ];
 
-                    session()->flash('notice_data', $flash_data);
-
-                    return redirect('/');
+                    return $this->mailApprovalResultResponse($flash_data);
                 }
 
                 $approver = $this->resolveMailApproverForNotice($request, $notice_slip);
@@ -625,13 +619,11 @@ class AbsentNoticesController extends Controller
                 DB::rollBack();
 
                 if ($this->isAbsentNoticeMailApprovalRequest($request)) {
-                    session()->flash('notice_data', [
+                    return $this->mailApprovalResultResponse([
                         'success' => 0,
                         'status' => 'Error',
                         'message' => 'Missing date range for this notice. Please try again from the portal.',
                     ]);
-
-                    return redirect('/');
                 }
 
                 return response()->json(['message' => 'Missing date range for this notice. Please try again.'], 422);
@@ -687,15 +679,11 @@ class AbsentNoticesController extends Controller
             }
 
             if ($this->isAbsentNoticeMailApprovalRequest($request)) {
-                $flash_data = [
+                return $this->mailApprovalResultResponse([
                     'success' => 1,
                     'status' => $notice_slip->status,
                     'message' => 'Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b> has been <b>'.$notice_slip->status.'</b>.',
-                ];
-
-                session()->flash('notice_data', $flash_data);
-
-                return redirect('/');
+                ]);
             }
 
             return response()->json(['message' => 'Absent Notice Slip no. <b>'.$notice_slip->notice_id.'</b> has been <b>'.$notice_slip->status.'</b>.']);
@@ -717,15 +705,11 @@ class AbsentNoticesController extends Controller
                     $message = 'This approval link is invalid or you are not authorized to act on this request. Please sign in to the portal to approve or cancel.';
                 }
 
-                $flash_data = [
+                return $this->mailApprovalResultResponse([
                     'success' => 0,
                     'status' => 'Error',
                     'message' => $message,
-                ];
-
-                session()->flash('notice_data', $flash_data);
-
-                return redirect('/');
+                ]);
             }
 
             return response()->json(['message' => 'An error occured. Please try again.']);

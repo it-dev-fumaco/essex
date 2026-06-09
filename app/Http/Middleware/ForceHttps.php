@@ -28,7 +28,18 @@ class ForceHttps
         }
 
         if (config('app.env') === 'production' && ! $request->secure()) {
-            return redirect()->secure($request->getRequestUri(), 302);
+            // Behind TLS-terminating proxies that omit X-Forwarded-Proto, forcing HTTPS
+            // would redirect to the same URL indefinitely (ERR_TOO_MANY_REDIRECTS).
+            $forwardedProto = $request->headers->get('X-Forwarded-Proto');
+            if ($forwardedProto === null || $forwardedProto === '') {
+                URL::forceScheme('https');
+
+                return $next($request);
+            }
+
+            if ($forwardedProto !== 'https') {
+                return redirect()->secure($request->getRequestUri(), 302);
+            }
         }
 
         if (config('app.env') === 'production') {
