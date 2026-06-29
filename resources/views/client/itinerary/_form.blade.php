@@ -25,6 +25,7 @@
                     </div>
                     <div class="col-sm-6" style="padding: 10px 0;">
                         <span class="d-block fst-italic">Destination*</span>
+                        <p id="portal-destination-hint" class="text-muted small mb-1">Select a From type first.</p>
                         <select id="portal-destination-select" class="d-none" style="width: 100%; max-width: 260px;">
                             <option value="">--</option>
                         </select>
@@ -88,11 +89,10 @@
         </div>
 
         <div class="col-sm-12 center mb-3">
+            <div id="portal-itinerary-alert" class="alert alert-danger d-none mb-3" role="alert"></div>
             <button type="submit" class="btn btn-primary" id="portal-submit-itinerary">
                 <i class="fa fa-check"></i> Request for Approval
             </button>
         </div>
     </div>
 </form>
-
-<div id="portal-itinerary-alert" class="alert alert-danger d-none mx-3 mb-3" role="alert"></div>

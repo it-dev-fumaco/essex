@@ -926,6 +926,8 @@
     <script type="text/javascript" src="{{ asset('css/js/datepicker/bootstrap-datepicker.js') }}"></script>
     <link rel="stylesheet" type="text/css" href="{{ asset('css/js/datepicker/bootstrap-datepicker.css') }}" />
 
+    @include('client.itinerary._scripts')
+
     <script>
         $(document).ready(function() {
             $(document).on('click', '.settings-btn', function(e) {

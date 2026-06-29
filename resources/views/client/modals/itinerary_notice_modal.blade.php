@@ -12,4 +12,4 @@
     </div>
 </div>
 
-@include('client.itinerary._assets')
+@include('client.itinerary._styles')

@@ -24,10 +24,9 @@ final class AbsentNoticeOwnerStatusMail extends Mailable
         $subject = $this->data['subject'] ?? 'Absent Notice Update';
 
         return $this
-            ->from(env('MAIL_FROM_ADDRESS'))
+            ->from(config('mail.from.address'), config('mail.from.name'))
             ->subject($subject)
             ->view('kiosk.Mail.template.notice_owner_status')
             ->with('data', $this->data);
     }
 }
-

@@ -18,7 +18,9 @@ final class ItinerarySubmissionService
      */
     public function submit(Request $request): array
     {
-        if (! $request->from || ! is_array($request->from) || count($request->from) === 0) {
+        $from = $request->input('from');
+
+        if (! is_array($from) || count($from) === 0) {
             return [
                 'success' => false,
                 'itinerary_id' => null,
@@ -35,16 +37,34 @@ final class ItinerarySubmissionService
             ];
         }
 
+        $parsedDates = [];
+        foreach (array_keys($from) as $i) {
+            $parsed = $this->parseItineraryDate((string) ($request->input('itinerary_date')[$i] ?? ''));
+            if (! $parsed) {
+                return [
+                    'success' => false,
+                    'itinerary_id' => null,
+                    'message' => 'Invalid itinerary date format. Use MM-DD-YYYY.',
+                ];
+            }
+
+            $parsedDates[$i] = $parsed->format('Y-m-d');
+        }
+
         try {
+            $connection = DB::connection('mysql_erp');
             $todays_date = Carbon::now()->format('Y-m-d H:i:s');
-            $list = DB::connection('mysql_erp')->table('tabItinerary')->where('name', 'like', '%ITK%')
+
+            $connection->beginTransaction();
+
+            $list = $connection->table('tabItinerary')->where('name', 'like', '%ITK%')
                 ->select(DB::raw('MAX(CAST(SUBSTRING(name, 4, length(name)-3) AS UNSIGNED)) as name'))
                 ->first();
 
             $last_id = $list->name ? $list->name : 0;
             $new_id = 'ITK'.str_pad((string) ($last_id + 1), 4, '0', STR_PAD_LEFT);
 
-            $itk = [
+            $connection->table('tabItinerary')->insert([
                 'name' => $new_id,
                 'creation' => $todays_date,
                 'modified' => $todays_date,
@@ -53,26 +73,15 @@ final class ItinerarySubmissionService
                 'docstatus' => 0,
                 'workflow_state' => 'For Approval',
                 'transaction_date' => date('Y-m-d'),
-            ];
-
-            DB::connection('mysql_erp')->table('tabItinerary')->insert($itk);
+            ]);
 
             $itk_child = [];
-            foreach ($request->from as $i => $row) {
-                $customer = ($request->from[$i] == 'Customer') ? $request->destination[$i] : null;
-                $lead = ($request->from[$i] == 'Lead') ? $request->destination[$i] : null;
-                $supplier = ($request->from[$i] == 'Supplier') ? $request->destination[$i] : null;
-                $others = ($request->from[$i] == 'Others') ? $request->destination[$i] : null;
-
-                $parsed = DateTime::createFromFormat('m-d-Y', $request->itinerary_date[$i]);
-                if (! $parsed) {
-                    return [
-                        'success' => false,
-                        'itinerary_id' => null,
-                        'message' => 'Invalid itinerary date format. Use MM-DD-YYYY.',
-                    ];
-                }
-                $itinerary_date = $parsed->format('Y-m-d');
+            foreach ($from as $i => $row) {
+                $destination = $request->input('destination')[$i] ?? null;
+                $customer = ($from[$i] == 'Customer') ? $destination : null;
+                $lead = ($from[$i] == 'Lead') ? $destination : null;
+                $supplier = ($from[$i] == 'Supplier') ? $destination : null;
+                $others = ($from[$i] == 'Others') ? $destination : null;
 
                 $itk_child[] = [
                     'name' => uniqid(date('mdY')),
@@ -85,24 +94,26 @@ final class ItinerarySubmissionService
                     'parentfield' => 'project',
                     'parenttype' => 'Itinerary',
                     'idx' => $i + 1,
-                    'project' => $request->project[$i],
+                    'project' => $request->input('project')[$i] ?? null,
                     'customer' => $customer,
-                    'itinerary_date' => $itinerary_date,
-                    'purpose' => $request->purpose[$i],
-                    'time' => $request->itinerary_time[$i],
-                    'from' => $request->from[$i],
+                    'itinerary_date' => $parsedDates[$i],
+                    'purpose' => $request->input('purpose')[$i] ?? null,
+                    'time' => $request->input('itinerary_time')[$i] ?? null,
+                    'from' => $from[$i],
                     'lead' => $lead,
                     'supplier' => $supplier,
                     'destination' => $others,
-                    'itinerary_location' => $request->destination[$i],
+                    'itinerary_location' => $destination,
+                    'date' => $parsedDates[$i],
                 ];
             }
 
-            DB::connection('mysql_erp')->table('tabItinerary Tab')->insert($itk_child);
+            $connection->table('tabItinerary Tab')->insert($itk_child);
 
-            if ($request->companion_id) {
+            $companionIds = $request->input('companion_id');
+            if (is_array($companionIds) && count($companionIds) > 0) {
                 $companion = [];
-                foreach ($request->companion_id as $i => $row) {
+                foreach ($companionIds as $i => $companionId) {
                     $companion[] = [
                         'name' => uniqid(date('mdY')),
                         'creation' => $todays_date,
@@ -114,13 +125,15 @@ final class ItinerarySubmissionService
                         'parentfield' => 'companion',
                         'parenttype' => 'Itinerary',
                         'idx' => $i + 1,
-                        'companion' => $request->companion_id[$i],
-                        'employee_name' => $request->companion_name[$i],
+                        'companion' => $companionId,
+                        'employee_name' => $request->input('companion_name')[$i] ?? null,
                     ];
                 }
 
-                DB::connection('mysql_erp')->table('tabCompanion Table')->insert($companion);
+                $connection->table('tabCompanion Table')->insert($companion);
             }
+
+            $connection->commit();
 
             return [
                 'success' => true,
@@ -128,6 +141,10 @@ final class ItinerarySubmissionService
                 'message' => 'Itinerary '.$new_id.' submitted for approval.',
             ];
         } catch (Throwable $e) {
+            if (DB::connection('mysql_erp')->transactionLevel() > 0) {
+                DB::connection('mysql_erp')->rollBack();
+            }
+
             report($e);
 
             return [
@@ -167,5 +184,31 @@ final class ItinerarySubmissionService
 
             return [];
         }
+    }
+
+    private function parseItineraryDate(string $raw): ?DateTime
+    {
+        $value = trim($raw);
+        if ($value === '') {
+            return null;
+        }
+
+        foreach ([
+            'm-d-Y',
+            'n-j-Y',
+            'm/d/Y',
+            'n/j/Y',
+            'm-d-Y g:i A',
+            'm-d-Y H:i:s A',
+            'n-j-Y g:i A',
+            'Y-m-d',
+        ] as $format) {
+            $parsed = DateTime::createFromFormat($format, $value);
+            if ($parsed instanceof DateTime) {
+                return $parsed;
+            }
+        }
+
+        return null;
     }
 }
