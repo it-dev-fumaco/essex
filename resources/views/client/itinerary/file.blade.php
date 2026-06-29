@@ -29,5 +29,6 @@
 
 @section('script')
 <script type="text/javascript" src="{{ asset('css/js/datepicker/bootstrap-datepicker.js') }}"></script>
-@include('client.itinerary._assets')
+@include('client.itinerary._styles')
+@include('client.itinerary._scripts')
 @endsection

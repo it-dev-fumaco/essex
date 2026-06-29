@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\AbsentNoticeStatusChanged;
 use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
+use App\Services\AbsentNoticeOwnerNotificationService;
 use App\Support\AbsentNoticeMailApproval;
 use Carbon\Carbon;
 use DateInterval;
@@ -20,6 +20,10 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class AbsentNoticesController extends Controller
 {
+    public function __construct(
+        private readonly AbsentNoticeOwnerNotificationService $ownerNotificationService,
+    ) {}
+
     /**
      * Resend approval notifications to department approvers.
      */
@@ -111,6 +115,12 @@ class AbsentNoticesController extends Controller
     private function mailApprovalResultResponse(array $data): \Illuminate\Http\Response
     {
         return response()->view('mail.absent_notice_approval_result', ['data' => $data]);
+    }
+
+    private function shouldNotifyOwnerOfApproval(?string $previousStatus, ?string $newStatus): bool
+    {
+        return strtoupper(trim((string) $previousStatus)) !== 'APPROVED'
+            && strtoupper(trim((string) $newStatus)) === 'APPROVED';
     }
 
     /**
@@ -664,15 +674,14 @@ class AbsentNoticesController extends Controller
 
             DB::commit();
 
-            // Send notice owner email only on APPROVED transition (avoid duplicates).
-            if (strtoupper((string) $previousStatus) !== 'APPROVED' && $notice_slip->status === 'APPROVED') {
+            if ($this->shouldNotifyOwnerOfApproval($previousStatus, $status)) {
                 try {
-                    event(new AbsentNoticeStatusChanged((int) $notice_slip->notice_id, (string) $previousStatus, (string) $notice_slip->status));
+                    $this->ownerNotificationService->sendApprovedNotice((int) $notice_slip->notice_id);
                 } catch (\Throwable $e) {
-                    Log::error('Failed to dispatch AbsentNoticeStatusChanged event.', [
+                    Log::error('Failed to send absent notice owner approval email.', [
                         'notice_id' => $notice_slip->notice_id,
                         'from' => $previousStatus,
-                        'to' => $notice_slip->status,
+                        'to' => $status,
                         'error' => $e->getMessage(),
                     ]);
                 }

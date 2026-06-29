@@ -17,7 +17,7 @@
         </div>
         </div>
 	  	<div class="card-body">
-	  		<form method="POST" action="/kiosk/itinerary/save">
+	  		<form method="POST" action="/kiosk/itinerary/save" id="kiosk-itinerary-form">
 	  			@csrf
 	    	<div class="row">
 	    		<div class="col-md-3">
