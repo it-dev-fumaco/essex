@@ -306,7 +306,7 @@ class EmployeesController extends Controller
 
                 $log = [
                     'type' => 'Resigned Employee Notice',
-                    'recipient' => implode(', ', config('mail.it_recipients', ['it@fumaco.com', 'it-team@fumaco.com'])),
+                    'recipient' => implode(', ', config('mail.it_recipients', ['dl.it@fumaco.com'])),
                     'subject' => '[Action Required] Resigned Employee',
                     'template' => 'emails.employee.resigned',
                     'template_data' => json_encode($data),
@@ -775,14 +775,14 @@ class EmployeesController extends Controller
 
                 $log = [
                     'type' => 'Resigned Employee Notice',
-                    'recipient' => implode(', ', config('mail.it_recipients', ['it@fumaco.com', 'it-team@fumaco.com'])),
+                    'recipient' => implode(', ', config('mail.it_recipients', ['dl.it@fumaco.com'])),
                     'subject' => '[Action Required] Resigned Employee',
                     'template' => 'emails.employee.resigned',
                     'template_data' => json_encode($data),
                 ];
                 // Keep resigned notice email even on update/edit.
                 try {
-                    $mail = $this->send_mail($log['subject'], $log['template'], config('mail.it_recipients', ['it@fumaco.com', 'it-team@fumaco.com']), $data, $log);
+                    $mail = $this->send_mail($log['subject'], $log['template'], config('mail.it_recipients', ['dl.it@fumaco.com']), $data, $log);
                 } catch (\Throwable $th) {
                 }
             } else {

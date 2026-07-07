@@ -100,7 +100,7 @@ return [
 
     'it_recipients' => array_values(array_unique(array_filter(array_map(
         'trim',
-        explode(',', (string) env('MAIL_IT_RECIPIENTS', env('MAIL_RECIPIENT', 'it@fumaco.com,it-team@fumaco.com')))
+        explode(',', (string) env('MAIL_IT_RECIPIENTS', env('MAIL_RECIPIENT', 'dl.it@fumaco.com')))
     )))),
 
     /*

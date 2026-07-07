@@ -137,7 +137,7 @@ final class SendEmployeeLifecycleNotification
             ]);
 
             $recipients = array_filter(array_merge(
-                config('mail.it_recipients', ['it@fumaco.com', 'it-team@fumaco.com']),
+                config('mail.it_recipients', ['dl.it@fumaco.com']),
                 [$manager?->email]
             ));
             $markColumn = 'onboarding_email_sent_at';
@@ -178,7 +178,7 @@ final class SendEmployeeLifecycleNotification
             $template = 'emails.employee.offboarding';
             $type = 'Offboarding Email';
             $recipients = array_filter(array_merge(
-                config('mail.it_recipients', ['it@fumaco.com', 'it-team@fumaco.com']),
+                config('mail.it_recipients', ['dl.it@fumaco.com']),
                 [$manager?->email]
             ));
             $markColumn = 'offboarding_email_sent_at';
