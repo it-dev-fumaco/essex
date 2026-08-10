@@ -3107,11 +3107,17 @@
     <script type="text/javascript">
         $(document).on('click', '#employee_submit', function(event) {
             var excode = $(this).data('idcode');
+            // portal.app has no csrf meta; send Blade token like other homepage AJAX posts
+            var csrfToken = '{{ csrf_token() }}';
             $.ajax({
                 type: 'post',
                 url: '/oem/employee/validateExamCode',
                 data: {
-                    excode: excode
+                    excode: excode,
+                    _token: csrfToken
+                },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 success: function(data) {
                     $.bootstrapGrowl('<center><span id="msg-alert">' + data.message +
