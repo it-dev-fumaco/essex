@@ -55,7 +55,11 @@ class ApplicantExaminationsController extends Controller
 
         $is_applicant = ($examinee->user_type == 'Applicant') ? true : false;
         if (! $is_applicant) {
-            return response()->json(['message' => 'Invalid Exam Code.', 'status' => 'danger']);
+            $message = ($examinee->user_type === 'Employee')
+                ? 'This exam code is for employees. Please use the Employee Portal (My Profile → Assessments) to take this exam.'
+                : 'Invalid Exam Code.';
+
+            return response()->json(['message' => $message, 'status' => 'danger']);
         }
 
         $took_exam = ($examinee->status == 2) ? true : false;
