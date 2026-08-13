@@ -77,7 +77,7 @@
          <div class="col-md-12 text-center mt-2" style="padding: 10px 0;">
             @php($parts = explode(",",$q->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" width="450" height="120">
             @endforeach
          </div>
@@ -96,14 +96,13 @@
          {{-- Identification --}}
          @if($data['type_id'] == 12)
          <div class="col-md-6 col-md-offset-3 text-center mt-5" style="padding: 10px 0;">
-            @if(!$q->questions)
-            @php($parts = explode(",",$q->question_img)) 
-            @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
-               <img src="{{$part}}" width="450" height="120">
-            @endforeach
-            @else
+            @if($q->questions)
             <span style="font-size: 15pt;">{!! $q->questions !!}</span>
+            @endif
+            @if($q->question_img)
+            @foreach(explode(',', $q->question_img) as $part)
+               <br><img src="{{ \App\Support\QuestionImage::url($part) }}" style="max-width: 450px; width: 100%; height: auto;" alt="">
+            @endforeach
             @endif
          </div>
          <div class="col-md-12 text-center" style="padding: 10px 0;">
@@ -119,7 +118,7 @@
             @if(!$q->questions)
             @php($parts = explode(",",$q->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" style="width: 10%;">
             @endforeach
             @else
@@ -139,7 +138,7 @@
             @if(!$q->questions)
             @php($parts = explode(",",$q->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" width="450" height="120">
             @endforeach
             @else

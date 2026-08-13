@@ -90,7 +90,7 @@
          <div class="col-md-12 text-center mt-2" style="padding: 10px 0;">
             @php($parts = explode(",",$questions->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" width="450" height="120">
             @endforeach
          </div>
@@ -114,7 +114,7 @@
             @if(!$questions->questions)
             @php($parts = explode(",",$questions->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" width="450" height="120">
             @endforeach
             @else
@@ -134,7 +134,7 @@
             @if(!$questions->questions)
             @php($parts = explode(",",$questions->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" style="width: 10%;">
             @endforeach
             @else
@@ -154,7 +154,7 @@
             @if(!$questions->questions)
             @php($parts = explode(",",$questions->question_img)) 
             @foreach($parts as $part) 
-               @php($part = '/storage/questions/'.$part)
+               @php($part = \App\Support\QuestionImage::url($part))
                <img src="{{$part}}" width="450" height="120">
             @endforeach
             @else

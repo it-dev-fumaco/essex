@@ -292,8 +292,11 @@
                method:"POST",
                data: $('#update-examinee-details-form').serialize(),
                success:function(response){
-                  setInterval(timeRemaining, 1000);
-                  setInterval(timeSpent, 1000);
+                  examEndsAt = Date.now() + (exam_duration * 1000);
+                  examStartedAt = Date.now();
+                  warning3MinShown = false;
+                  examEnded = false;
+                  setInterval(syncExamTimers, 250);
 
                   $('#exam-details-modal').modal('hide');
                },
@@ -303,18 +306,33 @@
             });
          });
          
-         var exam_duration = $('#exam-duration').val();
+         var exam_duration = parseInt($('#exam-duration').val(), 10) || 0;
          $('#time-remaining-disp').text(exam_duration + ':00');
          $('#time-remaining-div').css('color', '#1E8449');
          $('.time-remaining').val(exam_duration + ':00');
          $('.update_time-remaining').val(exam_duration + ':00');
-         var exam_duration = exam_duration * 60;
-         function timeRemaining(){
-            if (exam_duration <= 180) {
+         exam_duration = exam_duration * 60;
+         var examEndsAt = null;
+         var examStartedAt = null;
+         var warning3MinShown = false;
+         var examEnded = false;
+         var m = '00';
+         var s = '00';
+
+         function syncExamTimers(){
+            if (!examEndsAt) {
+               return;
+            }
+
+            var remaining = Math.max(0, Math.ceil((examEndsAt - Date.now()) / 1000));
+            exam_duration = remaining;
+
+            if (remaining <= 180) {
                $('#time-remaining-div').css('color', '#C0392B');
             }
 
-            if (exam_duration == 180) {
+            if (remaining <= 180 && !warning3MinShown) {
+               warning3MinShown = true;
                $.bootstrapGrowl("<center><span class='msg-alert'>WARNING: Exam will end in 3 minute(s).</span></center>", {
                   type: 'danger',
                   align: 'center',
@@ -325,34 +343,46 @@
                });
             }
 
-            if (exam_duration <= 0) {
+            if (remaining <= 0) {
+               m = '00';
+               s = '00';
                $('#time-remaining-disp').text('Time is up!');
-               $('#warning-modal span').text("Time is up! Your examination has ended.");
-               $('#warning-modal').modal({backdrop: 'static', keyboard: false});
-               $('#warning-modal').modal('show');
-               save_form_timeisup();
+               $('.time-remaining').val('00:00');
+               $('.update_time-remaining').val('00:00');
+               if (!examEnded) {
+                  examEnded = true;
+                  $('#warning-modal span').text("Time is up! Your examination has ended.");
+                  $('#warning-modal').modal({backdrop: 'static', keyboard: false});
+                  $('#warning-modal').modal('show');
+                  save_form_timeisup();
+               }
+            } else {
+               m = pad(parseInt(remaining / 60, 10));
+               s = pad(remaining % 60);
+               $('#time-remaining-disp').text(m + ':' + s);
+               $('.time-remaining').val(m + ':' + s);
+               $('.update_time-remaining').val(m + ':' + s);
             }
 
-            if (exam_duration > 0) {
-               --exam_duration;
-               m = pad(parseInt(exam_duration / 60));
-               s = pad(exam_duration % 60);
-               $('#time-remaining-disp').text(m + ':' + s);
+            if (examStartedAt) {
+               var spent = Math.max(0, Math.floor((Date.now() - examStartedAt) / 1000));
+               totalSeconds = spent;
+               var spentM = pad(parseInt(spent / 60, 10));
+               var spentS = pad(spent % 60);
+               $('.time-spent').val(spentM + ':' + spentS);
+               $('.update_time-spent').val(spentM + ':' + spentS);
             }
-            
-            $('.time-remaining').val(m + ':' + s); 
-            $('.update_time-remaining').val(m + ':' + s); 
          }
+
+         document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+               syncExamTimers();
+            }
+         });
+
          $('.time-spent').val('00:00');
          $('.update_time-spent').val('00:00');
          var totalSeconds = 0;
-         function timeSpent(){
-            ++totalSeconds;
-            m = pad(parseInt(totalSeconds / 60));
-            s = pad(totalSeconds % 60);
-            $('.time-spent').val(m + ':' + s);
-            $('.update_time-spent').val(m + ':' + s);
-         }
 
          function pad(val) {
             var valString = val + "";

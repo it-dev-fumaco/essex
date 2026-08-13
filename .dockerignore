@@ -49,6 +49,11 @@ PERFORMANCE_*.md
 THIN_*.md
 ENTERPRISE_*.md
 
+# Laravel public/storage is a symlink (artisan storage:link). Docker Desktop
+# on Windows fails the build with "invalid file request public/storage".
+# Recreated in the container by docker/app/entrypoint.sh.
+/public/storage
+
 # Misc
 *.log
 *.mdb

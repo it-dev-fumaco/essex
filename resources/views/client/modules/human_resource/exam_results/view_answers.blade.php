@@ -42,7 +42,7 @@
                            @if($ans->question_img) 
                               @php($parts = explode(",",$ans->question_img)) 
                               @foreach($parts as $part) 
-                              @php($part = '/storage/questions/'.$part) 
+                              @php($part = \App\Support\QuestionImage::url($part)) 
                               <br><img src="{{$part}}" width="440" height="110">
                               @endforeach
                            @endif

@@ -55,7 +55,11 @@ class ApplicantExaminationsController extends Controller
 
         $is_applicant = ($examinee->user_type == 'Applicant') ? true : false;
         if (! $is_applicant) {
-            return response()->json(['message' => 'Invalid Exam Code.', 'status' => 'danger']);
+            $message = ($examinee->user_type === 'Employee')
+                ? 'This exam code is for employees. Please use the Employee Portal (My Profile → Assessments) to take this exam.'
+                : 'Invalid Exam Code.';
+
+            return response()->json(['message' => $message, 'status' => 'danger']);
         }
 
         $took_exam = ($examinee->status == 2) ? true : false;
@@ -354,7 +358,8 @@ class ApplicantExaminationsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('applicant.exam_success', ['examinee_id' => $examineeId]);
+            // AJAX client redirects to /oem/examSubmitted/{id}; avoid broken applicant.exam_success param
+            return response()->json(['message' => 'success', 'examinee_id' => (int) $examineeId]);
         } catch (\Throwable $th) {
             DB::rollback();
 

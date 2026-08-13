@@ -5,40 +5,40 @@
       <tr>
         <td class="hover-image">
           <a href="/module/attendance/history">
-            <img src="{{ asset('storage/img/attendance.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('attendance.png') }}" alt="Attendance"/>
           </a>
         </td>
         <td class="hover-image">
-          <img src="{{ asset('storage/img/loan.png') }}"/>
+          <img src="{{ \App\Support\StorageUrl::img('loan.png') }}" alt="Loan"/>
         </td>
         <td class="hover-image">
           <a href="/evaluation/objectives">
-            <img src="{{ asset('storage/img/evaluation.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('evaluation.png') }}" alt="Evaluation"/>
           </a>
         </td>
         <td class="hover-image">
           <a href="/examPanel">
-            <img src="{{ asset('storage/img/exam.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('exam.png') }}" alt="Exam"/>
           </a>
         </td>
         <td class="hover-image">
           <a href="/module/absent_notice_slip/history">
-            <img src="{{ asset('storage/img/notice_slip.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('notice_slip.png') }}" alt="Notice Slip"/>
           </a>
         </td>
         <td class="hover-image">
           <a href="/client/gatepass/history">
-            <img src="{{ asset('storage/img/pass.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('pass.png') }}" alt="Gatepass"/>
           </a>
         </td>
         <td class="hover-image">
           <a href="/module/hr/applicants">
-            <img src="{{ asset('storage/img/hr.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('hr.png') }}" alt="HR"/>
           </a>
         </td>
         <td class="hover-image">
           <a href="/client/analytics/attendance">
-            <img src="{{ asset('storage/img/analytics.png') }}"/>
+            <img src="{{ \App\Support\StorageUrl::img('analytics.png') }}" alt="Analytics"/>
           </a>
         </td>
       </tr>
@@ -67,44 +67,44 @@
 	<div class="row seven-cols">
     	<div class="col-md-1">
     		<div class="hover-image" data-toggle="modal" data-target="#attendanceModal" id="attendance-modal"><h4>Attendance</h4>
-			<p><img src="{{ asset('storage/img/attendance.png') }}" width="120" height="120"/></p></div>
+			<p><img src="{{ \App\Support\StorageUrl::img('attendance.png') }}" width="120" height="120"/></p></div>
 			<a href="/module/attendance/history"><button>Manage</button></a>
 		</div>
     	<div class="col-md-1 hover-image" data-toggle="modal" data-target="#regLoan">
     		<h4>Loan</h4>
-			<p><img src="{{ asset('storage/img/loan.png') }}" width="120" height="120"/></p>
+			<p><img src="{{ \App\Support\StorageUrl::img('loan.png') }}" width="120" height="120"/></p>
 			<button>Manage</button>
 		</div>
     	<div class="col-md-1">
         <div class="hover-image" data-toggle="modal" data-target="#evaluationModal" id="evaluation-modal">
     		<h4>Evaluation</h4>
-			<p><img src="{{ asset('storage/img/evaluation.png') }}" width="120" height="120"/></p></div>
+			<p><img src="{{ \App\Support\StorageUrl::img('evaluation.png') }}" width="120" height="120"/></p></div>
       <a href="/evaluation/objectives">
 			<button>Manage</button></a>
     	</div>
     	<div class="col-md-1">
         <div class="hover-image" data-toggle="modal" data-target="#examModal" id="exam-modal">
     		<h4>Exam</h4>
-			<p><img src="{{ asset('storage/img/exam.png') }}" width="120" height="120"/></p></div>
+			<p><img src="{{ \App\Support\StorageUrl::img('exam.png') }}" width="120" height="120"/></p></div>
       <a href="/examPanel">
 			<button>Manage</button></a>
     	</div>
     	<div class="col-md-1">
         <div class="hover-image" data-toggle="modal" data-target="#absentNoticeModal" id="notice-modal">
     		<h4>Absent Notice</h4>
-			<p><img src="{{ asset('storage/img/notice_slip.png') }}" width="120" height="120"/></p></div>
+			<p><img src="{{ \App\Support\StorageUrl::img('notice_slip.png') }}" width="120" height="120"/></p></div>
       <a href="/module/absent_notice_slip/history">
 			<button>Manage</button></a>
     	</div>
     	<div class="col-md-1">
     		<div class="hover-image" data-toggle="modal" data-target="#gatepassModal" id="gatepass-modal"><h4>Gatepass</h4>
-			<p><img src="{{ asset('storage/img/pass.png') }}" width="120" height="120"/></p></div>
+			<p><img src="{{ \App\Support\StorageUrl::img('pass.png') }}" width="120" height="120"/></p></div>
 			<a href="/client/gatepass/history"><button>Manage</button></a>
     	</div>
     	<div class="col-md-1 hover-image">
     		<a href="/module/hr/applicants">
     		<h4>HR</h4>
-			<p><img src="{{ asset('storage/img/hr.png') }}" width="120" height="120"/></p>
+			<p><img src="{{ \App\Support\StorageUrl::img('hr.png') }}" width="120" height="120"/></p>
 			<button>Manage</button></a>
     	</div>
   </div>

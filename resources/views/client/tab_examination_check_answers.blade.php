@@ -24,7 +24,7 @@
             <div class="col-sm-2" style="padding-left: 5%; text-align: left;">End Time:</div>
             <div class="col-sm-4" style="text-align: left; font-weight: bold;">{{date('h:i:s A',strtotime($examres->end_time))}}</div>
 
-            <form method="post" action="/saveScore/{{$examres->examinee_id}}/{{$examres->exam_id}}}">
+            <form method="post" action="/saveScore/{{$examres->examinee_id}}/{{$examres->exam_id}}" id="update-score-form">
             @csrf
             <div class="col-md-12" style="padding: 2% 5% 1% 5%;">
               
@@ -49,7 +49,7 @@
                           @if($ans->question_img)
                             @php($parts = explode(",",$ans->question_img))
                               @foreach($parts as $part)
-                                  @php($part = '/storage/questions/'.$part)
+                                  @php($part = \App\Support\QuestionImage::url($part))
                                   <br><img src="{{$part}}" style="width: 25%; height: 20%;">
                               @endforeach
                           @endif

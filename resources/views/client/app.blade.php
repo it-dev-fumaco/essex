@@ -280,7 +280,7 @@ button.switch-month:hover {
             <div class="col-md-5 col-sm-6">
               <div class="header-logo">
                 <a href="/">
-                  <img src="{{ asset('storage/img/logo5.png') }}" alt="">
+                  <img src="{{ \App\Support\StorageUrl::img('logo5.png') }}" alt="">
                 </a>
               </div>
               <div class="name-title">FUMACO Inc. <br> The Art of Science & Lighting</div>

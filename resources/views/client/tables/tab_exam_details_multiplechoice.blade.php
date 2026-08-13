@@ -23,7 +23,7 @@
       @forelse($multipleChoice as $question)
       <tr>
          <td>{{ $question->question_id }}</td>
-         <td><span style="color:black">{!! $question->questions !!}</span><br>@if($question->question_img)@php($parts = explode(",",$question->question_img)) @foreach($parts as $part) @php($part = '/storage/questions/'.$part)<div class="col-md-4"><img src="{{$part}}"></div>@endforeach @endif</td>
+         <td><span style="color:black">{!! $question->questions !!}</span><br>@if($question->question_img)@php($parts = explode(",",$question->question_img)) @foreach($parts as $part) @php($part = \App\Support\QuestionImage::url($part))<div class="col-md-4"><img src="{{$part}}"></div>@endforeach @endif</td>
          <td>{!! $question->option1 !!} <br>@if($question->option1_img) @php($question->option1_img = '/storage/options/'.$question->option1_img) <div class="col-md-12"><img src="{{$question->option1_img}}"></div>@endif</td>
          <td>{!! $question->option2 !!} <br>@if($question->option2_img) @php($question->option2_img = '/storage/options/'.$question->option2_img) <div class="col-md-12"><img src="{{$question->option2_img}}"></div>@endif</td>
          <td>{!! $question->option3 !!} <br>@if($question->option3_img) @php($question->option3_img = '/storage/options/'.$question->option3_img) <div class="col-md-12"><img src="{{$question->option3_img}}"></div>@endif</td>

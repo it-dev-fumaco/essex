@@ -46,7 +46,7 @@ class QuestionsController extends Controller
                 $qimgs = '';
                 foreach ($request->qimage as $que) {
                     $filename = 'question'.Str::random(5).'_'.$que->getClientOriginalName();
-                    $que->storeAs('public/questions', $filename);
+                    $que->storeAs('questions', $filename, 'upcloud');
                     $qimgs .= $filename.',';
                 }
                 $question->question_img = substr($qimgs, 0, -1);
@@ -54,25 +54,25 @@ class QuestionsController extends Controller
 
             if ($request->hasFile('option1_img')) {
                 $filename = 'option1-'.rand(10000, 99999).'_'.$request->option1_img->getClientOriginalName();
-                $request->option1_img->storeAs('public/options', $filename);
+                $request->option1_img->storeAs('options', $filename, 'upcloud');
                 $question->option1_img = $filename;
             }
 
             if ($request->hasFile('option2_img')) {
                 $filename = 'option2-'.rand(10000, 99999).'_'.$request->option2_img->getClientOriginalName();
-                $request->option2_img->storeAs('public/options', $filename);
+                $request->option2_img->storeAs('options', $filename, 'upcloud');
                 $question->option2_img = $filename;
             }
 
             if ($request->hasFile('option3_img')) {
                 $filename = 'option3-'.rand(10000, 99999).'_'.$request->option3_img->getClientOriginalName();
-                $request->option3_img->storeAs('public/options', $filename);
+                $request->option3_img->storeAs('options', $filename, 'upcloud');
                 $question->option3_img = $filename;
             }
 
             if ($request->hasFile('option4_img')) {
                 $filename = 'option4-'.rand(10000, 99999).'_'.$request->option4_img->getClientOriginalName();
-                $request->option4_img->storeAs('public/options', $filename);
+                $request->option4_img->storeAs('options', $filename, 'upcloud');
                 $question->option4_img = $filename;
             }
 
@@ -100,15 +100,17 @@ class QuestionsController extends Controller
                 if ($question->question_img) {
                     $parts = explode(',', $question->question_img);
                     foreach ($parts as $part) {
-                        $filepath = storage_path().'\\app\\public\\questions\\'.$part;
-                        unlink($filepath);
+                        $part = trim($part);
+                        if ($part !== '' && Storage::disk('upcloud')->exists('questions/'.$part)) {
+                            Storage::disk('upcloud')->delete('questions/'.$part);
+                        }
                     }
                 }
 
                 $qimgs = '';
                 foreach ($request->qimage as $que) {
                     $filename = 'question'.Str::random(5).'_'.$que->getClientOriginalName();
-                    $que->storeAs('public/questions', $filename);
+                    $que->storeAs('questions', $filename, 'upcloud');
                     $qimgs .= $filename.',';
                 }
                 $question->question_img = substr($qimgs, 0, -1);
@@ -116,45 +118,49 @@ class QuestionsController extends Controller
 
             if ($request->hasFile('option1_img')) {
                 if ($question->option1_img) {
-                    $filepath = storage_path().'\\app\\public\\options\\'.$question->option1_img;
-                    unlink($filepath);
+                    if (Storage::disk('upcloud')->exists('options/'.$question->option1_img)) {
+                        Storage::disk('upcloud')->delete('options/'.$question->option1_img);
+                    }
                     $question->option1_img = null;
                 }
                 $filename = 'option1-'.rand(10000, 99999).'_'.$request->option1_img->getClientOriginalName();
-                $request->option1_img->storeAs('public/options', $filename);
+                $request->option1_img->storeAs('options', $filename, 'upcloud');
                 $question->option1_img = $filename;
             }
 
             if ($request->hasFile('option2_img')) {
                 if ($question->option2_img) {
-                    $filepath = storage_path().'\\app\\public\\options\\'.$question->option2_img;
-                    unlink($filepath);
+                    if (Storage::disk('upcloud')->exists('options/'.$question->option2_img)) {
+                        Storage::disk('upcloud')->delete('options/'.$question->option2_img);
+                    }
                     $question->option2_img = null;
                 }
                 $filename = 'option2-'.rand(10000, 99999).'_'.$request->option2_img->getClientOriginalName();
-                $request->option2_img->storeAs('public/options', $filename);
+                $request->option2_img->storeAs('options', $filename, 'upcloud');
                 $question->option2_img = $filename;
             }
 
             if ($request->hasFile('option3_img')) {
                 if ($question->option3_img) {
-                    $filepath = storage_path().'\\app\\public\\options\\'.$question->option3_img;
-                    unlink($filepath);
+                    if (Storage::disk('upcloud')->exists('options/'.$question->option3_img)) {
+                        Storage::disk('upcloud')->delete('options/'.$question->option3_img);
+                    }
                     $question->option3_img = null;
                 }
                 $filename = 'option3-'.rand(10000, 99999).'_'.$request->option3_img->getClientOriginalName();
-                $request->option3_img->storeAs('public/options', $filename);
+                $request->option3_img->storeAs('options', $filename, 'upcloud');
                 $question->option3_img = $filename;
             }
 
             if ($request->hasFile('option4_img')) {
                 if ($question->option4_img) {
-                    $filepath = storage_path().'\\app\\public\\options\\'.$question->option4_img;
-                    unlink($filepath);
+                    if (Storage::disk('upcloud')->exists('options/'.$question->option4_img)) {
+                        Storage::disk('upcloud')->delete('options/'.$question->option4_img);
+                    }
                     $question->option4_img = null;
                 }
                 $filename = 'option4-'.rand(10000, 99999).'_'.$request->option4_img->getClientOriginalName();
-                $request->option4_img->storeAs('public/options', $filename);
+                $request->option4_img->storeAs('options', $filename, 'upcloud');
                 $question->option4_img = $filename;
             }
 
@@ -173,25 +179,16 @@ class QuestionsController extends Controller
             if ($question->question_img) {
                 $parts = explode(',', $question->question_img);
                 foreach ($parts as $part) {
-                    $filepath = storage_path().'\\app\\public\\questions\\'.$part;
-                    unlink($filepath);
+                    $part = trim($part);
+                    if ($part !== '' && Storage::disk('upcloud')->exists('questions/'.$part)) {
+                        Storage::disk('upcloud')->delete('questions/'.$part);
+                    }
                 }
             }
-            if ($question->option1_img) {
-                $filepath = storage_path().'\\app\\public\\options\\'.$question->option1_img;
-                unlink($filepath);
-            }
-            if ($question->option2_img) {
-                $filepath = storage_path().'\\app\\public\\options\\'.$question->option2_img;
-                unlink($filepath);
-            }
-            if ($question->option3_img) {
-                $filepath = storage_path().'\\app\\public\\options\\'.$question->option3_img;
-                unlink($filepath);
-            }
-            if ($question->option4_img) {
-                $filepath = storage_path().'\\app\\public\\options\\'.$question->option4_img;
-                unlink($filepath);
+            foreach (['option1_img', 'option2_img', 'option3_img', 'option4_img'] as $image) {
+                if ($question->$image && Storage::disk('upcloud')->exists('options/'.$question->$image)) {
+                    Storage::disk('upcloud')->delete('options/'.$question->$image);
+                }
             }
 
             DB::table('questions')->where('question_id', '=', $request->question_id)->delete();
@@ -292,7 +289,7 @@ class QuestionsController extends Controller
             $qimgs = '';
             foreach ($request->qimage as $que) {
                 $filename = 'question'.Str::random(5).'_'.$que->getClientOriginalName();
-                $que->storeAs('public/questions', $filename);
+                $que->storeAs('questions', $filename, 'upcloud');
                 $qimgs .= $filename.',';
             }
             $question->question_img = substr($qimgs, 0, -1);
@@ -300,25 +297,25 @@ class QuestionsController extends Controller
 
         if ($request->hasFile('option1_img')) {
             $filename = 'option1-'.rand(10000, 99999).'_'.$request->option1_img->getClientOriginalName();
-            $request->option1_img->storeAs('public/options', $filename);
+            $request->option1_img->storeAs('options', $filename, 'upcloud');
             $question->option1_img = $filename;
         }
 
         if ($request->hasFile('option2_img')) {
             $filename = 'option2-'.rand(10000, 99999).'_'.$request->option2_img->getClientOriginalName();
-            $request->option2_img->storeAs('public/options', $filename);
+            $request->option2_img->storeAs('options', $filename, 'upcloud');
             $question->option2_img = $filename;
         }
 
         if ($request->hasFile('option3_img')) {
             $filename = 'option3-'.rand(10000, 99999).'_'.$request->option3_img->getClientOriginalName();
-            $request->option3_img->storeAs('public/options', $filename);
+            $request->option3_img->storeAs('options', $filename, 'upcloud');
             $question->option3_img = $filename;
         }
 
         if ($request->hasFile('option4_img')) {
             $filename = 'option4-'.rand(10000, 99999).'_'.$request->option4_img->getClientOriginalName();
-            $request->option4_img->storeAs('public/options', $filename);
+            $request->option4_img->storeAs('options', $filename, 'upcloud');
             $question->option4_img = $filename;
         }
 
@@ -347,16 +344,16 @@ class QuestionsController extends Controller
                 if ($question->question_img) {
                     $parts = explode(',', $question->question_img);
                     foreach ($parts as $part) {
-                        if (Storage::disk('public')->exists('/questions/'.$part)) {
-                            $filepath = storage_path().'\\app\\public\\questions\\'.$part;
-                            unlink($filepath);
+                        $part = trim($part);
+                        if ($part !== '' && Storage::disk('upcloud')->exists('questions/'.$part)) {
+                            Storage::disk('upcloud')->delete('questions/'.$part);
                         }
                     }
                 }
                 $qimgs = '';
                 foreach ($request->qimage as $que) {
                     $filename = 'question'.Str::random(5).'_'.$que->getClientOriginalName();
-                    $que->storeAs('public/questions', $filename);
+                    $que->storeAs('questions', $filename, 'upcloud');
                     $qimgs .= $filename.',';
                 }
                 $question->question_img = substr($qimgs, 0, -1);
@@ -367,14 +364,13 @@ class QuestionsController extends Controller
             foreach ($option_images as $image) {
                 if ($request->hasFile($image)) {
                     if ($question->$image) {
-                        if (Storage::disk('public')->exists('/options/'.$question->$image)) {
-                            $filepath = storage_path().'\\app\\public\\options\\'.$question->$image;
-                            unlink($filepath);
+                        if (Storage::disk('upcloud')->exists('options/'.$question->$image)) {
+                            Storage::disk('upcloud')->delete('options/'.$question->$image);
                         }
                         $question->$image = null;
                     }
                     $filename = explode('_', $image)[0].'-'.rand(10000, 99999).'_'.$request->$image->getClientOriginalName();
-                    $request->$image->storeAs('public/options/', $filename);
+                    $request->$image->storeAs('options', $filename, 'upcloud');
                     $question->$image = $filename;
                 }
             }
@@ -399,29 +395,17 @@ class QuestionsController extends Controller
         if ($question->question_img) {
             $parts = explode(',', $question->question_img);
             foreach ($parts as $part) {
-                $filepath = storage_path().'\\app\\public\\questions\\'.$part;
-                unlink($filepath);
+                $part = trim($part);
+                if ($part !== '' && Storage::disk('upcloud')->exists('questions/'.$part)) {
+                    Storage::disk('upcloud')->delete('questions/'.$part);
+                }
             }
         }
 
-        if ($question->option1_img) {
-            $filepath = storage_path().'\\app\\public\\options\\'.$question->option1_img;
-            unlink($filepath);
-        }
-
-        if ($question->option2_img) {
-            $filepath = storage_path().'\\app\\public\\options\\'.$question->option2_img;
-            unlink($filepath);
-        }
-
-        if ($question->option3_img) {
-            $filepath = storage_path().'\\app\\public\\options\\'.$question->option3_img;
-            unlink($filepath);
-        }
-
-        if ($question->option4_img) {
-            $filepath = storage_path().'\\app\\public\\options\\'.$question->option4_img;
-            unlink($filepath);
+        foreach (['option1_img', 'option2_img', 'option3_img', 'option4_img'] as $image) {
+            if ($question->$image && Storage::disk('upcloud')->exists('options/'.$question->$image)) {
+                Storage::disk('upcloud')->delete('options/'.$question->$image);
+            }
         }
 
         DB::table('questions')->where('question_id', '=', $request->question_id)->delete();
