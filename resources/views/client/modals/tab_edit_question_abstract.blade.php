@@ -34,7 +34,7 @@
                   @if($question->question_img)
                      @php($parts = explode(',',$question->question_img))
 
-                     @foreach($parts as $part) @php($part = '/storage/questions/'.$part)
+                     @foreach($parts as $part) @php($part = \App\Support\QuestionImage::url($part))
                         <div class="col-md-6">
                            <img src="{{$part}}">
                         </div>

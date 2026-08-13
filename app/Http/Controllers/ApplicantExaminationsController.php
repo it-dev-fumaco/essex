@@ -358,7 +358,8 @@ class ApplicantExaminationsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('applicant.exam_success', ['examinee_id' => $examineeId]);
+            // AJAX client redirects to /oem/examSubmitted/{id}; avoid broken applicant.exam_success param
+            return response()->json(['message' => 'success', 'examinee_id' => (int) $examineeId]);
         } catch (\Throwable $th) {
             DB::rollback();
 

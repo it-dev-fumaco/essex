@@ -319,7 +319,7 @@ class ClientExamsController extends Controller
             $examres->save();
         }
 
-        return redirect()->route('applicant.exam_success', ['examinee_id' => $examineeId]);
+        return response()->json(['message' => 'success', 'examinee_id' => (int) $examineeId]);
     }
 
     public function update_no_answer(Request $request, $examineeId)

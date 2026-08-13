@@ -441,6 +441,7 @@ class ExaminationReportsController extends Controller
 
     public function saveScore($examinee_id, $exam_id, Request $request)
     {
+        $exam_id = rtrim((string) $exam_id, '}');
 
         $examinee_ans = ExamineeAnswer::where('examinee_id', $examinee_id)->where('exam_id', $exam_id)->get();
 
@@ -456,7 +457,7 @@ class ExaminationReportsController extends Controller
         $examres->examinee_score = ExamineeAnswer::where('examinee_id', $examinee_id)->where('exam_id', $exam_id)->where('isCorrect', 'True')->count();
         $examres->save();
 
-        return redirect()->route('viewAnswers', [$examinee_id, $exam_id]);
+        return $this->redirectToApplicationPath($request, 'viewExamResult/'.$examinee_id.'/'.$exam_id);
     }
 
     public function sessionDetails($column)
@@ -659,6 +660,7 @@ class ExaminationReportsController extends Controller
 
     public function updateApplicantScore($examinee_id, $exam_id, Request $request)
     {
+        $exam_id = rtrim((string) $exam_id, '}');
 
         $examinee_ans = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->get();
 
@@ -674,6 +676,6 @@ class ExaminationReportsController extends Controller
         $examres->examinee_score = ExamineeAnswer::where('examinee_id',$examinee_id)->where('exam_id',$exam_id)->where('isCorrect','True')->count();
         $examres->save();
 
-        return redirect('/client/exam_results/'.$examinee_id.'/'.$exam_id.'');
+        return $this->redirectToApplicationPath($request, 'client/exam_results/'.$examinee_id.'/'.$exam_id);
     }
 }

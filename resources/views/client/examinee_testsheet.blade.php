@@ -318,7 +318,7 @@
                                                    @if($q->question_img)
                                                       @php($parts = explode(",",$q->question_img))
                                                          @foreach($parts as $part)
-                                                            @php($part = '/storage/questions/'.$part)
+                                                            @php($part = \App\Support\QuestionImage::url($part))
                                                             <br><img src="{{$part}}" style="width: 55%;">
                                                          @endforeach
                                                    @endif
@@ -369,7 +369,7 @@
                                                @if($q->question_img) 
                                                  @php($parts = explode(",",$q->question_img)) 
                                                  @foreach($parts as $part) 
-                                                   @php($part = '/storage/questions/'.$part) 
+                                                   @php($part = \App\Support\QuestionImage::url($part)) 
                                                    <td style="vertical-align: middle; width: 50%; text-align: center;">
                                                      <img src="{{$part}}" width="450" height="120">
                                                    </td>
