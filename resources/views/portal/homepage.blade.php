@@ -105,7 +105,7 @@
                     </div>
                     <div class="col-12 portal-home-vision-split d-flex flex-column gap-3">
                         <div class="portal-vision-card mb-0 d-flex flex-column">
-                            <div class="portal-vision-bg" style="background-image: url('{{ asset('storage/img/slider/achievement.jpg') }}');"></div>
+                            <div class="portal-vision-bg" style="background-image: url('{{ \App\Support\StorageUrl::img('slider/achievement.jpg') }}');"></div>
                             <div class="portal-vision-overlay" aria-hidden="true"></div>
                             <div id="portalVisionCarousel" class="carousel slide portal-vision-carousel d-flex flex-column" data-bs-ride="carousel" data-bs-interval="9000" data-bs-wrap="true">
                                 <div class="carousel-inner">
@@ -161,11 +161,7 @@
                         <div class="card-body">
                             @foreach ($celebrants as $celebrant)
                                 @php
-                                    $image = 'storage/img/user.png';
-                                    if($celebrant->image && Storage::disk('public')->exists(str_replace('storage/', null, $celebrant->image))){
-                                        $image = $celebrant->image;
-                                    }
-
+                                    $image = $celebrant->avatar_url ?? asset('storage/img/user.png');
                                     $celebration = 'Birthday';
                                     $celebration_icon = 'fa-birthday-cake';
                                     if($celebrant->date_joined && Carbon\Carbon::parse($celebrant->date_joined)->format('m-d') == Carbon\Carbon::now()->format('m-d')){
@@ -175,7 +171,7 @@
                                 @endphp
                                 <div class="row" style="font-size: 9pt !important">
                                     <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
-                                        <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                        <div class="profile-image small-profile-image" style="background-image: url('{{ $image }}'); width: 45px !important; height: 45px !important"></div>
                                     </div>
                                     <div class="col-7 col-xl-8 p-0 d-flex justify-content-center align-items-center">
                                         <div class="container-fluid p-0">
@@ -247,14 +243,11 @@
                                         @continue
                                     @endif
                                     @php
-                                        $image = $approver->image ? $approver->image : 'storage/img/user.png';
-                                        if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
-                                            $image = 'storage/img/user.png';
-                                        }
+                                        $image = $approver->avatar_url ?? asset('storage/img/user.png');
                                     @endphp
                                     <div class="row container-fluid d-flex justify-content-center align-items-center">
                                         <div class="col-3 col-xl-2" style="padding: 5px !important">
-                                            <div class="profile-image" style="background-image: url({{ asset($image) }});"></div>
+                                            <div class="profile-image" style="background-image: url('{{ $image }}');"></div>
                                         </div>
                                         <div class="col-9 col-xl-9">
                                             <span style="font-weight: 600; font-size: 9pt;">{{ $approver->employee_name }}</span><br>
@@ -276,13 +269,10 @@
                             @foreach ($out_of_office_today as $out_of_office)
                                 <div class="row" style="font-size: 9pt !important">
                                     @php
-                                        $image = $out_of_office->image ? $out_of_office->image : '/storage/img/user.png';
-                                        if(!Storage::disk('public')->exists(str_replace('storage/', null, $image))){
-                                            $image = 'storage/img/user.png';
-                                        }
+                                        $image = $out_of_office->avatar_url ?? asset('storage/img/user.png');
                                     @endphp
                                     <div class="col-3 col-xl-2 d-flex justify-content-center align-items-center">
-                                        <div class="profile-image small-profile-image" style="background-image: url({{ asset($image) }}); width: 45px !important; height: 45px !important"></div>
+                                        <div class="profile-image small-profile-image" style="background-image: url('{{ $image }}'); width: 45px !important; height: 45px !important"></div>
                                     </div>
                                     <div class="col-7 col-xl-6 p-0 d-flex justify-content-center align-items-center">
                                         <div class="container-fluid p-0">
@@ -435,7 +425,6 @@
 @endsection
 
 @section('script')
-
 <script src="/vendor/unisharp/laravel-ckeditor/ckeditor.js"></script>
 <script src="/vendor/unisharp/laravel-ckeditor/adapters/jquery.js"></script>
 {{-- Do not load a second jQuery here: it replaces window.jQuery and drops Slider Revolution (jquery.fn.revolution). --}}
