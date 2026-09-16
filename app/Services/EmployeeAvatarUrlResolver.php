@@ -24,11 +24,11 @@ final class EmployeeAvatarUrlResolver
         bool $skipExistsCheck = false,
         ?int $cacheBusterTimestamp = null,
     ): string {
-        $default = asset('storage/img/user.png');
+        $default = $this->defaultPlaceholderUrl();
 
         $image = $imageValue ? trim((string) $imageValue) : '';
-        if ($image === '') {
-            return $default;
+        if ($this->isPlaceholderImage($image)) {
+            return $this->withCacheBuster($default, $cacheBusterTimestamp);
         }
 
         if (Str::startsWith($image, ['http://', 'https://'])) {
@@ -166,23 +166,43 @@ final class EmployeeAvatarUrlResolver
                     return $disk->url($key);
                 }
             }
-        } catch (\Throwable) {
-            // ignore
-        }
 
-        try {
-            $disk = Storage::disk('upcloud');
-            foreach ($candidateKeys as $key) {
-                $url = $disk->url($key);
-                if ($url) {
-                    return $url;
-                }
-            }
+            return $default;
         } catch (\Throwable) {
             // ignore
         }
 
         return $default;
+    }
+
+    private function defaultPlaceholderUrl(): string
+    {
+        try {
+            $url = Storage::disk('upcloud')->url('img/user.png');
+            if ($url) {
+                return $url;
+            }
+        } catch (\Throwable) {
+            // ignore
+        }
+
+        return asset('storage/img/user.png');
+    }
+
+    private function isPlaceholderImage(string $image): bool
+    {
+        if ($image === '') {
+            return true;
+        }
+
+        $normalized = strtolower(ltrim(str_replace('\\', '/', $image), '/'));
+        while (str_starts_with($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+
+        $basename = pathinfo($normalized, PATHINFO_BASENAME);
+
+        return $basename === 'user.png' || $normalized === 'img/user.png';
     }
 
     private function withCacheBuster(string $url, ?int $cacheBusterTimestamp): string

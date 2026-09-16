@@ -18,19 +18,19 @@ return [
         [
             'name' => 'ERPNext',
             'label' => 'Enterprise Resource Planning',
-            'url' => 'http://10.0.0.83',
+            'url' => 'https://erp.fumaco.net',
             'icon' => 'fa-building',
         ],
         [
             'name' => 'Athena ERP',
             'label' => 'Inventory',
-            'url' => 'http://athena.fumaco.com',
+            'url' => 'https://athena.fumaco.net',
             'icon' => 'fa-boxes',
         ],
         [
             'name' => 'MES',
             'label' => 'Manufacturing Execution System',
-            'url' => 'http://mes.fumaco.com',
+            'url' => 'https://mes.fumaco.net',
             'icon' => 'fa-industry',
         ],
         [
@@ -42,7 +42,7 @@ return [
         [
             'name' => 'LMS',
             'label' => 'Logistic Management System',
-            'url' => 'http://lms.fumaco.com',
+            'url' => 'https://lms.fumaco.net',
             'icon' => 'fa-truck',
         ],
     ],

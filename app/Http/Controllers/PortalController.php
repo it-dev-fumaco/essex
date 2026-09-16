@@ -55,7 +55,7 @@ class PortalController extends Controller
             ->whereDate('notice_slip.date_from', '<=', date('Y-m-d'))
             ->whereDate('notice_slip.date_to', '>=', date('Y-m-d'))
             ->where('notice_slip.status', 'Approved')
-            ->select('users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to', 'users.image')->get();
+            ->select('users.user_id', 'users.employee_name', 'leave_types.leave_type', 'designation.designation', 'notice_slip.date_from', 'notice_slip.date_to', 'notice_slip.time_from', 'notice_slip.time_to', 'users.image', 'users.updated_at')->get();
 
         $approvals = $approvers = [];
         if (Auth::check()) {
@@ -69,7 +69,7 @@ class PortalController extends Controller
                 ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
                 ->join('designation', 'users.designation_id', '=', 'designation.des_id')
                 ->where('department_approvers.department_id', '=', Auth::user()->department_id)
-                ->select('users.employee_name', 'users.image', 'designation.designation', 'department_approvers.employee_id')
+                ->select('users.user_id', 'users.employee_name', 'users.image', 'users.updated_at', 'designation.designation', 'department_approvers.employee_id')
                 ->get();
 
             $categories = collect($categories)->filter(function ($query) {
@@ -84,7 +84,32 @@ class PortalController extends Controller
 
         $portalSystems = collect(config('portal.systems', []));
 
+        $celebrants = collect($celebrants)->map(fn ($row) => $this->withAvatarUrl($row))->values();
+        $out_of_office_today = collect($out_of_office_today)->map(fn ($row) => $this->withAvatarUrl($row))->values();
+        $approvers = collect($approvers)->map(fn ($row) => $this->withAvatarUrl($row))->values();
+
         return view('portal.homepage', compact('albums', 'milestones', 'it_policy', 'approvals', 'categories', 'approvers', 'celebrants', 'out_of_office_today', 'portalSystems'));
+    }
+
+    private function withAvatarUrl(object $row): object
+    {
+        $bust = null;
+        if (! empty($row->updated_at)) {
+            try {
+                $bust = Carbon::parse((string) $row->updated_at)->timestamp;
+            } catch (\Throwable) {
+                $bust = null;
+            }
+        }
+
+        $row->avatar_url = $this->employeeAvatarUrlResolver->resolve(
+            $row->image ?? null,
+            (string) ($row->user_id ?? $row->employee_id ?? ''),
+            false,
+            $bust
+        );
+
+        return $row;
     }
 
     public function load_manuals(Request $request)
@@ -237,24 +262,7 @@ class PortalController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
-            $employees = collect($paginator->items())->map(function ($employee) {
-                $bust = null;
-                if (! empty($employee->updated_at)) {
-                    try {
-                        $bust = Carbon::parse((string) $employee->updated_at)->timestamp;
-                    } catch (\Throwable) {
-                        $bust = null;
-                    }
-                }
-                $employee->avatar_url = $this->employeeAvatarUrlResolver->resolve(
-                    $employee->image ?? null,
-                    (string) ($employee->user_id ?? ''),
-                    true,
-                    $bust
-                );
-
-                return $employee;
-            });
+            $employees = collect($paginator->items())->map(fn ($employee) => $this->withAvatarUrl($employee));
 
             $html = view('portal.tbl_directory', [
                 'employees' => $employees,

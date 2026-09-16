@@ -1,6 +1,6 @@
 <section class="timeline-section timeline p-5">
     <div class="info bg-image">
-        <img class="w-75" src="{{ asset('/storage/img/company_logo.png') }}" />
+        <img class="w-75" src="{{ \App\Support\StorageUrl::img('company_logo.png') }}" />
         <h5>Historical Milestones</h5>
         <p>The Art of Science & Lighting</p>
         <p>
@@ -137,7 +137,7 @@
 
     .bg-image{
         border-radius: 10px;
-        background-image: url("{{ asset('storage/img/featured/3.jpg') }}");
+        background-image: url("{{ \App\Support\StorageUrl::img('featured/3.jpg') }}");
         background-color: #cccccc;
         height: 100%;
         background-position: center;
