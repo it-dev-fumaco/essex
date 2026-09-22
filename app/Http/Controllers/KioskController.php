@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KioskLoginRequest;
-use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
 use App\Models\Gatepass;
+use App\Services\AbsentNoticeApproverNotificationService;
 use App\Services\ItinerarySubmissionService;
 use App\Traits\AttendanceTrait;
 use Auth;
@@ -15,12 +15,15 @@ use DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class KioskController extends Controller
 {
     use AttendanceTrait;
+
+    public function __construct(
+        private readonly AbsentNoticeApproverNotificationService $approverNotificationService,
+    ) {}
 
     public function index()
     {
@@ -185,7 +188,7 @@ class KioskController extends Controller
         $notice_slip->token = $token;
         $notice_slip->save();
 
-        // Notify department approver(s) by email (same flow as portal submission).
+        // Notify department approver(s) and reporting manager (same flow as portal).
         $viewdetails = DB::table('notice_slip')
             ->join('leave_types', 'leave_types.leave_type_id', 'notice_slip.leave_type_id')
             ->join('departments', 'departments.department_id', 'notice_slip.dept_id')
@@ -211,39 +214,7 @@ class KioskController extends Controller
             'mail_link_base' => rtrim($request->root(), '/'),
         ];
 
-        $leave_approver = DB::table('department_approvers')
-            ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
-            ->where('department_approvers.department_id', Auth::user()->department_id)
-            ->distinct()
-            ->pluck('users.email', 'users.user_id');
-
-        foreach ($leave_approver as $user_id => $email) {
-            $data['approver'] = $user_id;
-
-            $email_sent = 0;
-            try {
-                Mail::to($email)->queue(new SendMail_notice($data));
-                $email_sent = 1;
-            } catch (\Throwable $th) {
-                $email_sent = 0;
-                Log::warning('Failed queueing absent notice approver email (kiosk).', [
-                    'notice_id' => $notice_id,
-                    'approver_user_id' => $user_id,
-                    'recipient' => $email,
-                    'error' => $th->getMessage(),
-                ]);
-            }
-
-            DB::table('email_notifications')->insert([
-                'type' => 'Absent Notice Slip',
-                'recipient' => $email,
-                'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
-                'template' => 'kiosk.Mail.template.notice_template',
-                'template_data' => json_encode($data),
-                'user_id' => Auth::user()->user_id,
-                'email_sent' => $email_sent,
-            ]);
-        }
+        $this->approverNotificationService->notify($notice_slip, $data);
 
         DB::commit();
         return redirect('/kiosk/notice/view');
