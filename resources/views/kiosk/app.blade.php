@@ -362,9 +362,12 @@ function closeNav() {
 </script>
 <script type="text/javascript">
 var idleTime = 0;
+var KIOSK_IDLE_TICK_MS = 5000;
+var KIOSK_IDLE_THRESHOLD = 59; // (59+1) * 5s = 300s = 5 minutes
+var KIOSK_COUNTDOWN_SEC = 5;
 $(document).ready(function () {
-    //Increment the idle time counter every minute.
-    var idleInterval = setInterval(timerIncrement, 5000); // 1 minute
+    // Increment idle counter every 5s; modal after ~5 minutes of inactivity.
+    var idleInterval = setInterval(timerIncrement, KIOSK_IDLE_TICK_MS);
 
     //Zero the idle timer on mouse movement.
     $(this).mousemove(function (e) {
@@ -391,7 +394,7 @@ $(document).ready(function () {
 
 function timerIncrement() {
     idleTime = idleTime + 1;
-    if (idleTime > 8) { // 20 minutes
+    if (idleTime > KIOSK_IDLE_THRESHOLD) { // ~5 minutes of inactivity
         // window.location.reload();
          $('#logout_confirmation').modal('show');
          timercountdown();
@@ -400,7 +403,7 @@ function timerIncrement() {
 }
 var downloadTimer;
 function timercountdown(){
-  var timeleft = 5;
+  var timeleft = KIOSK_COUNTDOWN_SEC;
   downloadTimer = setInterval(function(){
   document.getElementById("timer").innerHTML = timeleft + " seconds remaining";
 

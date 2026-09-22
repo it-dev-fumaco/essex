@@ -15,7 +15,7 @@
          <a href="/kiosk/attendance" class="redirect">
             <div class="card">
                <div class="view overlay text-center text-white aqua-gradient">
-                  <img src="{{ asset('storage/kiosk/comp.png') }}" class="rounded mx-auto d-block w-25 mt-3">
+                  <img src="{{ \App\Support\StorageUrl::get('kiosk/comp.png') }}" class="rounded mx-auto d-block w-25 mt-3">
                   <h6 class="mb-3 mt-2">{{-- <i class="fa fa-calendar mr-1"> --}}</i>ATTENDANCE</h6>
                </div>
                <div class="card-body text-center">
@@ -30,7 +30,7 @@
          <a href="/kiosk/notice" class="redirect">
             <div class="card">
                <div class="view overlay text-center text-white aqua-gradient">
-                  <img src="{{ asset('storage/kiosk/absent_notice.png') }}" class="rounded mx-auto d-block w-25 mt-3">
+                  <img src="{{ \App\Support\StorageUrl::get('kiosk/absent_notice.png') }}" class="rounded mx-auto d-block w-25 mt-3">
                   <h6 class="mb-3 mt-2">{{-- <i class="fa fa-check-circle-o mr-1"></i> --}}ABSENT NOTICE</h6>
                </div>
                <div class="card-body text-center">
@@ -45,7 +45,7 @@
          <a href="/kiosk/gatepass" class="redirect">
             <div class="card">
                <div class="view overlay text-center text-white aqua-gradient">
-                  <img src="{{ asset('storage/kiosk/gatepass.png') }}" class="rounded mx-auto d-block w-25 mt-3">
+                  <img src="{{ \App\Support\StorageUrl::get('kiosk/gatepass.png') }}" class="rounded mx-auto d-block w-25 mt-3">
                   <h6 class="mb-3 mt-2">{{-- <i class="fa fa-book mr-1"></i> --}}GATEPASS</h6>
                </div>
                <div class="card-body text-center">
@@ -60,7 +60,7 @@
          <a href="/kiosk/itinerary" class="redirect">
             <div class="card">
                <div class="view overlay text-center text-white aqua-gradient">
-                  <img src="{{ asset('storage/kiosk/itinerary.png') }}" class="rounded mx-auto d-block w-25 mt-3">
+                  <img src="{{ \App\Support\StorageUrl::get('kiosk/itinerary.png') }}" class="rounded mx-auto d-block w-25 mt-3">
                   <h6 class="mb-3 mt-2">{{-- <i class="fa fa-question-circle mr-1"></i> --}}ITINERARY</h6>
                </div>
                <div class="card-body text-center">
@@ -149,10 +149,13 @@
          <div class="row">
             <div class="col-md-12">
             @php
-               $img = Auth::user()->image ? Auth::user()->image : '/storage/img/user.png'
+               $img = app(\App\Services\EmployeeAvatarUrlResolver::class)->resolve(
+                  Auth::user()->image ?? null,
+                  (string) Auth::user()->user_id
+               );
             @endphp
                <div class="avatar mx-auto white">
-                  <img src="{{ asset($img) }}" alt="avatar mx-auto white" class="rounded img-fluid w-50">
+                  <img src="{{ $img }}" alt="avatar mx-auto white" class="rounded img-fluid w-50">
                </div>
                <div class="card-body p-0">
                   <h3 class="card-title mt-1">{{ Auth::user()->employee_name }}</h3>
