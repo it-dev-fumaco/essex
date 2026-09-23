@@ -366,9 +366,9 @@ trait AttendanceTrait
         $time_out = $logs ? $logs->time_out : null;
 
         $hasNotice = $this->getNotices($transaction_date, $employee);
-   
-        $isHoliday = DB::table('holidays')->where('holiday_date', $transaction_date)
-            ->orWhere('category', 'Regular Holiday')->whereMonth('holiday_date', Carbon::parse($transaction_date)->format('m'))->whereDay('holiday_date', Carbon::parse($transaction_date)->format('d'))->first();
+
+        $parsed = Carbon::parse($transaction_date);
+        $isHoliday = DB::table('holidays')->whereDate('holiday_date', $transaction_date)->first();
 
         if ($hasNotice) {
             $status = $hasNotice['absence_type'];
@@ -376,7 +376,7 @@ trait AttendanceTrait
             $status = 'Present';
         }elseif ($isHoliday) {
             $status = 'Holiday';
-        }elseif (Carbon::parse($transaction_date)->format('N') == 7) {
+        }elseif ($parsed->format('N') == 7) {
             $status = 'Sunday';
         }else{
             $status = 'Unfiled Absence';
