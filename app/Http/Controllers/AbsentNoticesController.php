@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\SendMail_notice;
 use App\Models\AbsentNotice;
+use App\Services\AbsentNoticeApproverNotificationService;
 use App\Services\AbsentNoticeOwnerNotificationService;
 use App\Support\AbsentNoticeMailApproval;
 use Carbon\Carbon;
@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -22,83 +21,15 @@ class AbsentNoticesController extends Controller
 {
     public function __construct(
         private readonly AbsentNoticeOwnerNotificationService $ownerNotificationService,
+        private readonly AbsentNoticeApproverNotificationService $approverNotificationService,
     ) {}
 
     /**
-     * Resend approval notifications to department approvers.
+     * Resend approval notifications to department approvers and reporting manager.
      */
     private function sendApprovalNotificationToManagers(AbsentNotice $noticeSlip, array $data): array
     {
-        $leaveApprovers = DB::table('department_approvers')
-            ->join('users', 'users.user_id', '=', 'department_approvers.employee_id')
-            ->where('department_approvers.department_id', $noticeSlip->dept_id)
-            ->distinct()
-            ->pluck('users.email', 'users.user_id');
-
-        $owner = DB::table('users')
-            ->select('user_id', 'reporting_to')
-            ->where('user_id', $noticeSlip->user_id)
-            ->first();
-
-        $manager = null;
-        if ($owner && $owner->reporting_to) {
-            $manager = DB::table('users')
-                ->select('user_id', 'email')
-                ->where('user_id', $owner->reporting_to)
-                ->first();
-        }
-
-        $recipients = [];
-        foreach ($leaveApprovers as $userId => $email) {
-            if ($email) {
-                $recipients[(string) $userId] = $email;
-            }
-        }
-
-        if ($manager && $manager->email) {
-            $recipients[(string) $manager->user_id] = $manager->email;
-        }
-
-        $emailSent = 0;
-        $hasRecipient = false;
-
-        foreach ($recipients as $userId => $email) {
-            $hasRecipient = true;
-            $data['approver'] = $userId;
-
-            $sent = 0;
-            try {
-                // Send immediately so resend works even when queue workers are unavailable.
-                Mail::to($email)->send(new SendMail_notice($data));
-                $sent = 1;
-            } catch (\Throwable $th) {
-                $sent = 0;
-                Log::error('Failed sending absent notice approval email.', [
-                    'notice_id' => $noticeSlip->notice_id ?? null,
-                    'recipient' => $email,
-                    'error' => $th->getMessage(),
-                ]);
-            }
-
-            if ($sent) {
-                $emailSent = 1;
-            }
-
-            DB::table('email_notifications')->insert([
-                'type' => 'Absent Notice Slip',
-                'recipient' => $email,
-                'subject' => 'Absent Notice Slip - FOR YOUR APPROVAL',
-                'template' => 'kiosk.Mail.template.notice_template',
-                'template_data' => json_encode($data),
-                'user_id' => Auth::user()->user_id,
-                'email_sent' => $sent,
-            ]);
-        }
-
-        return [
-            'has_recipient' => $hasRecipient,
-            'email_sent' => $emailSent,
-        ];
+        return $this->approverNotificationService->notify($noticeSlip, $data);
     }
 
     /**
