@@ -201,6 +201,25 @@ launchFullScreen(document.documentElement);
          $('#Date').html(dayNames[newDate.getDay()] + ", " + newDate.getDate() + ' ' + monthNames[newDate.getMonth()] + ' ' + newDate.getFullYear());
 
          setInterval('updateClock()', 1000);
+
+         // Reload login after 3 hours of inactivity so CSRF/session stay fresh (avoids 419).
+         var loginIdleTime = 0;
+         var LOGIN_IDLE_TICK_MS = 60000;
+         var LOGIN_IDLE_THRESHOLD = 180; // 180 * 60s = 3 hours
+
+         function resetLoginIdle() {
+            loginIdleTime = 0;
+         }
+
+         $(document).on('mousemove mousedown keypress touchstart click', resetLoginIdle);
+         $('.id-key, #access-id, #password').on('focus input', resetLoginIdle);
+
+         setInterval(function () {
+            loginIdleTime = loginIdleTime + 1;
+            if (loginIdleTime > LOGIN_IDLE_THRESHOLD) {
+               window.location.reload();
+            }
+         }, LOGIN_IDLE_TICK_MS);
       }); 
 
       function updateClock(){
