@@ -6,6 +6,7 @@ use App\Support\AbsentNoticeMailApproval;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -51,7 +52,29 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        // Kiosk: never strand users on "419 Page Expired" — send them back to a fresh login.
+        if ($e instanceof TokenMismatchException && $this->isKioskRequest($request)) {
+            return redirect('/kiosk/login')
+                ->with('message', 'Session expired. Please tap your card or log in again.');
+        }
+
         return parent::render($request, $e);
+    }
+
+    protected function isKioskRequest(HttpRequest $request): bool
+    {
+        if ($request->is('kiosk', 'kiosk/*')) {
+            return true;
+        }
+
+        $referer = $request->headers->get('referer');
+        if (is_string($referer) && $referer !== '' && $this->isSameApplicationHost($request, $referer)) {
+            $path = (string) (parse_url($referer, PHP_URL_PATH) ?: '');
+
+            return str_starts_with($path, '/kiosk');
+        }
+
+        return false;
     }
 
     /**
