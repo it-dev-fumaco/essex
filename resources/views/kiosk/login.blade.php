@@ -202,24 +202,32 @@ launchFullScreen(document.documentElement);
 
          setInterval('updateClock()', 1000);
 
-         // Reload login after 3 hours of inactivity so CSRF/session stay fresh (avoids 419).
-         var loginIdleTime = 0;
-         var LOGIN_IDLE_TICK_MS = 60000;
-         var LOGIN_IDLE_THRESHOLD = 180; // 180 * 60s = 3 hours
+         // Keep login CSRF/session fresh. Absolute timer (not idle-based): mouse/touch
+         // must not delay refresh, or the page can outlive the server session → 419.
+         var LOGIN_REFRESH_MS = 3 * 60 * 60 * 1000; // 3 hours
+         var pageLoadedAt = Date.now();
 
-         function resetLoginIdle() {
-            loginIdleTime = 0;
+         function reloadLoginPage() {
+            window.location.reload();
          }
 
-         $(document).on('mousemove mousedown keypress touchstart click', resetLoginIdle);
-         $('.id-key, #access-id, #password').on('focus input', resetLoginIdle);
+         setTimeout(reloadLoginPage, LOGIN_REFRESH_MS);
 
-         setInterval(function () {
-            loginIdleTime = loginIdleTime + 1;
-            if (loginIdleTime > LOGIN_IDLE_THRESHOLD) {
-               window.location.reload();
+         // If the kiosk tab was backgrounded past the refresh window, reload on return.
+         document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && (Date.now() - pageLoadedAt) >= LOGIN_REFRESH_MS) {
+               reloadLoginPage();
             }
-         }, LOGIN_IDLE_TICK_MS);
+         });
+
+         // Last line of defense: if the open page is already stale, refresh instead of POSTing.
+         $('form').on('submit', function (e) {
+            if ((Date.now() - pageLoadedAt) >= LOGIN_REFRESH_MS) {
+               e.preventDefault();
+               reloadLoginPage();
+               return false;
+            }
+         });
       }); 
 
       function updateClock(){
