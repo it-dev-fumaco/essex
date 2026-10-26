@@ -4,7 +4,7 @@
 # - speed rebuilds (cache composer + node layers)
 # - ensure new image tags always reflect code changes (immutable code in image; no full-code volume in prod)
 
-FROM php:8.3-fpm AS php-base
+FROM php:8.3.36-fpm AS php-base
 
 # Build and enable PHP extensions; remove build deps after
 RUN set -eux; \
