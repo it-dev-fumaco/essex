@@ -35,7 +35,7 @@ class LeaveTypesController extends Controller
         $leave_type->leave_type = $request->leave_type;
         $leave_type->color_legend = $request->color_legend;
         $leave_type->description = $request->description;
-        $leave_type->applied_to_all = $request->applied_to_all;
+        $leave_type->applied_to_all = $request->boolean('applied_to_all') ? 1 : 0;
         $leave_type->save();
 
         return redirect('/admin/leave_types')->with('message', 'Leave Type successfully added');
@@ -47,7 +47,7 @@ class LeaveTypesController extends Controller
         $leave_type->leave_type = $request->leave_type;
         $leave_type->color_legend = $request->color_legend;
         $leave_type->description = $request->description;
-        $leave_type->applied_to_all = $request->applied_to_all;
+        $leave_type->applied_to_all = $request->boolean('applied_to_all') ? 1 : 0;
         $leave_type->save();
 
         return redirect('/admin/leave_types')->with('message', 'Leave Type successfully updated');
